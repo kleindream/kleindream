@@ -1,0 +1,23 @@
+
+<%- include("layout", { title: "Início", body: `  
+  <div class="grid">
+    <div>
+      <div class="card">
+        <div class="h" style="font-size: 2rem; font-weight: 900; color: var(--accent);">Atalhos para a diversão!</div>
+        <p style="font-size: 1.2rem; color: var(--text); font-style: italic;">Vamos reviver os melhores momentos! Clique em qualquer um dos atalhos abaixo para acessar seu perfil, recados e fotos — tudo ao estilo dos velhos tempos!</p>
+        <div class="row" style="gap:6px;">
+          <a class="button secondary" href="/u/${me.username}">Meu perfil</a>
+          <a class="button secondary" href="/scraps/${me.username}">Recados</a>
+          <a class="button secondary" href="/testimonials/${me.username}">Depoimentos</a>
+          <a class="button secondary" href="/photos/${me.username}">Fotos</a>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="background: var(--panel2);">
+        <div class="h" style="font-size: 2rem; font-weight: 900; color: var(--accent);">Bem-vindo de volta!</div>
+        <p style="font-size: 1.2rem; color: var(--text);">A nostalgia está no ar! Vamos aproveitar para curtir as boas memórias e deixar as novas começarem? Não esqueça de compartilhar seu estilo com a galera!</p>
+      </div>
+    </div>
+  </div>
+` }) %>

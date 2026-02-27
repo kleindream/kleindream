@@ -1,0 +1,31 @@
+
+<%- include("layout", { title: "Fotos", body: `  
+  <div class="grid">
+    <div>
+      <div class="card">
+        <div class="h" style="font-size: 2rem; font-weight: 900; color: var(--accent);">Álbuns de ${user.username}</div>
+        ${me && me.username === user.username ? `
+          <form method="post" action="/albums/create">
+            <label class="small" style="color: var(--text);">Novo álbum</label>
+            <input name="title" placeholder="Ex: Amigos, Família, Viagens..." />
+            <br/><br/>
+            <button class="button" type="submit">Criar álbum</button>
+          </form>
+        ` : ''}
+      </div>
+    </div>
+    <div>
+      <div class="card" style="background: var(--panel2);">
+        <div class="h" style="font-size: 2rem; font-weight: 900; color: var(--accent);">Fotos favoritas</div>
+        <div class="grid">
+          ${photos.length ? photos.map(p => `
+            <div class="card" style="margin-top: 10px;">
+              <img src="${p.url}" alt="${p.title}" class="photo" />
+              <div style="text-align: center; color: var(--text);">${p.title}</div>
+            </div>
+          `).join('') : `<p style="color: var(--muted);">Ainda não há fotos. Adicione algumas para começar a compartilhar suas memórias!</p>`}
+        </div>
+      </div>
+    </div>
+  </div>
+` }) %>
