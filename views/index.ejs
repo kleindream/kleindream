@@ -1,14 +1,107 @@
+<%- include("layout", { title: "KleinDream", body: `
+  <div class="nostalgia-grid">
+    <aside class="nostalgia-side">
+      <div class="nostalgia-side-box">
+        <div class="nostalgia-side-title">Um cantinho pra respirar</div>
+        <p>
+          Lembra quando a internet era descoberta, não vitrine?<br>
+          Quando cada perfil parecia uma casa e cada recado tinha peso?
+        </p>
+        <p>
+          Aqui a gente volta pro ritmo calmo: conversar, conhecer, pertencer.
+        </p>
+      </div>
 
-<%- include("layout", { title: "KleinDream", body: `  
-  <div class="card">
-    <div class="h" style="font-size: 2.5rem; font-weight: 900; color: var(--accent);">Bem-vindo ao KleinDream!</div>
-    <p style="font-size: 1.2rem; color: var(--text);">Você acabou de entrar em um lugar onde a nostalgia se encontra com a diversão! Reviva os velhos tempos com amigos, fotos e aquela vibe de 2004. O verdadeiro estilo de vida das redes sociais, onde todo mundo tem uma voz e pode compartilhar seus recados, depoimentos e muito mais!</p>
-    <div class="row" style="gap: 12px;">
-      <a class="button" href="/register">Crie sua conta e entre no jogo!</a>
-      <a class="button secondary" href="/login">Já tem conta? Entre agora!</a>
-    </div>
-    <div class="card" style="margin-top: 20px; background: var(--panel2);">
-      <p style="font-size: 1.2rem; color: var(--text); font-style: italic;">Lembre-se: As melhores amizades começam com um simples "Olá!" ✨</p>
-    </div>
+      <div class="nostalgia-side-box">
+        <div class="nostalgia-side-title">O ritual do “entrar”</div>
+        <p>
+          O chiado do modem, a expectativa, a sensação de portal.<br>
+          A KleinDream é um abraço nessa memória.
+        </p>
+      </div>
+    </aside>
+
+    <main class="nostalgia-center">
+      <div class="card nostalgia-card">
+        <div class="h nostalgia-title">KleinDream</div>
+
+        <p class="nostalgia-lead">
+          Bem-vindo de volta ao tempo em que tudo parecia infinito.
+          Um lugar onde a nostalgia encontra a coragem de recomeçar.
+        </p>
+
+        <div class="nostalgia-sections">
+          <section class="nostalgia-section">
+            <div class="nostalgia-h2">Quando o som do modem era o início de uma aventura</div>
+            <p>
+              Entrar na internet era um ritual: desligar o telefone, esperar o chiado metálico,
+              torcer para ninguém ligar no meio. Quando conectava… era como atravessar um portal.
+            </p>
+          </section>
+
+          <section class="nostalgia-section">
+            <div class="nostalgia-h2">A geração que jogava até tarde e acordava cedo para sonhar</div>
+            <p>
+              TV de tubo, controle com fio, memory card guardado como tesouro.
+              Fóruns que ensinavam mais do que qualquer tutorial rápido.
+              A gente aprendia junto — e isso valia ouro.
+            </p>
+          </section>
+
+          <section class="nostalgia-section">
+            <div class="nostalgia-h2">Quando uma foto significava algo</div>
+            <p>
+              Antes dos filtros infinitos e das métricas invisíveis,
+              uma foto era identidade e história. Aqui, seu perfil volta a ter alma.
+            </p>
+          </section>
+
+          <section class="nostalgia-section">
+            <div class="nostalgia-h2">Mais conversa. Menos ruído.</div>
+            <p>
+              A KleinDream não quer te prender. Quer que você fique porque gosta.
+              Porque se sente em casa. Porque encontra gente que também sente saudade.
+            </p>
+          </section>
+        </div>
+
+        <div class="nostalgia-actions">
+          <a class="button" href="/register">Cadastrar</a>
+          <a class="button secondary" href="/login">Entrar</a>
+        </div>
+
+        <div class="nostalgia-bottom">
+          <div class="nostalgia-h2">Entre. Crie seu perfil. Escreva sua história.</div>
+          <p>
+            O passado não volta. Mas a sensação pode.<br>
+            Às vezes, tudo o que a gente precisa é de um lugar gentil para existir.
+          </p>
+          <p class="nostalgia-small">
+            Dica: preencha seu perfil com calma — time, cidade, gostos, lembranças.
+            Seu “eu” de antigamente vai reconhecer você aqui.
+          </p>
+        </div>
+      </div>
+    </main>
+
+    <aside class="nostalgia-side">
+      <div class="nostalgia-side-box">
+        <div class="nostalgia-side-title">Sem pressa</div>
+        <p>
+          Sem algoritmo gritando.<br>
+          Sem competição invisível.<br>
+          Só pessoas e histórias reais.
+        </p>
+      </div>
+
+      <div class="nostalgia-side-box">
+        <div class="nostalgia-side-title">Um recado pode mudar o dia</div>
+        <p>
+          As melhores amizades começam com um “Olá!”.<br>
+          Deixe a KleinDream ser o começo de algo leve.
+        </p>
+      </div>
+    </aside>
   </div>
+
 ` }) %>

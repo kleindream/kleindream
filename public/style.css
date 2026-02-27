@@ -186,3 +186,107 @@ hr{ border:0; border-top:1px solid var(--border); margin:10px 0; }
   font-weight: 900;
   cursor: pointer;
 }
+
+
+/* KleinDream Home Nostalgia */
+.nostalgia-grid{
+  display:flex;
+  gap:18px;
+  align-items:flex-start;
+}
+.nostalgia-side{
+  width:210px;
+  flex:0 0 210px;
+  opacity:0.95;
+}
+.nostalgia-side-box{
+  background: var(--panel2);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+.nostalgia-side-title{
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .2px;
+  margin-bottom: 6px;
+  color: var(--accent);
+}
+.nostalgia-side p{
+  font-size: 11px;
+  line-height: 1.55;
+  margin: 8px 0;
+  color: var(--muted);
+}
+.nostalgia-center{
+  flex:1;
+  min-width: 0;
+}
+.nostalgia-card{
+  padding: 18px;
+}
+.nostalgia-title{
+  font-size: 26px;
+  font-weight: 900;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.nostalgia-lead{
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text);
+  margin: 0 0 14px 0;
+}
+.nostalgia-sections{
+  margin-top: 8px;
+}
+.nostalgia-section{
+  padding: 10px 0;
+  border-top: 1px solid rgba(255,255,255,.06);
+}
+.nostalgia-section:first-child{
+  border-top: none;
+  padding-top: 0;
+}
+.nostalgia-h2{
+  font-size: 13px;
+  font-weight: 800;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+.nostalgia-section p{
+  font-size: 12px;
+  line-height: 1.65;
+  color: var(--muted);
+  margin: 0;
+}
+.nostalgia-actions{
+  display:flex;
+  gap:12px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+.nostalgia-bottom{
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.03);
+  border-radius: 14px;
+  padding: 14px;
+}
+.nostalgia-bottom p{
+  font-size: 12px;
+  line-height: 1.65;
+  color: var(--muted);
+  margin: 8px 0 0 0;
+}
+.nostalgia-small{
+  font-size: 11px !important;
+  opacity: .95;
+}
+
+@media (max-width: 980px){
+  .nostalgia-grid{flex-direction: column;}
+  .nostalgia-side{width:100%; flex: 0 0 auto;}
+}
