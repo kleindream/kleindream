@@ -20,7 +20,7 @@
         <div class="grid">
           ${photos.length ? photos.map(p => `
             <div class="card" style="margin-top: 10px;">
-              <img src="${p.url}" alt="${p.title}" class="photo" />
+              <img src="${p.url}" alt="${p.title}" class="photo kd-zoom" />
               <div style="text-align: center; color: var(--text);">${p.title}</div>
             </div>
           `).join('') : `<p style="color: var(--muted);">Ainda não há fotos. Adicione algumas para começar a compartilhar suas memórias!</p>`}

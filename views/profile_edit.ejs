@@ -1,10 +1,23 @@
 <%- include("layout", { title: "Editar perfil", body: `
   <div class="card">
     <div class="h">Editar perfil</div>
+        <div class="card" style="margin-top:10px;">
+          <div class="h" style="margin-bottom:8px;">Foto de perfil</div>
+          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+            <div>
+              ${me.profile_photo ? `<img src="/uploads/${me.profile_photo}" class="avatar kd-zoom" alt="Foto de perfil" style="width:96px;height:96px;border-radius:14px;object-fit:cover;" />` : `<div class="avatar" style="width:96px;height:96px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:var(--panel2);color:var(--muted);font-weight:800;">Sem foto</div>`}
+            </div>
+            <div style="flex:1;min-width:220px;">
+              <label class="small">Enviar nova foto</label>
+              <input type="file" name="profile_photo" accept="image/*" />
+              <div class="small" style="margin-top:6px;opacity:.9;">Dica: clique numa foto para ampliar.</div>
+            </div>
+          </div>
+        </div>
     ${error ? `<div class="card" style="border-color:#6b2033;background:#2a0a12;">${error}</div>` : ""}
     ${ok ? `<div class="card" style="border-color:#1e5f2b;background:#0b2411;">${ok}</div>` : ""}
 
-    <form method="post" action="/profile/edit">
+    <form method="post" action="/profile/edit" enctype="multipart/form-data">
       <div class="h" style="margin-top:0">Básico</div>
 
       <label class="small">Nome completo</label>

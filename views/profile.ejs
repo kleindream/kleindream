@@ -3,7 +3,8 @@
     <div>
       <div class="card">
         <div class="h">Perfil</div>
-        <div style="font-size:18px;font-weight:bold;">${user.username}</div>
+        ${user.profile_photo ? `<img src="/uploads/${user.profile_photo}" alt="Foto de perfil" class="kd-zoom" style="width:140px;height:140px;border-radius:18px;object-fit:cover;display:block;margin:0 auto 10px auto;border:1px solid rgba(255,255,255,.08);" />` : `<div style="width:140px;height:140px;border-radius:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px auto;background:var(--panel2);color:var(--muted);font-weight:900;">Sem foto</div>`}
+        <div style="font-size:18px;font-weight:bold;text-align:center;">${user.username}</div>
         <div class="small">${user.full_name || ""}</div>
         <hr/>
         <div class="kv">

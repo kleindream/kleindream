@@ -189,7 +189,7 @@ app.get("/profile/edit", requireAuth, (req, res) => {
   res.render("profile_edit", { me, error: null, ok: null });
 });
 
-app.post("/profile/edit", requireAuth, (req, res) => {
+app.post("/profile/edit", requireAuth, upload.single("profile_photo"), (req, res) => {
   const meId = req.session.userId;
   const {
     full_name, bio, city, state,
@@ -212,7 +212,13 @@ app.post("/profile/edit", requireAuth, (req, res) => {
       meId
     );
 
-  res.render("profile_edit", { me: getUserById(meId), error: null, ok: "Perfil atualizado." });
+
+  // Se enviou foto, atualiza profile_photo
+  if (req.file && req.file.filename) {
+    db.prepare("UPDATE users SET profile_photo=? WHERE id=?").run(req.file.filename, meId);
+  }
+
+    res.render("profile_edit", { me: getUserById(meId), error: null, ok: "Perfil atualizado." });
 });
 
 // ===== AMIZADES =====

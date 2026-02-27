@@ -21,6 +21,7 @@ function init() {
       bio TEXT,
       city TEXT,
       state TEXT,
+      profile_photo TEXT,
 
       birth_date TEXT,
       marital_status TEXT,
@@ -162,6 +163,7 @@ function init() {
     ["looking_for", "TEXT"],
     ["mood", "TEXT"],
     ["daily_phrase", "TEXT"],
+    ["profile_photo", "TEXT"],
   ];
 
   for (const [name, type] of extraCols) {

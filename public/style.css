@@ -145,3 +145,44 @@ hr{ border:0; border-top:1px solid var(--border); margin:10px 0; }
   border-radius:10px;
   border:1px solid var(--border);
 }
+
+
+/* ===== Foto: ampliar (modal) ===== */
+.kd-zoom { cursor: zoom-in; }
+.kd-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.78);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 9999;
+}
+.kd-modal.open { display: flex; }
+.kd-modal .inner {
+  position: relative;
+  max-width: min(980px, 96vw);
+  max-height: 90vh;
+}
+.kd-modal img {
+  max-width: 100%;
+  max-height: 90vh;
+  border-radius: 16px;
+  display: block;
+  object-fit: contain;
+  background: rgba(255,255,255,.04);
+}
+.kd-modal .close {
+  position: absolute;
+  top: -14px;
+  right: -14px;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(20,24,40,.95);
+  color: #fff;
+  font-weight: 900;
+  cursor: pointer;
+}
