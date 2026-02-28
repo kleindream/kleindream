@@ -1,23 +1,488 @@
+<!-- KLEINDREAM /HOME - CONTEÚDO COMPLETO -->
+<style>
+  :root{
+    --kd-bg: #0b1a33;
+    --kd-bg2:#0f2347;
+    --kd-panel:#102a55;
+    --kd-panel2:#0d2346;
+    --kd-border: rgba(255,255,255,.10);
+    --kd-text: rgba(255,255,255,.92);
+    --kd-muted: rgba(255,255,255,.72);
+    --kd-faint: rgba(255,255,255,.58);
+    --kd-accent:#77b6ff;
+    --kd-accent2:#9ad1ff;
+    --kd-link:#bfe0ff;
+    --kd-shadow: 0 18px 60px rgba(0,0,0,.35);
+  }
 
-<%- include("layout", { title: "Início", body: `  
-  <div class="grid">
-    <div>
-      <div class="card">
-        <div class="h" style="font-size: 2rem; font-weight: 900; color: var(--accent);">Atalhos para a diversão!</div>
-        <p style="font-size: 1.2rem; color: var(--text); font-style: italic;">Vamos reviver os melhores momentos! Clique em qualquer um dos atalhos abaixo para acessar seu perfil, recados e fotos — tudo ao estilo dos velhos tempos!</p>
-        <div class="row" style="gap:6px;">
-          <a class="button secondary" href="/u/${me.username}">Meu perfil</a>
-          <a class="button secondary" href="/scraps/${me.username}">Recados</a>
-          <a class="button secondary" href="/testimonials/${me.username}">Depoimentos</a>
-          <a class="button secondary" href="/photos/${me.username}">Fotos</a>
+  /* fundo ocupando a tela de forma agradável em 1366x768 */
+  .kd-home-wrap{
+    background:
+      radial-gradient(1200px 600px at 10% 10%, rgba(119,182,255,.18), transparent 55%),
+      radial-gradient(900px 500px at 90% 20%, rgba(154,209,255,.14), transparent 60%),
+      radial-gradient(1200px 700px at 50% 120%, rgba(119,182,255,.10), transparent 60%),
+      linear-gradient(180deg, var(--kd-bg) 0%, var(--kd-bg2) 55%, #09162c 100%);
+    color: var(--kd-text);
+    min-height: calc(100vh - 0px);
+    padding: 26px 0 44px;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  }
+
+  .kd-container{
+    max-width: 1120px;   /* ótimo para 1366x768 */
+    margin: 0 auto;
+    padding: 0 18px;
+  }
+
+  .kd-hero{
+    display: grid;
+    grid-template-columns: 1.15fr .85fr;
+    gap: 16px;
+    align-items: stretch;
+    margin-bottom: 18px;
+  }
+
+  .kd-card{
+    background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    border: 1px solid var(--kd-border);
+    border-radius: 22px;
+    box-shadow: var(--kd-shadow);
+    padding: 18px 18px;
+    backdrop-filter: blur(10px);
+  }
+
+  .kd-hero h1{
+    margin: 0 0 10px;
+    font-size: 38px;
+    line-height: 1.05;
+    letter-spacing: -0.8px;
+    font-weight: 900;
+  }
+
+  .kd-hero p{
+    margin: 0 0 14px;
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--kd-muted);
+  }
+
+  .kd-badges{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin: 12px 0 14px;
+  }
+
+  .kd-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding: 8px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--kd-border);
+    background: rgba(0,0,0,.16);
+    font-size: 12.5px;
+    color: var(--kd-muted);
+  }
+
+  .kd-dot{
+    width:8px;height:8px;border-radius:999px;
+    background: var(--kd-accent);
+    box-shadow: 0 0 0 4px rgba(119,182,255,.18);
+  }
+
+  .kd-cta{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top: 12px;
+  }
+
+  .kd-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding: 11px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,.18);
+    background: rgba(119,182,255,.18);
+    color: var(--kd-text);
+    text-decoration:none;
+    font-weight: 800;
+    letter-spacing:.2px;
+    transition: transform .08s ease, background .12s ease, border-color .12s ease;
+  }
+  .kd-btn:hover{ transform: translateY(-1px); background: rgba(119,182,255,.24); border-color: rgba(255,255,255,.26); }
+  .kd-btn.secondary{
+    background: rgba(0,0,0,.14);
+    color: var(--kd-link);
+  }
+
+  .kd-mini{
+    font-size: 12.5px;
+    color: var(--kd-faint);
+    line-height: 1.55;
+    margin-top: 10px;
+  }
+
+  .kd-side{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+
+  .kd-side h2{
+    margin:0 0 8px;
+    font-size: 16px;
+    letter-spacing: .2px;
+    font-weight: 900;
+  }
+
+  .kd-list{
+    margin:0;
+    padding:0;
+    list-style:none;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+
+  .kd-li{
+    padding: 10px 12px;
+    border-radius: 16px;
+    border: 1px solid var(--kd-border);
+    background: rgba(0,0,0,.14);
+  }
+  .kd-li b{ color: var(--kd-accent2); }
+  .kd-li span{ color: var(--kd-muted); font-size: 13px; line-height:1.45; display:block; margin-top:4px; }
+
+  .kd-section{
+    margin-top: 14px;
+  }
+
+  .kd-section h3{
+    margin: 0 0 10px;
+    font-size: 22px;
+    letter-spacing: -0.3px;
+    font-weight: 900;
+  }
+
+  .kd-sub{
+    margin: 0 0 14px;
+    color: var(--kd-muted);
+    line-height: 1.65;
+    font-size: 14.5px;
+  }
+
+  .kd-grid{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .kd-feature{
+    padding: 14px 14px;
+    border-radius: 18px;
+    border: 1px solid var(--kd-border);
+    background: rgba(0,0,0,.12);
+  }
+  .kd-feature h4{
+    margin: 0 0 6px;
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing:.2px;
+    color: var(--kd-accent2);
+  }
+  .kd-feature p{
+    margin:0;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--kd-muted);
+  }
+
+  .kd-two{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .kd-quote{
+    margin: 0;
+    padding: 14px 14px;
+    border-radius: 18px;
+    border: 1px solid rgba(119,182,255,.22);
+    background: rgba(119,182,255,.10);
+    color: rgba(255,255,255,.86);
+    line-height: 1.6;
+    font-size: 14px;
+  }
+  .kd-quote small{
+    display:block;
+    margin-top: 8px;
+    color: var(--kd-faint);
+    font-size: 12.5px;
+  }
+
+  .kd-divider{
+    height: 1px;
+    background: rgba(255,255,255,.10);
+    margin: 16px 0;
+  }
+
+  .kd-longtext{
+    color: var(--kd-muted);
+    line-height: 1.75;
+    font-size: 14.5px;
+  }
+  .kd-longtext b{ color: rgba(255,255,255,.92); }
+  .kd-longtext em{ color: rgba(191,224,255,.92); font-style: normal; }
+
+  .kd-callout{
+    padding: 16px 16px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,.16);
+    background: linear-gradient(180deg, rgba(0,0,0,.16), rgba(0,0,0,.10));
+  }
+  .kd-callout h4{
+    margin:0 0 8px;
+    font-size: 16px;
+    font-weight: 950;
+    letter-spacing: .2px;
+  }
+  .kd-callout p{
+    margin:0;
+    color: var(--kd-muted);
+    line-height: 1.6;
+    font-size: 13.5px;
+  }
+
+  .kd-footer-cta{
+    margin-top: 14px;
+    display:flex;
+    flex-wrap:wrap;
+    gap: 10px;
+    align-items:center;
+    justify-content: space-between;
+  }
+
+  .kd-footer-cta .kd-mini{
+    margin:0;
+  }
+
+  /* responsivo */
+  @media (max-width: 980px){
+    .kd-hero{ grid-template-columns: 1fr; }
+    .kd-grid{ grid-template-columns: 1fr; }
+    .kd-two{ grid-template-columns: 1fr; }
+    .kd-hero h1{ font-size: 34px; }
+  }
+</style>
+
+<div class="kd-home-wrap">
+  <div class="kd-container">
+
+    <!-- HERO -->
+    <div class="kd-hero">
+      <div class="kd-card">
+        <h1>Klein Dream</h1>
+        <p>
+          Uma rede social com alma de internet antiga — mas com base moderna e estável.
+          Aqui você não compete por atenção. Você constrói presença, história e conexão.
+        </p>
+
+        <div class="kd-badges">
+          <div class="kd-badge"><span class="kd-dot"></span> Sem algoritmo sufocando</div>
+          <div class="kd-badge"><span class="kd-dot"></span> Perfil completo e humano</div>
+          <div class="kd-badge"><span class="kd-dot"></span> Nostalgia com estrutura real</div>
+        </div>
+
+        <div class="kd-cta">
+          <a class="kd-btn" href="/cadastrar">Criar minha conta</a>
+          <a class="kd-btn secondary" href="/entrar">Entrar</a>
+          <a class="kd-btn secondary" href="/explorar">Explorar perfis</a>
+        </div>
+
+        <div class="kd-mini">
+          Dica: esta rede foi feita para lembrar a internet que você sente falta — e para funcionar sem sumir dados, sem apagar fotos e sem “recomeçar do zero”.
+        </div>
+      </div>
+
+      <div class="kd-side">
+        <div class="kd-card">
+          <h2>O que você pode fazer agora</h2>
+          <ul class="kd-list">
+            <li class="kd-li">
+              <b>Perfil com foto</b>
+              <span>Crie seu perfil, coloque sua foto de perfil e mostre quem você é.</span>
+            </li>
+            <li class="kd-li">
+              <b>Até 6 fotos no álbum</b>
+              <span>Guarde lembranças, estilo “internet de antigamente”, com limite clássico.</span>
+            </li>
+            <li class="kd-li">
+              <b>Recados e depoimentos</b>
+              <span>Deixe mensagens públicas e depoimentos que você aprova ou rejeita.</span>
+            </li>
+            <li class="kd-li">
+              <b>Amizades e comunidades</b>
+              <span>Adicione amigos e participe de comunidades com tópicos de verdade.</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="kd-card kd-callout">
+          <h4>Por que isso importa?</h4>
+          <p>
+            Porque a internet virou barulho. A Klein Dream é um retorno à calma:
+            menos disputa, mais conversa, mais perfil, mais identidade.
+          </p>
         </div>
       </div>
     </div>
-    <div>
-      <div class="card" style="background: var(--panel2);">
-        <div class="h" style="font-size: 2rem; font-weight: 900; color: var(--accent);">Bem-vindo de volta!</div>
-        <p style="font-size: 1.2rem; color: var(--text);">A nostalgia está no ar! Vamos aproveitar para curtir as boas memórias e deixar as novas começarem? Não esqueça de compartilhar seu estilo com a galera!</p>
+
+    <!-- FEATURES -->
+    <div class="kd-card kd-section">
+      <h3>Recursos em funcionamento</h3>
+      <p class="kd-sub">
+        Esta não é uma promessa vaga: a Klein Dream já permite interações reais. Você entra, monta seu perfil e vive a rede.
+      </p>
+
+      <div class="kd-grid">
+        <div class="kd-feature">
+          <h4>Perfis completos</h4>
+          <p>Nome, bio, cidade/estado, gostos e identidade. Aqui o perfil importa.</p>
+        </div>
+        <div class="kd-feature">
+          <h4>Foto de perfil</h4>
+          <p>Envie e salve sua imagem sem depender do servidor (persistente no Storage).</p>
+        </div>
+        <div class="kd-feature">
+          <h4>Álbum com 6 fotos</h4>
+          <p>Um limite clássico, com espaço suficiente para memória sem virar “spam de galeria”.</p>
+        </div>
+        <div class="kd-feature">
+          <h4>Recados</h4>
+          <p>Mensagens públicas, simples, diretas — como era pra ser.</p>
+        </div>
+        <div class="kd-feature">
+          <h4>Depoimentos</h4>
+          <p>Escreva, receba, aprove ou rejeite. Depoimento bom é consentido.</p>
+        </div>
+        <div class="kd-feature">
+          <h4>Amigos & Comunidades</h4>
+          <p>Conexões e tópicos. Comunidade boa é conversa com tema e continuidade.</p>
+        </div>
+      </div>
+
+      <div class="kd-divider"></div>
+
+      <div class="kd-two">
+        <blockquote class="kd-quote">
+          “A internet era azul. E a gente conversava mais do que postava.”
+          <small>— Um pensamento que muita gente reconhece na hora</small>
+        </blockquote>
+        <blockquote class="kd-quote">
+          “Não é sobre voltar no tempo. É sobre recuperar a humanidade que se perdeu.”
+          <small>— A proposta da Klein Dream</small>
+        </blockquote>
       </div>
     </div>
+
+    <!-- NOSTALGIA LONG -->
+    <div class="kd-card kd-section">
+      <h3>Quando entrar na internet era um evento</h3>
+      <p class="kd-sub">
+        Antes do mundo virar feed infinito, a internet era descoberta. Você entrava com intenção, curiosidade e um pouquinho de coragem.
+      </p>
+
+      <div class="kd-longtext">
+        <p>
+          Houve um tempo em que abrir o navegador era como abrir uma porta para um outro universo.
+          O som da conexão discada, o telefone ocupado, o modem “cantando” como se estivesse fazendo um ritual.
+          E quando finalmente conectava… parecia que você tinha vencido uma fase secreta da vida.
+        </p>
+
+        <p>
+          <b>Antes do Google</b>, a gente se virava como dava. Existia o <em>Cadê?</em>, existia tentativa e erro,
+          existia aquele jeito antigo de pesquisar com paciência, abrindo resultado por resultado.
+          A internet não vinha pronta: você montava a sua internet com os seus links, com seus favoritos,
+          com seus hábitos e com as páginas que você descobria na raça.
+        </p>
+
+        <p>
+          Aí tinha o <b>ICQ</b>… aquele “Uh-oh!” que mudava o humor do dia.
+          Você deixava aberto, esperando alguém aparecer. E quando aparecia, era presença real:
+          conversar era um compromisso, não um impulso.
+        </p>
+
+        <p>
+          Depois veio o <b>MSN Messenger</b>. O nick era poesia, era indireta, era música.
+          O status era um recado para o mundo.
+          E quando alguém ficava “Online”, você sentia aquele frio na barriga —
+          como quem vê uma pessoa chegando de verdade.
+        </p>
+
+        <p>
+          E então existiu uma fase em que a internet parecia um bairro:
+          <b>Orkut</b>, comunidades, tópicos, depoimentos, recados.
+          Você visitava perfis, deixava uma frase curta, e isso era suficiente.
+          Não existia algoritmo empurrando o que “deveria” ser importante.
+          Você decidia o que queria ver.
+        </p>
+
+        <p>
+          Os <b>fóruns</b> eram a universidade informal.
+          A gente aprendia lendo, perguntando, errando, respondendo.
+          Era normal esperar uma resposta. Era normal aprofundar um assunto por páginas e páginas.
+          Ali nascia conhecimento, nascia amizade, nascia respeito.
+        </p>
+
+        <p>
+          E quem viveu sabe: teve a fase do <b>Fotolog</b>, do <b>Flogão</b>…
+          Uma foto por dia, uma legenda pensada, comentários de verdade.
+          Não era sobre performance. Era sobre memória.
+        </p>
+
+        <div class="kd-divider"></div>
+
+        <p>
+          No computador, o clima também era outro.
+          O <b>Windows</b> não era “minimalista”, ele era colorido, pesado, cheio de personalidade.
+          E antes disso, tinha a tela preta do <b>MS-DOS</b>… o cursor piscando,
+          como se dissesse: “Agora é com você.”
+        </p>
+
+        <p>
+          Tinha gente que aprendeu na marra o valor de um comando simples:
+          <em>dir</em>, <em>cd</em>, e aquela sensação de domínio quando você entendia o caminho das pastas.
+          Era um tempo em que tecnologia exigia presença — e por isso virava parte da nossa história.
+        </p>
+
+        <p>
+          A Klein Dream nasce desse sentimento: não para “copiar” o passado,
+          mas para recuperar o que ele tinha de melhor:
+          <b>calma, profundidade, perfil, conversa, comunidade, identidade</b>.
+        </p>
+
+        <p>
+          Se você sente falta de quando a internet era mais humana e menos caótica…
+          se você sente falta de quando as pessoas escreviam mais e gritavam menos…
+          então talvez você já tenha encontrado um lugar pra chamar de “casa”.
+        </p>
+      </div>
+
+      <div class="kd-divider"></div>
+
+      <div class="kd-footer-cta">
+        <div class="kd-mini">
+          Pronto(a) para voltar a ter uma internet com cara de gente? 💙
+        </div>
+        <div class="kd-cta">
+          <a class="kd-btn" href="/cadastrar">Criar conta</a>
+          <a class="kd-btn secondary" href="/entrar">Entrar</a>
+        </div>
+      </div>
+    </div>
+
   </div>
-` }) %>
+</div>
