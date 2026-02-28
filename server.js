@@ -2,12 +2,11 @@ const path = require("path");
 const fs = require("fs");
 const express = require("express");
 const session = require("express-session");
-const SQLiteStore = require("connect-sqlite3")(session);
+const PgSession = require("connect-pg-simple")(session);
 const bcrypt = require("bcryptjs");
 const multer = require("multer");
 
-const { db, init } = require("./db");
-init();
+const { db, init, pool } = require("./db");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -25,7 +24,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
 app.use(
   session({
-    store: new SQLiteStore({ db: "sessions.sqlite", dir: "./data" }),
+    store: new PgSession({ pool, tableName: "session", createTableIfMissing: true }),
     secret: process.env.SESSION_SECRET || "kleindream_dev_secret",
     resave: false,
     saveUninitialized: false
@@ -33,8 +32,8 @@ app.use(
 );
 
 // Helpers
-function getUserById(id) {
-  return db.prepare("SELECT id, email, username, full_name, bio, city, state, birth_date, marital_status, favorite_team, profession, hobbies, favorite_music, favorite_movie, favorite_game, personality, looking_for, mood, daily_phrase, created_at FROM users WHERE id=?").get(id);
+async function getUserById(id) {
+  return await db.get("SELECT id, email, username, full_name, bio, city, state, birth_date, marital_status, favorite_team, profession, hobbies, favorite_music, favorite_movie, favorite_game, personality, looking_for, mood, daily_phrase, created_at FROM users WHERE id=?", [id]);
 }
 
 function requireAuth(req, res, next) {
@@ -42,18 +41,20 @@ function requireAuth(req, res, next) {
   next();
 }
 
-function addNotif(userId, type, text, link = null) {
-  db.prepare("INSERT INTO notifications (user_id, type, text, link) VALUES (?,?,?,?)").run(userId, type, text, link);
+async function addNotif(userId, type, text, link = null) {
+  await db.run("INSERT INTO notifications (user_id, type, text, link) VALUES (?,?,?,?)", [userId, type, text, link]);
 }
 
-app.use((req, res, next) => {
-  res.locals.me = req.session.userId ? getUserById(req.session.userId) : null;
+app.use(async (req, res, next) => {
+  try {
+  res.locals.me = req.session.userId ? await getUserById(req.session.userId) : null;
   if (req.session.userId) {
-    const notifs = db.prepare("SELECT * FROM notifications WHERE user_id=? AND is_read=0 ORDER BY created_at DESC LIMIT 20").all(req.session.userId);
+    const notifs = await db.all("SELECT * FROM notifications WHERE user_id=? AND is_read=0 ORDER BY created_at DESC LIMIT 20", [req.session.userId]);
     res.locals.notifCount = notifs.length;
   } else {
     res.locals.notifCount = 0;
   }
+  } catch (err) { return next(err); }
   next();
 });
 
@@ -71,29 +72,29 @@ const upload = multer({
 });
 
 // ===== ROTAS PÚBLICAS =====
-app.get("/", (req, res) => res.render("index"));
+app.get("/", async (req, res) => res.render("index"));
 
-app.get("/register", (req, res) => res.render("register", { error: null }));
-app.post("/register", (req, res) => {
+app.get("/register", async (req, res) => res.render("register", { error: null }));
+app.post("/register", async (req, res) => {
   const { email, username, password, full_name } = req.body;
 
   if (!email || !username || !password) return res.render("register", { error: "Preencha e-mail, usuário e senha." });
   if (password.length < 4) return res.render("register", { error: "Senha muito curta (mínimo 4)." });
 
-  const exists = db.prepare("SELECT 1 FROM users WHERE email=? OR username=?").get(email, username);
+  const exists = await db.get("SELECT 1 FROM users WHERE email=? OR username=?", [email, username]);
   if (exists) return res.render("register", { error: "E-mail ou usuário já existe." });
 
   const hash = bcrypt.hashSync(password, 10);
-  const info = db.prepare("INSERT INTO users (email, username, password_hash, full_name) VALUES (?,?,?,?)").run(email, username, hash, full_name || null);
+  const info = await db.run("INSERT INTO users (email, username, password_hash, full_name) VALUES (?,?,?,?) RETURNING id", [email, username, hash, full_name || null]);
 
-  req.session.userId = info.lastInsertRowid;
+  req.session.userId = info.rows[0].id;
   res.redirect("/home");
 });
 
-app.get("/login", (req, res) => res.render("login", { error: null }));
-app.post("/login", (req, res) => {
+app.get("/login", async (req, res) => res.render("login", { error: null }));
+app.post("/login", async (req, res) => {
   const { usernameOrEmail, password } = req.body;
-  const user = db.prepare("SELECT * FROM users WHERE email=? OR username=?").get(usernameOrEmail, usernameOrEmail);
+  const user = await db.get("SELECT * FROM users WHERE email=? OR username=?", [usernameOrEmail, usernameOrEmail]);
   if (!user) return res.render("login", { error: "Usuário não encontrado." });
 
   const ok = bcrypt.compareSync(password || "", user.password_hash);
@@ -103,93 +104,93 @@ app.post("/login", (req, res) => {
   res.redirect("/home");
 });
 
-app.post("/logout", (req, res) => {
+app.post("/logout", async (req, res) => {
   req.session.destroy(() => res.redirect("/"));
 });
 
 // ===== HOME =====
-app.get("/home", requireAuth, (req, res) => {
+app.get("/home", requireAuth, async (req, res) => {
   const meId = req.session.userId;
 
-  const incomingRequests = db.prepare(`
+  const incomingRequests = await db.all(`
     SELECT fr.id, u.id AS user_id, u.username, u.full_name
     FROM friend_requests fr
     JOIN users u ON u.id = fr.from_user_id
     WHERE fr.to_user_id=? AND fr.status='pending'
     ORDER BY fr.created_at DESC
-  `).all(meId);
+  `, [meId]);
 
-  const pendingTestimonials = db.prepare(`
+  const pendingTestimonials = await db.all(`
     SELECT t.id, u.id AS user_id, u.username, u.full_name, t.created_at
     FROM testimonials t
     JOIN users u ON u.id = t.from_user_id
     WHERE t.to_user_id=? AND t.status='pending'
     ORDER BY t.created_at DESC
-  `).all(meId);
+  `, [meId]);
 
-  const unreadMessages = db.prepare(`
+  const unreadMessages = await db.all(`
     SELECT m.id, u.username AS from_username, m.subject, m.created_at
     FROM messages m
     JOIN users u ON u.id = m.from_user_id
     WHERE m.to_user_id=? AND m.is_read=0
     ORDER BY m.created_at DESC
     LIMIT 10
-  `).all(meId);
+  `, [meId]);
 
-  const latestScraps = db.prepare(`
+  const latestScraps = await db.all(`
     SELECT s.id, s.content, s.created_at, u.username AS from_username, u.id AS from_id
     FROM scraps s
     JOIN users u ON u.id = s.from_user_id
     WHERE s.to_user_id=?
     ORDER BY s.created_at DESC
     LIMIT 10
-  `).all(meId);
+  `, [meId]);
 
   res.render("home", { incomingRequests, pendingTestimonials, unreadMessages, latestScraps });
 });
 
 // ===== PERFIL =====
-app.get("/u/:username", requireAuth, (req, res) => {
+app.get("/u/:username", requireAuth, async (req, res) => {
   const meId = req.session.userId;
-  const user = db.prepare("SELECT id, username, full_name, bio, city, state, birth_date, marital_status, favorite_team, profession, hobbies, favorite_music, favorite_movie, favorite_game, personality, looking_for, mood, daily_phrase, created_at FROM users WHERE username=?").get(req.params.username);
+  const user = await db.get("SELECT id, username, full_name, bio, city, state, birth_date, marital_status, favorite_team, profession, hobbies, favorite_music, favorite_movie, favorite_game, personality, looking_for, mood, daily_phrase, created_at FROM users WHERE username=?", [req.params.username]);
   if (!user) return res.status(404).send("Usuário não encontrado.");
 
   const isMe = user.id === meId;
 
-  const friend = db.prepare("SELECT 1 FROM friendships WHERE user_id=? AND friend_id=?").get(meId, user.id);
+  const friend = await db.get("SELECT 1 FROM friendships WHERE user_id=? AND friend_id=?", [meId, user.id]);
 
-  const reqOut = db.prepare("SELECT status FROM friend_requests WHERE from_user_id=? AND to_user_id=?").get(meId, user.id);
-  const reqIn = db.prepare("SELECT status FROM friend_requests WHERE from_user_id=? AND to_user_id=?").get(user.id, meId);
+  const reqOut = await db.get("SELECT status FROM friend_requests WHERE from_user_id=? AND to_user_id=?", [meId, user.id]);
+  const reqIn = await db.get("SELECT status FROM friend_requests WHERE from_user_id=? AND to_user_id=?", [user.id, meId]);
 
-  const scraps = db.prepare(`
+  const scraps = await db.all(`
     SELECT s.id, s.content, s.created_at, u.username AS from_username
     FROM scraps s
     JOIN users u ON u.id = s.from_user_id
     WHERE s.to_user_id=?
     ORDER BY s.created_at DESC
     LIMIT 20
-  `).all(user.id);
+  `, [user.id]);
 
-  const testimonials = db.prepare(`
+  const testimonials = await db.all(`
     SELECT t.id, t.content, t.created_at, u.username AS from_username
     FROM testimonials t
     JOIN users u ON u.id = t.from_user_id
     WHERE t.to_user_id=? AND t.status='approved'
     ORDER BY t.created_at DESC
     LIMIT 20
-  `).all(user.id);
+  `, [user.id]);
 
-  const friendsCount = db.prepare("SELECT COUNT(*) AS c FROM friendships WHERE user_id=?").get(user.id).c;
+  const friendsCount = await db.get("SELECT COUNT(*) AS c FROM friendships WHERE user_id=?", [user.id]).c;
 
   res.render("profile", { user, isMe, friend: !!friend, reqOut, reqIn, scraps, testimonials, friendsCount });
 });
 
-app.get("/profile/edit", requireAuth, (req, res) => {
-  const me = getUserById(req.session.userId);
+app.get("/profile/edit", requireAuth, async (req, res) => {
+  const me = await getUserById(req.session.userId);
   res.render("profile_edit", { me, error: null, ok: null });
 });
 
-app.post("/profile/edit", requireAuth, upload.single("profile_photo"), (req, res) => {
+app.post("/profile/edit", requireAuth, upload.single("profile_photo"), async (req, res) => {
   const meId = req.session.userId;
   const {
     full_name, bio, city, state,
@@ -198,420 +199,413 @@ app.post("/profile/edit", requireAuth, upload.single("profile_photo"), (req, res
     personality, looking_for, mood, daily_phrase
   } = req.body;
 
-  db.prepare(`UPDATE users SET
+  await db.run(`UPDATE users SET
       full_name=?, bio=?, city=?, state=?,
       birth_date=?, marital_status=?, favorite_team=?, profession=?,
       hobbies=?, favorite_music=?, favorite_movie=?, favorite_game=?,
       personality=?, looking_for=?, mood=?, daily_phrase=?
-    WHERE id=?`)
-      .run(
-      full_name || null, bio || null, city || null, state || null,
+    WHERE id=?`, [full_name || null, bio || null, city || null, state || null,
       birth_date || null, marital_status || null, favorite_team || null, profession || null,
       hobbies || null, favorite_music || null, favorite_movie || null, favorite_game || null,
       personality || null, looking_for || null, mood || null, daily_phrase || null,
-      meId
-    );
+      meId]);
 
 
   // Se enviou foto, atualiza profile_photo
   if (req.file && req.file.filename) {
-    db.prepare("UPDATE users SET profile_photo=? WHERE id=?").run(req.file.filename, meId);
+    await db.run("UPDATE users SET profile_photo=? WHERE id=?", [req.file.filename, meId]);
   }
 
-    res.render("profile_edit", { me: getUserById(meId), error: null, ok: "Perfil atualizado." });
+    res.render("profile_edit", { me: await getUserById(meId), error: null, ok: "Perfil atualizado." });
 });
 
 // ===== AMIZADES =====
-app.get("/friends", requireAuth, (req, res) => {
+app.get("/friends", requireAuth, async (req, res) => {
   const meId = req.session.userId;
 
-  const friends = db.prepare(`
+  const friends = await db.all(`
     SELECT u.id, u.username, u.full_name
     FROM friendships f
     JOIN users u ON u.id = f.friend_id
     WHERE f.user_id=?
     ORDER BY u.username
-  `).all(meId);
+  `, [meId]);
 
-  const incomingRequests = db.prepare(`
+  const incomingRequests = await db.all(`
     SELECT fr.id, u.id AS user_id, u.username, u.full_name, fr.created_at
     FROM friend_requests fr
     JOIN users u ON u.id = fr.from_user_id
     WHERE fr.to_user_id=? AND fr.status='pending'
     ORDER BY fr.created_at DESC
-  `).all(meId);
+  `, [meId]);
 
-  const outgoingRequests = db.prepare(`
+  const outgoingRequests = await db.all(`
     SELECT fr.id, u.id AS user_id, u.username, u.full_name, fr.status, fr.created_at
     FROM friend_requests fr
     JOIN users u ON u.id = fr.to_user_id
     WHERE fr.from_user_id=?
     ORDER BY fr.created_at DESC
-  `).all(meId);
+  `, [meId]);
 
   res.render("friends", { friends, incomingRequests, outgoingRequests });
 });
 
-app.post("/friends/request/:userId", requireAuth, (req, res) => {
+app.post("/friends/request/:userId", requireAuth, async (req, res) => {
   const meId = req.session.userId;
   const otherId = Number(req.params.userId);
   if (otherId === meId) return res.redirect("back");
 
-  const already = db.prepare("SELECT 1 FROM friendships WHERE user_id=? AND friend_id=?").get(meId, otherId);
+  const already = await db.get("SELECT 1 FROM friendships WHERE user_id=? AND friend_id=?", [meId, otherId]);
   if (already) return res.redirect("back");
 
   try {
-    db.prepare("INSERT INTO friend_requests (from_user_id, to_user_id) VALUES (?,?)").run(meId, otherId);
-    addNotif(otherId, "friend_request", "Você recebeu um pedido de amizade.", "/friends");
+    await db.run("INSERT INTO friend_requests (from_user_id, to_user_id) VALUES (?,?)", [meId, otherId]);
+    await addNotif(otherId, "friend_request", "Você recebeu um pedido de amizade.", "/friends");
   } catch (e) {}
   res.redirect("back");
 });
 
-app.post("/friends/accept/:requestId", requireAuth, (req, res) => {
+app.post("/friends/accept/:requestId", requireAuth, async (req, res) => {
   const meId = req.session.userId;
   const reqId = Number(req.params.requestId);
 
-  const fr = db.prepare("SELECT * FROM friend_requests WHERE id=? AND to_user_id=?").get(reqId, meId);
+  const fr = await db.get("SELECT * FROM friend_requests WHERE id=? AND to_user_id=?", [reqId, meId]);
   if (!fr) return res.redirect("/friends");
 
-  db.prepare("UPDATE friend_requests SET status='accepted' WHERE id=?").run(reqId);
+  await db.run("UPDATE friend_requests SET status='accepted' WHERE id=?", [reqId]);
 
-  db.prepare("INSERT OR IGNORE INTO friendships (user_id, friend_id) VALUES (?,?)").run(fr.from_user_id, fr.to_user_id);
-  db.prepare("INSERT OR IGNORE INTO friendships (user_id, friend_id) VALUES (?,?)").run(fr.to_user_id, fr.from_user_id);
+  await db.run("INSERT OR IGNORE INTO friendships (user_id, friend_id) VALUES (?,?)", [fr.from_user_id, fr.to_user_id]);
+  await db.run("INSERT OR IGNORE INTO friendships (user_id, friend_id) VALUES (?,?)", [fr.to_user_id, fr.from_user_id]);
 
-  addNotif(fr.from_user_id, "friend_accept", "Seu pedido de amizade foi aceito.", `/u/${getUserById(meId).username}`);
+  await addNotif(fr.from_user_id, "friend_accept", "Seu pedido de amizade foi aceito.", `/u/${(await getUserById(meId)).username}`);
   res.redirect("/friends");
 });
 
-app.post("/friends/reject/:requestId", requireAuth, (req, res) => {
+app.post("/friends/reject/:requestId", requireAuth, async (req, res) => {
   const meId = req.session.userId;
   const reqId = Number(req.params.requestId);
-  db.prepare("UPDATE friend_requests SET status='rejected' WHERE id=? AND to_user_id=?").run(reqId, meId);
+  await db.run("UPDATE friend_requests SET status='rejected' WHERE id=? AND to_user_id=?", [reqId, meId]);
   res.redirect("/friends");
 });
 
-app.post("/friends/remove/:userId", requireAuth, (req, res) => {
+app.post("/friends/remove/:userId", requireAuth, async (req, res) => {
   const meId = req.session.userId;
   const otherId = Number(req.params.userId);
-  db.prepare("DELETE FROM friendships WHERE (user_id=? AND friend_id=?) OR (user_id=? AND friend_id=?)")
-    .run(meId, otherId, otherId, meId);
+  await db.run("DELETE FROM friendships WHERE (user_id=? AND friend_id=?) OR (user_id=? AND friend_id=?)", [meId, otherId, otherId, meId]);
   res.redirect("/friends");
 });
 
 // ===== RECADOS =====
-app.get("/scraps/:username", requireAuth, (req, res) => {
-  const user = db.prepare("SELECT id, username, full_name FROM users WHERE username=?").get(req.params.username);
+app.get("/scraps/:username", requireAuth, async (req, res) => {
+  const user = await db.get("SELECT id, username, full_name FROM users WHERE username=?", [req.params.username]);
   if (!user) return res.status(404).send("Usuário não encontrado.");
 
-  const scraps = db.prepare(`
+  const scraps = await db.all(`
     SELECT s.id, s.content, s.created_at, u.username AS from_username, u.id AS from_id
     FROM scraps s
     JOIN users u ON u.id = s.from_user_id
     WHERE s.to_user_id=?
     ORDER BY s.created_at DESC
     LIMIT 100
-  `).all(user.id);
+  `, [user.id]);
 
   res.render("scraps", { user, scraps });
 });
 
-app.post("/scraps/:username", requireAuth, (req, res) => {
+app.post("/scraps/:username", requireAuth, async (req, res) => {
   const meId = req.session.userId;
   const { content } = req.body;
-  const to = db.prepare("SELECT id FROM users WHERE username=?").get(req.params.username);
+  const to = await db.get("SELECT id FROM users WHERE username=?", [req.params.username]);
   if (!to) return res.redirect("/home");
   if (!content || !content.trim()) return res.redirect(`/scraps/${req.params.username}`);
 
-  db.prepare("INSERT INTO scraps (from_user_id, to_user_id, content) VALUES (?,?,?)").run(meId, to.id, content.trim());
-  addNotif(to.id, "scrap", "Você recebeu um recado.", `/scraps/${req.params.username}`);
+  await db.run("INSERT INTO scraps (from_user_id, to_user_id, content) VALUES (?,?,?)", [meId, to.id, content.trim()]);
+  await addNotif(to.id, "scrap", "Você recebeu um recado.", `/scraps/${req.params.username}`);
   res.redirect(`/scraps/${req.params.username}`);
 });
 
 // ===== DEPOIMENTOS =====
-app.get("/testimonials/:username", requireAuth, (req, res) => {
+app.get("/testimonials/:username", requireAuth, async (req, res) => {
   const meId = req.session.userId;
-  const user = db.prepare("SELECT id, username, full_name FROM users WHERE username=?").get(req.params.username);
+  const user = await db.get("SELECT id, username, full_name FROM users WHERE username=?", [req.params.username]);
   if (!user) return res.status(404).send("Usuário não encontrado.");
 
-  const approved = db.prepare(`
+  const approved = await db.all(`
     SELECT t.id, t.content, t.created_at, u.username AS from_username
     FROM testimonials t
     JOIN users u ON u.id = t.from_user_id
     WHERE t.to_user_id=? AND t.status='approved'
     ORDER BY t.created_at DESC
-  `).all(user.id);
+  `, [user.id]);
 
   const pendingMine = (user.id === meId)
-    ? db.prepare(`
+    ? await db.all(`
         SELECT t.id, t.content, t.created_at, u.username AS from_username
         FROM testimonials t
         JOIN users u ON u.id = t.from_user_id
         WHERE t.to_user_id=? AND t.status='pending'
         ORDER BY t.created_at DESC
-      `).all(user.id)
+      `, [user.id])
     : [];
 
   res.render("testimonials", { user, approved, pendingMine });
 });
 
-app.post("/testimonials/:username", requireAuth, (req, res) => {
+app.post("/testimonials/:username", requireAuth, async (req, res) => {
   const meId = req.session.userId;
   const { content } = req.body;
-  const to = db.prepare("SELECT id FROM users WHERE username=?").get(req.params.username);
+  const to = await db.get("SELECT id FROM users WHERE username=?", [req.params.username]);
   if (!to) return res.redirect("/home");
   if (!content || !content.trim()) return res.redirect(`/testimonials/${req.params.username}`);
 
-  db.prepare("INSERT INTO testimonials (from_user_id, to_user_id, content) VALUES (?,?,?)")
-    .run(meId, to.id, content.trim());
+  await db.run("INSERT INTO testimonials (from_user_id, to_user_id, content) VALUES (?,?,?)", [meId, to.id, content.trim()]);
 
-  addNotif(to.id, "testimonial", "Você recebeu um depoimento para aprovar.", "/testimonials/" + req.params.username);
+  await addNotif(to.id, "testimonial", "Você recebeu um depoimento para aprovar.", "/testimonials/" + req.params.username);
   res.redirect(`/testimonials/${req.params.username}`);
 });
 
-app.post("/testimonials/approve/:id", requireAuth, (req, res) => {
+app.post("/testimonials/approve/:id", requireAuth, async (req, res) => {
   const meId = req.session.userId;
-  const t = db.prepare("SELECT * FROM testimonials WHERE id=? AND to_user_id=?").get(Number(req.params.id), meId);
+  const t = await db.get("SELECT * FROM testimonials WHERE id=? AND to_user_id=?", [Number(req.params.id), meId]);
   if (t) {
-    db.prepare("UPDATE testimonials SET status='approved' WHERE id=?").run(t.id);
-    addNotif(t.from_user_id, "testimonial_approved", "Seu depoimento foi aprovado.", `/u/${getUserById(meId).username}`);
+    await db.run("UPDATE testimonials SET status='approved' WHERE id=?", [t.id]);
+    await addNotif(t.from_user_id, "testimonial_approved", "Seu depoimento foi aprovado.", `/u/${(await getUserById(meId)).username}`);
   }
   res.redirect("back");
 });
 
-app.post("/testimonials/reject/:id", requireAuth, (req, res) => {
+app.post("/testimonials/reject/:id", requireAuth, async (req, res) => {
   const meId = req.session.userId;
-  db.prepare("UPDATE testimonials SET status='rejected' WHERE id=? AND to_user_id=?").run(Number(req.params.id), meId);
+  await db.run("UPDATE testimonials SET status='rejected' WHERE id=? AND to_user_id=?", [Number(req.params.id), meId]);
   res.redirect("back");
 });
 
 // ===== FOTOS / ÁLBUNS =====
-app.get("/photos/:username", requireAuth, (req, res) => {
-  const user = db.prepare("SELECT id, username, full_name FROM users WHERE username=?").get(req.params.username);
+app.get("/photos/:username", requireAuth, async (req, res) => {
+  const user = await db.get("SELECT id, username, full_name FROM users WHERE username=?", [req.params.username]);
   if (!user) return res.status(404).send("Usuário não encontrado.");
 
-  const albums = db.prepare("SELECT * FROM albums WHERE user_id=? ORDER BY created_at DESC").all(user.id);
-  const photos = db.prepare("SELECT * FROM photos WHERE user_id=? ORDER BY created_at DESC LIMIT 80").all(user.id);
+  const albums = await db.all("SELECT * FROM albums WHERE user_id=? ORDER BY created_at DESC", [user.id]);
+  const photos = await db.all("SELECT * FROM photos WHERE user_id=? ORDER BY created_at DESC LIMIT 80", [user.id]);
 
   res.render("photos", { user, albums, photos });
 });
 
-app.post("/albums/create", requireAuth, (req, res) => {
+app.post("/albums/create", requireAuth, async (req, res) => {
   const meId = req.session.userId;
   const title = (req.body.title || "").trim();
-  if (!title) return res.redirect(`/photos/${getUserById(meId).username}`);
-  db.prepare("INSERT INTO albums (user_id, title) VALUES (?,?)").run(meId, title);
-  res.redirect(`/photos/${getUserById(meId).username}`);
+  if (!title) return res.redirect(`/photos/${(await getUserById(meId)).username}`);
+  await db.run("INSERT INTO albums (user_id, title) VALUES (?,?)", [meId, title]);
+  res.redirect(`/photos/${(await getUserById(meId)).username}`);
 });
 
-app.post("/photos/upload/:albumId", requireAuth, upload.single("photo"), (req, res) => {
+app.post("/photos/upload/:albumId", requireAuth, upload.single("photo"), async (req, res) => {
   const meId = req.session.userId;
   const albumId = Number(req.params.albumId);
 
-  const album = db.prepare("SELECT * FROM albums WHERE id=? AND user_id=?").get(albumId, meId);
-  if (!album) return res.redirect(`/photos/${getUserById(meId).username}`);
+  const album = await db.get("SELECT * FROM albums WHERE id=? AND user_id=?", [albumId, meId]);
+  if (!album) return res.redirect(`/photos/${(await getUserById(meId)).username}`);
 
-  if (!req.file) return res.redirect(`/photos/${getUserById(meId).username}`);
+  if (!req.file) return res.redirect(`/photos/${(await getUserById(meId)).username}`);
 
   const caption = (req.body.caption || "").trim();
-  db.prepare("INSERT INTO photos (album_id, user_id, filename, caption) VALUES (?,?,?,?)")
-    .run(albumId, meId, req.file.filename, caption || null);
+  await db.run("INSERT INTO photos (album_id, user_id, filename, caption) VALUES (?,?,?,?)", [albumId, meId, req.file.filename, caption || null]);
 
-  res.redirect(`/photos/${getUserById(meId).username}`);
+  res.redirect(`/photos/${(await getUserById(meId)).username}`);
 });
 
 // ===== GRUPOS =====
-app.get("/groups", requireAuth, (req, res) => {
+app.get("/groups", requireAuth, async (req, res) => {
   const meId = req.session.userId;
 
-  const groups = db.prepare(`
+  const groups = await db.all(`
     SELECT g.*, (SELECT COUNT(*) FROM group_members gm WHERE gm.group_id=g.id) AS members
     FROM groups g
     ORDER BY g.created_at DESC
     LIMIT 200
-  `).all();
+  `, []);
 
-  const myGroups = db.prepare(`
+  const myGroups = await db.all(`
     SELECT g.*
     FROM group_members gm
     JOIN groups g ON g.id = gm.group_id
     WHERE gm.user_id=?
     ORDER BY g.name
-  `).all(meId);
+  `, [meId]);
 
   res.render("groups", { groups, myGroups, error: null });
 });
 
-app.post("/groups/create", requireAuth, (req, res) => {
+app.post("/groups/create", requireAuth, async (req, res) => {
   const meId = req.session.userId;
   const name = (req.body.name || "").trim();
   const description = (req.body.description || "").trim();
   const category = (req.body.category || "").trim();
 
   if (!name) {
-    const groups = db.prepare("SELECT * FROM groups ORDER BY created_at DESC LIMIT 200").all();
-    const myGroups = db.prepare(`
+    const groups = await db.all("SELECT * FROM groups ORDER BY created_at DESC LIMIT 200", []);
+    const myGroups = await db.all(`
       SELECT g.*
       FROM group_members gm
       JOIN groups g ON g.id = gm.group_id
       WHERE gm.user_id=?
       ORDER BY g.name
-    `).all(meId);
+    `, [meId]);
     return res.render("groups", { groups, myGroups, error: "Nome do grupo é obrigatório." });
   }
 
-  const info = db.prepare("INSERT INTO groups (owner_id, name, description, category) VALUES (?,?,?,?)")
-    .run(meId, name, description || null, category || null);
+  const info = await db.run("INSERT INTO groups (owner_id, name, description, category) VALUES (?,?,?,?) RETURNING id", [meId, name, description || null, category || null]);
 
-  const groupId = info.lastInsertRowid;
-  db.prepare("INSERT INTO group_members (group_id, user_id, role) VALUES (?,?, 'owner')").run(groupId, meId);
+  const groupId = info.rows[0].id;
+  await db.run("INSERT INTO group_members (group_id, user_id, role) VALUES (?,?, 'owner')", [groupId, meId]);
 
   res.redirect(`/groups/${groupId}`);
 });
 
-app.get("/groups/:id", requireAuth, (req, res) => {
+app.get("/groups/:id", requireAuth, async (req, res) => {
   const meId = req.session.userId;
   const groupId = Number(req.params.id);
 
-  const group = db.prepare("SELECT * FROM groups WHERE id=?").get(groupId);
+  const group = await db.get("SELECT * FROM groups WHERE id=?", [groupId]);
   if (!group) return res.status(404).send("Grupo não encontrado.");
 
-  const membership = db.prepare("SELECT * FROM group_members WHERE group_id=? AND user_id=?").get(groupId, meId);
+  const membership = await db.get("SELECT * FROM group_members WHERE group_id=? AND user_id=?", [groupId, meId]);
 
-  const members = db.prepare(`
+  const members = await db.all(`
     SELECT u.username, u.full_name, gm.role
     FROM group_members gm
     JOIN users u ON u.id = gm.user_id
     WHERE gm.group_id=?
     ORDER BY CASE gm.role WHEN 'owner' THEN 0 WHEN 'mod' THEN 1 ELSE 2 END, u.username
     LIMIT 200
-  `).all(groupId);
+  `, [groupId]);
 
-  const topics = db.prepare(`
+  const topics = await db.all(`
     SELECT t.*, u.username AS author
     FROM group_topics t
     JOIN users u ON u.id = t.user_id
     WHERE t.group_id=?
     ORDER BY t.created_at DESC
     LIMIT 100
-  `).all(groupId);
+  `, [groupId]);
 
   res.render("group_view", { group, membership, members, topics });
 });
 
-app.post("/groups/:id/join", requireAuth, (req, res) => {
+app.post("/groups/:id/join", requireAuth, async (req, res) => {
   const meId = req.session.userId;
   const groupId = Number(req.params.id);
-  const group = db.prepare("SELECT * FROM groups WHERE id=?").get(groupId);
+  const group = await db.get("SELECT * FROM groups WHERE id=?", [groupId]);
   if (!group) return res.redirect("/groups");
 
-  db.prepare("INSERT OR IGNORE INTO group_members (group_id, user_id, role) VALUES (?,?, 'member')").run(groupId, meId);
+  await db.run("INSERT OR IGNORE INTO group_members (group_id, user_id, role) VALUES (?,?, 'member')", [groupId, meId]);
   res.redirect(`/groups/${groupId}`);
 });
 
-app.post("/groups/:id/leave", requireAuth, (req, res) => {
+app.post("/groups/:id/leave", requireAuth, async (req, res) => {
   const meId = req.session.userId;
   const groupId = Number(req.params.id);
 
-  const role = db.prepare("SELECT role FROM group_members WHERE group_id=? AND user_id=?").get(groupId, meId);
+  const role = await db.get("SELECT role FROM group_members WHERE group_id=? AND user_id=?", [groupId, meId]);
   if (role && role.role === "owner") return res.redirect(`/groups/${groupId}`);
 
-  db.prepare("DELETE FROM group_members WHERE group_id=? AND user_id=?").run(groupId, meId);
+  await db.run("DELETE FROM group_members WHERE group_id=? AND user_id=?", [groupId, meId]);
   res.redirect(`/groups/${groupId}`);
 });
 
-app.post("/groups/:id/topics/create", requireAuth, (req, res) => {
+app.post("/groups/:id/topics/create", requireAuth, async (req, res) => {
   const meId = req.session.userId;
   const groupId = Number(req.params.id);
   const title = (req.body.title || "").trim();
   const content = (req.body.content || "").trim();
 
-  const membership = db.prepare("SELECT * FROM group_members WHERE group_id=? AND user_id=?").get(groupId, meId);
+  const membership = await db.get("SELECT * FROM group_members WHERE group_id=? AND user_id=?", [groupId, meId]);
   if (!membership) return res.redirect(`/groups/${groupId}`);
 
   if (!title || !content) return res.redirect(`/groups/${groupId}`);
 
-  const info = db.prepare("INSERT INTO group_topics (group_id, user_id, title) VALUES (?,?,?)").run(groupId, meId, title);
-  const topicId = info.lastInsertRowid;
+  const info = await db.run("INSERT INTO group_topics (group_id, user_id, title) VALUES (?,?,?) RETURNING id", [groupId, meId, title]);
+  const topicId = info.rows[0].id;
 
-  db.prepare("INSERT INTO group_posts (topic_id, user_id, content) VALUES (?,?,?)").run(topicId, meId, content);
+  await db.run("INSERT INTO group_posts (topic_id, user_id, content) VALUES (?,?,?)", [topicId, meId, content]);
   res.redirect(`/groups/${groupId}/topic/${topicId}`);
 });
 
-app.get("/groups/:groupId/topic/:topicId", requireAuth, (req, res) => {
+app.get("/groups/:groupId/topic/:topicId", requireAuth, async (req, res) => {
   const groupId = Number(req.params.groupId);
   const topicId = Number(req.params.topicId);
   const meId = req.session.userId;
 
-  const group = db.prepare("SELECT * FROM groups WHERE id=?").get(groupId);
-  const topic = db.prepare(`
+  const group = await db.get("SELECT * FROM groups WHERE id=?", [groupId]);
+  const topic = await db.get(`
     SELECT t.*, u.username AS author
     FROM group_topics t
     JOIN users u ON u.id = t.user_id
     WHERE t.id=? AND t.group_id=?
-  `).get(topicId, groupId);
+  `, [topicId, groupId]);
 
   if (!group || !topic) return res.status(404).send("Tópico não encontrado.");
 
-  const membership = db.prepare("SELECT * FROM group_members WHERE group_id=? AND user_id=?").get(groupId, meId);
+  const membership = await db.get("SELECT * FROM group_members WHERE group_id=? AND user_id=?", [groupId, meId]);
 
-  const posts = db.prepare(`
+  const posts = await db.all(`
     SELECT p.*, u.username AS author
     FROM group_posts p
     JOIN users u ON u.id = p.user_id
     WHERE p.topic_id=?
     ORDER BY p.created_at ASC
-  `).all(topicId);
+  `, [topicId]);
 
   res.render("group_topic", { group, topic, posts, membership });
 });
 
-app.post("/groups/:groupId/topic/:topicId/reply", requireAuth, (req, res) => {
+app.post("/groups/:groupId/topic/:topicId/reply", requireAuth, async (req, res) => {
   const meId = req.session.userId;
   const groupId = Number(req.params.groupId);
   const topicId = Number(req.params.topicId);
   const content = (req.body.content || "").trim();
 
-  const membership = db.prepare("SELECT * FROM group_members WHERE group_id=? AND user_id=?").get(groupId, meId);
+  const membership = await db.get("SELECT * FROM group_members WHERE group_id=? AND user_id=?", [groupId, meId]);
   if (!membership) return res.redirect(`/groups/${groupId}`);
 
   if (!content) return res.redirect(`/groups/${groupId}/topic/${topicId}`);
 
-  db.prepare("INSERT INTO group_posts (topic_id, user_id, content) VALUES (?,?,?)").run(topicId, meId, content);
+  await db.run("INSERT INTO group_posts (topic_id, user_id, content) VALUES (?,?,?)", [topicId, meId, content]);
   res.redirect(`/groups/${groupId}/topic/${topicId}`);
 });
 
 // ===== MENSAGENS =====
-app.get("/messages", requireAuth, (req, res) => {
+app.get("/messages", requireAuth, async (req, res) => {
   const meId = req.session.userId;
 
-  const inbox = db.prepare(`
+  const inbox = await db.all(`
     SELECT m.*, u.username AS from_username
     FROM messages m
     JOIN users u ON u.id = m.from_user_id
     WHERE m.to_user_id=?
     ORDER BY m.created_at DESC
     LIMIT 100
-  `).all(meId);
+  `, [meId]);
 
-  const outbox = db.prepare(`
+  const outbox = await db.all(`
     SELECT m.*, u.username AS to_username
     FROM messages m
     JOIN users u ON u.id = m.to_user_id
     WHERE m.from_user_id=?
     ORDER BY m.created_at DESC
     LIMIT 100
-  `).all(meId);
+  `, [meId]);
 
   res.render("messages", { inbox, outbox, error: null, ok: null });
 });
 
-app.post("/messages/send", requireAuth, (req, res) => {
+app.post("/messages/send", requireAuth, async (req, res) => {
   const meId = req.session.userId;
   const toUsername = (req.body.to || "").trim();
   const subject = (req.body.subject || "").trim();
   const body = (req.body.body || "").trim();
 
-  const to = db.prepare("SELECT id FROM users WHERE username=?").get(toUsername);
+  const to = await db.get("SELECT id FROM users WHERE username=?", [toUsername]);
   if (!to) {
     return res.render("messages", { inbox: [], outbox: [], error: "Usuário destino não encontrado.", ok: null });
   }
@@ -619,36 +613,35 @@ app.post("/messages/send", requireAuth, (req, res) => {
     return res.render("messages", { inbox: [], outbox: [], error: "Assunto e mensagem são obrigatórios.", ok: null });
   }
 
-  db.prepare("INSERT INTO messages (from_user_id, to_user_id, subject, body) VALUES (?,?,?,?)")
-    .run(meId, to.id, subject, body);
+  await db.run("INSERT INTO messages (from_user_id, to_user_id, subject, body) VALUES (?,?,?,?)", [meId, to.id, subject, body]);
 
-  addNotif(to.id, "message", "Você recebeu uma mensagem.", "/messages");
+  await addNotif(to.id, "message", "Você recebeu uma mensagem.", "/messages");
   res.redirect("/messages");
 });
 
-app.get("/messages/:id", requireAuth, (req, res) => {
+app.get("/messages/:id", requireAuth, async (req, res) => {
   const meId = req.session.userId;
   const id = Number(req.params.id);
 
-  const msg = db.prepare(`
+  const msg = await db.get(`
     SELECT m.*, u.username AS from_username, u2.username AS to_username
     FROM messages m
     JOIN users u ON u.id = m.from_user_id
     JOIN users u2 ON u2.id = m.to_user_id
     WHERE m.id=? AND (m.to_user_id=? OR m.from_user_id=?)
-  `).get(id, meId, meId);
+  `, [id, meId, meId]);
 
   if (!msg) return res.status(404).send("Mensagem não encontrada.");
 
   if (msg.to_user_id === meId && msg.is_read === 0) {
-    db.prepare("UPDATE messages SET is_read=1 WHERE id=?").run(id);
+    await db.run("UPDATE messages SET is_read=1 WHERE id=?", [id]);
   }
 
   res.render("message_view", { msg });
 });
 
 // ===== BUSCA =====
-app.get("/search", requireAuth, (req, res) => {
+app.get("/search", requireAuth, async (req, res) => {
   const q = (req.query.q || "").trim();
   const type = (req.query.type || "people").trim();
 
@@ -657,21 +650,21 @@ app.get("/search", requireAuth, (req, res) => {
 
   if (q) {
     if (type === "groups") {
-      groups = db.prepare(`
+      groups = await db.all(`
         SELECT g.*, (SELECT COUNT(*) FROM group_members gm WHERE gm.group_id=g.id) AS members
         FROM groups g
         WHERE g.name LIKE ? OR g.description LIKE ?
         ORDER BY g.name
         LIMIT 100
-      `).all(`%${q}%`, `%${q}%`);
+      `, [`%${q}%`, `%${q}%`]);
     } else {
-      people = db.prepare(`
+      people = await db.all(`
         SELECT id, username, full_name, city, state
         FROM users
         WHERE username LIKE ? OR full_name LIKE ? OR city LIKE ?
         ORDER BY username
         LIMIT 100
-      `).all(`%${q}%`, `%${q}%`, `%${q}%`);
+      `, [`%${q}%`, `%${q}%`, `%${q}%`]);
     }
   }
 
@@ -679,26 +672,35 @@ app.get("/search", requireAuth, (req, res) => {
 });
 
 // ===== NOTIFICAÇÕES =====
-app.get("/notifications", requireAuth, (req, res) => {
+app.get("/notifications", requireAuth, async (req, res) => {
   const meId = req.session.userId;
 
-  const notifs = db.prepare(`
+  const notifs = await db.all(`
     SELECT * FROM notifications
     WHERE user_id=?
     ORDER BY created_at DESC
     LIMIT 200
-  `).all(meId);
+  `, [meId]);
 
   res.render("notifications", { notifs });
 });
 
-app.post("/notifications/readall", requireAuth, (req, res) => {
+app.post("/notifications/readall", requireAuth, async (req, res) => {
   const meId = req.session.userId;
-  db.prepare("UPDATE notifications SET is_read=1 WHERE user_id=?").run(meId);
+  await db.run("UPDATE notifications SET is_read=1 WHERE user_id=?", [meId]);
   res.redirect("/notifications");
 });
 
 // ===== START =====
-app.listen(PORT, () => {
-  console.log(`KleinDream rodando em http://localhost:${PORT}`);
+async function main() {
+  await init();
+
+  app.listen(PORT, () => {
+    console.log(`KleinDream rodando em http://localhost:${PORT}`);
+  });
+}
+
+main().catch((err) => {
+  console.error("[KleinDream] Falha ao iniciar:", err);
+  process.exit(1);
 });
