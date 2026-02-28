@@ -1,24 +1,30 @@
 <%- include("layout", { title: "Editar perfil", body: `
   <div class="card">
     <div class="h">Editar perfil</div>
-        <div class="card" style="margin-top:10px;">
-          <div class="h" style="margin-bottom:8px;">Foto de perfil</div>
-          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
-            <div>
-              ${me.profile_photo ? `<img src="/uploads/${me.profile_photo}" class="avatar kd-zoom" alt="Foto de perfil" style="width:96px;height:96px;border-radius:14px;object-fit:cover;" />` : `<div class="avatar" style="width:96px;height:96px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:var(--panel2);color:var(--muted);font-weight:800;">Sem foto</div>`}
-            </div>
-            <div style="flex:1;min-width:220px;">
-              <label class="small">Enviar nova foto</label>
-              <input type="file" name="profile_photo" accept="image/*" />
-              <div class="small" style="margin-top:6px;opacity:.9;">Dica: clique numa foto para ampliar.</div>
-            </div>
-          </div>
-        </div>
+
     ${error ? `<div class="card" style="border-color:#6b2033;background:#2a0a12;">${error}</div>` : ""}
     ${ok ? `<div class="card" style="border-color:#1e5f2b;background:#0b2411;">${ok}</div>` : ""}
 
     <form method="post" action="/profile/edit" enctype="multipart/form-data">
-      <div class="h" style="margin-top:0">Básico</div>
+      <div class="card" style="margin-top:10px;">
+        <div class="h" style="margin-bottom:8px;">Foto de perfil</div>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+          <div>
+            ${
+              me.profile_photo
+                ? `<img src="${(me.profile_photo || "").startsWith("http") ? me.profile_photo : `/uploads/${me.profile_photo}`}" class="avatar kd-zoom" alt="Foto de perfil" style="width:96px;height:96px;border-radius:14px;object-fit:cover;" />`
+                : `<div class="avatar" style="width:96px;height:96px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:var(--panel2);color:var(--muted);font-weight:800;">Sem foto</div>`
+            }
+          </div>
+          <div style="flex:1;min-width:220px;">
+            <label class="small">Enviar nova foto</label>
+            <input type="file" name="profile_photo" accept="image/*" />
+            <div class="small" style="margin-top:6px;opacity:.9;">Dica: clique numa foto para ampliar.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="h" style="margin-top:12px;">Básico</div>
 
       <label class="small">Nome completo</label>
       <input name="full_name" value="${me.full_name || ""}" />
@@ -32,36 +38,32 @@
       <input name="state" value="${me.state || ""}" />
 
       <br/><br/>
-      <label class="small">Sobre mim</label>
-      <textarea name="bio">${me.bio || ""}</textarea>
+      <label class="small">Bio</label>
+      <textarea name="bio" rows="4" placeholder="Escreva algo sobre você...">${me.bio || ""}</textarea>
 
-      <br/><br/>
-      <div class="h">Detalhes</div>
+      <div class="h" style="margin-top:12px;">Detalhes</div>
 
       <label class="small">Data de nascimento</label>
-      <input type="date" name="birth_date" value="${me.birth_date || ""}" />
+      <input name="birth_date" value="${me.birth_date || ""}" placeholder="Ex: 1990-05-21" />
 
       <br/><br/>
       <label class="small">Estado civil</label>
-      <select name="marital_status">
-        ${["", "Solteiro(a)", "Namorando", "Casado(a)", "Separado(a)", "Divorciado(a)", "Viúvo(a)", "É complicado"].map(v => `<option value="${v}" ${String(me.marital_status||"")===v?"selected":""}>${v||"(não informar)"}</option>`).join("")}
-      </select>
+      <input name="marital_status" value="${me.marital_status || ""}" placeholder="Ex: solteiro(a), casado(a)..." />
 
       <br/><br/>
-      <label class="small">Time de futebol</label>
-      <input name="favorite_team" value="${me.favorite_team || ""}" placeholder="Ex: Flamengo" />
+      <label class="small">Time do coração</label>
+      <input name="favorite_team" value="${me.favorite_team || ""}" />
 
       <br/><br/>
       <label class="small">Profissão</label>
-      <input name="profession" value="${me.profession || ""}" placeholder="Ex: Técnico de informática" />
+      <input name="profession" value="${me.profession || ""}" />
 
       <br/><br/>
-      <div class="h">Gostos</div>
+      <label class="small">Hobbies</label>
+      <input name="hobbies" value="${me.hobbies || ""}" />
 
-      <label class="small">Hobbies / Interesses</label>
-      <input name="hobbies" value="${me.hobbies || ""}" placeholder="Ex: games, VHS, fóruns, terror" />
+      <div class="h" style="margin-top:12px;">Gostos</div>
 
-      <br/><br/>
       <label class="small">Música favorita</label>
       <input name="favorite_music" value="${me.favorite_music || ""}" />
 
@@ -73,30 +75,26 @@
       <label class="small">Jogo favorito</label>
       <input name="favorite_game" value="${me.favorite_game || ""}" />
 
-      <br/><br/>
-      <div class="h">Social</div>
+      <div class="h" style="margin-top:12px;">Jeito de ser</div>
 
-      <label class="small">Traços / Personalidade</label>
-      <input name="personality" value="${me.personality || ""}" placeholder="Ex: otimista, realista, perfeccionista" />
-
-      <br/><br/>
-      <label class="small">O que procura aqui</label>
-      <select name="looking_for">
-        ${["", "Amizade", "Networking", "Relacionamento", "Comunidades"].map(v => `<option value="${v}" ${String(me.looking_for||"")===v?"selected":""}>${v||"(não informar)"}</option>`).join("")}
-      </select>
+      <label class="small">Personalidade</label>
+      <input name="personality" value="${me.personality || ""}" placeholder="Ex: tímido(a), extrovertido(a)..." />
 
       <br/><br/>
-      <label class="small">Humor de hoje</label>
-      <select name="mood">
-        ${["", "😀 Feliz", "😐 Neutro", "😔 Triste", "😡 Irritado", "😎 De boa"].map(v => `<option value="${v}" ${String(me.mood||"")===v?"selected":""}>${v||"(não informar)"}</option>`).join("")}
-      </select>
+      <label class="small">Procurando</label>
+      <input name="looking_for" value="${me.looking_for || ""}" placeholder="Ex: amizades, namoro, conversas..." />
+
+      <br/><br/>
+      <label class="small">Humor</label>
+      <input name="mood" value="${me.mood || ""}" placeholder="Ex: feliz, pensativo(a)..." />
 
       <br/><br/>
       <label class="small">Frase do dia</label>
-      <input name="daily_phrase" value="${me.daily_phrase || ""}" />
+      <input name="daily_phrase" value="${me.daily_phrase || ""}" placeholder="Ex: 'Enquanto o agora existe...'" />
 
-      <br/>
-      <button class="btn" type="submit">Salvar</button>
+      <br/><br/>
+      <button class="button" type="submit">Salvar alterações</button>
+      <a class="button" href="/profile/${me.username}" style="margin-left:8px;">Voltar</a>
     </form>
   </div>
 ` }) %>

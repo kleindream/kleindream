@@ -1,27 +1,56 @@
-
-<%- include("layout", { title: "Fotos", body: `  
+<%- include("layout", { title: "Fotos", body: `
   <div class="grid">
     <div>
       <div class="card">
         <div class="h" style="font-size: 2rem; font-weight: 900; color: var(--accent);">Álbuns de ${user.username}</div>
+
+        ${error ? `<div class="card" style="border-color:#6b2033;background:#2a0a12;margin-top:10px;">${error}</div>` : ""}
+
+        <div class="small" style="margin-top:10px;color:var(--muted);">
+          Dica nostálgica: aqui o limite é <b>6 fotos</b> por perfil, estilo 2004.
+        </div>
+
         ${me && me.username === user.username ? `
-          <form method="post" action="/albums/create">
+          <form method="post" action="/albums/create" style="margin-top:12px;">
             <label class="small" style="color: var(--text);">Novo álbum</label>
             <input name="title" placeholder="Ex: Amigos, Família, Viagens..." />
             <br/><br/>
             <button class="button" type="submit">Criar álbum</button>
           </form>
         ` : ''}
+
+        <div style="margin-top:14px;">
+          ${albums.length ? albums.map(a => `
+            <div class="card" style="margin-top:10px;background:var(--panel2);">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+                <div>
+                  <div class="h" style="margin:0;">${a.title}</div>
+                  <div class="small" style="color:var(--muted);">ID #${a.id}</div>
+                </div>
+
+                ${me && me.username === user.username ? `
+                  <form method="post" action="/photos/upload/${a.id}" enctype="multipart/form-data" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                    <input type="file" name="photo" accept="image/*" style="max-width:220px;" required />
+                    <input name="caption" placeholder="Legenda (opcional)" style="max-width:220px;" />
+                    <button class="button" type="submit">Enviar</button>
+                  </form>
+                ` : ''}
+              </div>
+            </div>
+          `).join('') : `<div class="small" style="margin-top:12px;color:var(--muted);">Ainda não há álbuns por aqui.</div>`}
+        </div>
       </div>
     </div>
+
     <div>
       <div class="card" style="background: var(--panel2);">
-        <div class="h" style="font-size: 2rem; font-weight: 900; color: var(--accent);">Fotos favoritas</div>
-        <div class="grid">
+        <div class="h" style="font-size: 2rem; font-weight: 900; color: var(--accent);">Fotos (${photos.length}/6)</div>
+
+        <div class="grid" style="margin-top:10px;">
           ${photos.length ? photos.map(p => `
             <div class="card" style="margin-top: 10px;">
-              <img src="${p.url}" alt="${p.title}" class="photo kd-zoom" />
-              <div style="text-align: center; color: var(--text);">${p.title}</div>
+              <img src="${(p.filename || "").startsWith("http") ? p.filename : `/uploads/${p.filename}`}" alt="Foto" class="photo kd-zoom" />
+              ${p.caption ? `<div style="text-align:center;color:var(--text);margin-top:6px;">${p.caption}</div>` : ``}
             </div>
           `).join('') : `<p style="color: var(--muted);">Ainda não há fotos. Adicione algumas para começar a compartilhar suas memórias!</p>`}
         </div>

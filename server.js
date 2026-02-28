@@ -5,11 +5,55 @@ const session = require("express-session");
 const PgSession = require("connect-pg-simple")(session);
 const bcrypt = require("bcryptjs");
 const multer = require("multer");
+const { createClient } = require("@supabase/supabase-js");
 
 const { db, init, pool } = require("./db");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Supabase Storage (for profile photos & albums)
+// Set these env vars in Render/Vercel:
+//   SUPABASE_URL
+//   SUPABASE_SERVICE_ROLE_KEY   (keep secret)
+// Optional:
+//   SUPABASE_BUCKET (default: "kleindream")
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SUPABASE_BUCKET = process.env.SUPABASE_BUCKET || "kleindream";
+
+const supabase = (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY)
+  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } })
+  : null;
+
+function assertSupabase(res) {
+  if (!supabase) {
+    res.status(500).send("Supabase Storage não configurado. Defina SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY.");
+    return false;
+  }
+  return true;
+}
+
+async function uploadToSupabaseStorage({ userId, kind, file }) {
+  // kind: "profile" | "photo"
+  const ext = (path.extname(file.originalname) || "").toLowerCase() || ".jpg";
+  const safeExt = [".jpg",".jpeg",".png",".webp",".gif"].includes(ext) ? ext : ".jpg";
+  const stamp = Date.now() + "_" + Math.random().toString(16).slice(2);
+  const objectPath = `${userId}/${kind}/${stamp}${safeExt}`;
+
+  const { error } = await supabase.storage
+    .from(SUPABASE_BUCKET)
+    .upload(objectPath, file.buffer, {
+      contentType: file.mimetype || "application/octet-stream",
+      upsert: true
+    });
+
+  if (error) throw error;
+
+  const { data } = supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(objectPath);
+  return { publicUrl: data.publicUrl, objectPath };
+}
+
 
 // Pastas garantidas
 const uploadsDir = path.join(__dirname, "public", "uploads");
@@ -33,7 +77,7 @@ app.use(
 
 // Helpers
 async function getUserById(id) {
-  return await db.get("SELECT id, email, username, full_name, bio, city, state, birth_date, marital_status, favorite_team, profession, hobbies, favorite_music, favorite_movie, favorite_game, personality, looking_for, mood, daily_phrase, created_at FROM users WHERE id=?", [id]);
+  return await db.get("SELECT id, email, username, full_name, bio, city, state, profile_photo, birth_date, marital_status, favorite_team, profession, hobbies, favorite_music, favorite_movie, favorite_game, personality, looking_for, mood, daily_phrase, created_at FROM users WHERE id=?", [id]);
 }
 
 function requireAuth(req, res, next) {
@@ -59,16 +103,13 @@ app.use(async (req, res, next) => {
 });
 
 // Upload
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadsDir),
-  filename: (req, file, cb) => {
-    const safe = Date.now() + "_" + Math.random().toString(16).slice(2) + path.extname(file.originalname).toLowerCase();
-    cb(null, safe);
-  }
-});
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 6 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype || !file.mimetype.startsWith("image/")) return cb(new Error("Apenas imagens."));
+    cb(null, true);
+  }
 });
 
 // ===== ROTAS PÚBLICAS =====
@@ -152,7 +193,7 @@ app.get("/home", requireAuth, async (req, res) => {
 // ===== PERFIL =====
 app.get("/u/:username", requireAuth, async (req, res) => {
   const meId = req.session.userId;
-  const user = await db.get("SELECT id, username, full_name, bio, city, state, birth_date, marital_status, favorite_team, profession, hobbies, favorite_music, favorite_movie, favorite_game, personality, looking_for, mood, daily_phrase, created_at FROM users WHERE username=?", [req.params.username]);
+  const user = await db.get("SELECT id, username, full_name, bio, city, state, profile_photo, birth_date, marital_status, favorite_team, profession, hobbies, favorite_music, favorite_movie, favorite_game, personality, looking_for, mood, daily_phrase, created_at FROM users WHERE username=?", [req.params.username]);
   if (!user) return res.status(404).send("Usuário não encontrado.");
 
   const isMe = user.id === meId;
@@ -211,9 +252,16 @@ app.post("/profile/edit", requireAuth, upload.single("profile_photo"), async (re
       meId]);
 
 
-  // Se enviou foto, atualiza profile_photo
-  if (req.file && req.file.filename) {
-    await db.run("UPDATE users SET profile_photo=? WHERE id=?", [req.file.filename, meId]);
+  // Se enviou foto, salva no Supabase Storage e atualiza profile_photo (URL pública)
+  if (req.file) {
+    if (!assertSupabase(res)) return;
+    try {
+      const { publicUrl } = await uploadToSupabaseStorage({ userId: meId, kind: "profile", file: req.file });
+      await db.run("UPDATE users SET profile_photo=? WHERE id=?", [publicUrl, meId]);
+    } catch (e) {
+      console.error("[KleinDream] Upload profile photo error:", e);
+      return res.render("profile_edit", { me: await getUserById(meId), error: "Falha ao enviar a foto. Tente outra imagem.", ok: null });
+    }
   }
 
     res.render("profile_edit", { me: await getUserById(meId), error: null, ok: "Perfil atualizado." });
@@ -388,7 +436,11 @@ app.get("/photos/:username", requireAuth, async (req, res) => {
   const albums = await db.all("SELECT * FROM albums WHERE user_id=? ORDER BY created_at DESC", [user.id]);
   const photos = await db.all("SELECT * FROM photos WHERE user_id=? ORDER BY created_at DESC LIMIT 80", [user.id]);
 
-  res.render("photos", { user, albums, photos });
+  let error = null;
+  if (req.query.err === "limit") error = "Você já atingiu o limite de 6 fotos no álbum.";
+  if (req.query.err === "upload") error = "Não consegui enviar sua foto. Tente novamente.";
+
+  res.render("photos", { user, albums, photos, error });
 });
 
 app.post("/albums/create", requireAuth, async (req, res) => {
@@ -403,15 +455,28 @@ app.post("/photos/upload/:albumId", requireAuth, upload.single("photo"), async (
   const meId = req.session.userId;
   const albumId = Number(req.params.albumId);
 
+  const me = await getUserById(meId);
   const album = await db.get("SELECT * FROM albums WHERE id=? AND user_id=?", [albumId, meId]);
-  if (!album) return res.redirect(`/photos/${(await getUserById(meId)).username}`);
+  if (!album) return res.redirect(`/photos/${me.username}`);
 
-  if (!req.file) return res.redirect(`/photos/${(await getUserById(meId)).username}`);
+  if (!req.file) return res.redirect(`/photos/${me.username}`);
 
-  const caption = (req.body.caption || "").trim();
-  await db.run("INSERT INTO photos (album_id, user_id, filename, caption) VALUES (?,?,?,?)", [albumId, meId, req.file.filename, caption || null]);
+  // Limite: no máximo 6 fotos por usuário (estilo Orkut)
+  const countRow = await db.get("SELECT COUNT(*)::int AS c FROM photos WHERE user_id=?", [meId]);
+  const currentCount = (countRow && (countRow.c ?? countRow.count ?? 0)) || 0;
+  if (currentCount >= 6) return res.redirect(`/photos/${me.username}?err=limit`);
 
-  res.redirect(`/photos/${(await getUserById(meId)).username}`);
+  if (!assertSupabase(res)) return;
+
+  try {
+    const { publicUrl } = await uploadToSupabaseStorage({ userId: meId, kind: "photo", file: req.file });
+    const caption = (req.body.caption || "").trim();
+    await db.run("INSERT INTO photos (album_id, user_id, filename, caption) VALUES (?,?,?,?)", [albumId, meId, publicUrl, caption || null]);
+    res.redirect(`/photos/${me.username}`);
+  } catch (e) {
+    console.error("[KleinDream] Upload photo error:", e);
+    res.redirect(`/photos/${me.username}?err=upload`);
+  }
 });
 
 // ===== GRUPOS =====
