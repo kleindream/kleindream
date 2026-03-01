@@ -12,10 +12,10 @@
           e voltar porque faz sentido.
         </p>
         <div class="row" style="gap:6px;margin-top:10px;flex-wrap:wrap;">
-          <a class="button secondary" href="/u/${me.username}">Meu perfil</a>
-          <a class="button secondary" href="/scraps/${me.username}">Recados</a>
-          <a class="button secondary" href="/photos/${me.username}">Fotos</a>
-          <a class="button secondary" href="/testimonials/${me.username}">Depoimentos</a>
+          <a class="button secondary" href="/u/<%= me.username %>">Meu perfil</a>
+          <a class="button secondary" href="/scraps/<%= me.username %>">Recados</a>
+          <a class="button secondary" href="/photos/<%= me.username %>">Fotos</a>
+          <a class="button secondary" href="/testimonials/<%= me.username %>">Depoimentos</a>
         </div>
         <div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap;">
           <a class="button" href="/mural">Ir pro Mural público</a>
@@ -31,7 +31,7 @@
 
     <div>
       <div class="card" style="background:var(--panel2);">
-        <div class="h" style="font-size:2rem;font-weight:900;color:var(--accent);">Bem-vindo de volta, ${me.full_name || me.username}!</div>
+        <div class="h" style="font-size:2rem;font-weight:900;color:var(--accent);">Bem-vindo de volta, <%= (me && (me.full_name || me.username)) ? (me.full_name || me.username) : "" %>!</div>
         <p style="font-size:1.05rem;color:var(--text);line-height:1.6;">
           Se quiser deixar a sua marca hoje, começa simples: um post no mural, um recado pra alguém, uma foto
           ou um depoimento sincero.
@@ -144,7 +144,7 @@
           </li>
         <% }) %>
       </ul>
-      <div style="margin-top:8px;"><a class="button secondary" href="/scraps/${me.username}">Ver todos</a></div>
+      <div style="margin-top:8px;"><a class="button secondary" href="/scraps/<%= me.username %>">Ver todos</a></div>
     <% } %>
   </div>
 ` }) %>
