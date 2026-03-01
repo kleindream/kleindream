@@ -18,6 +18,7 @@
           <div class="small">Procura</div><div>${user.looking_for || "-"}</div>
           <div class="small">Entrou em</div><div>${user.created_at}</div>
           <div class="small">Amigos</div><div>${friendsCount}</div>
+          <div class="small">Visitas</div><div>${totalVisits}</div>
         </div>
 
         ${user.daily_phrase ? `<hr/><div class="small">Frase do dia</div><div>${escapeHtml(user.daily_phrase)}</div>` : ``}
@@ -65,26 +66,34 @@
         </div>
       </div>
 
-      <div class="card">
-        <div class="h">Últimos visitantes</div>
-        ${visitors && visitors.length ? visitors.map(v => `
-          <div class="visitor-item">
-            ${v.profile_photo
-              ? `<img src="${(v.profile_photo || "").startsWith("http") ? v.profile_photo : `/uploads/${v.profile_photo}`}" alt="Foto" />`
-              : `<div class="visitor-ph">?</div>`}
-            <div>
-              <div><a href="/u/${v.username}">${v.username}</a></div>
-              <div class="small">${v.created_at}</div>
-            </div>
-          </div>
-        `).join("") : `<div class="small">Ainda ninguém passou por aqui.</div>`}
-      </div>
-
-
-      </div>
+      ${isMe ? `
+        <div class="card">
+          <div class="h">Últimos visitantes</div>
+          ${canSeeVisitors ? `
+            ${visitors.length ? visitors.map(v => `
+              <div class="visitor-item">
+                ${
+                  v.profile_photo
+                    ? `<img src="${(v.profile_photo || "").startsWith("http") ? v.profile_photo : `/uploads/${v.profile_photo}`}" alt="Foto" />`
+                    : `<div class="visitor-ph">?</div>`
+                }
+                <div>
+                  <div><a href="/u/${v.username}"><b>${v.username}</b></a></div>
+                  <div class="small">${v.created_at}</div>
+                </div>
+              </div>
+            `).join("") : `<div class="small">Nenhuma visita ainda.</div>`}
+            <hr/>
+            <a class="btn secondary" href="/me/visitors">Ver histórico</a>
+          ` : `
+            <div class="small">Você está com <b>Modo Invisível</b> ativado. Visitas não são registradas, e por regra você não vê a lista.</div>
+            <div style="margin-top:8px;"><a class="btn secondary" href="/profile/edit">Ajustar privacidade</a></div>
+          `}
+        </div>
+      ` : ``}
     </div>
 
-    <div>
+    <div
       <div class="card">
         <div class="h">Recados (últimos)</div>
         ${scraps.length ? scraps.map(s => `

@@ -193,43 +193,36 @@ app.get("/home", requireAuth, async (req, res) => {
 // ===== PERFIL =====
 app.get("/u/:username", requireAuth, async (req, res) => {
   const meId = req.session.userId;
-  const user = await db.get("SELECT id, username, full_name, bio, city, state, profile_photo, birth_date, marital_status, favorite_team, profession, hobbies, favorite_music, favorite_movie, favorite_game, personality, looking_for, mood, daily_phrase, created_at FROM users WHERE username=?", [req.params.username]);
+  const user = await db.get("SELECT id, username, full_name, bio, city, state, profile_photo, birth_date, marital_status, favorite_team, profession, hobbies, favorite_music, favorite_movie, favorite_game, personality, looking_for, mood, daily_phrase, invisible_visits, notify_profile_visits, created_at FROM users WHERE username=?", [req.params.username]);
   if (!user) return res.status(404).send("Usuário não encontrado.");
 
   const isMe = user.id === meId;
-
-
-  // Registrar visita ao perfil (se não for o próprio perfil) com anti-spam de 10 minutos
-  if (!isMe) {
-    const recent = await db.get(`
-      SELECT id FROM profile_visits
-      WHERE visitor_id=? AND visited_id=? AND created_at > NOW() - INTERVAL '10 minutes'
-      LIMIT 1
-    `, [meId, user.id]);
-
-    if (!recent) {
-      await db.run(`
-        INSERT INTO profile_visits (visitor_id, visited_id)
-        VALUES (?, ?)
-      `, [meId, user.id]);
-    }
-  }
-
-  // Últimos visitantes
-  const visitors = await db.all(`
-    SELECT u.id, u.username, u.profile_photo, pv.created_at
-    FROM profile_visits pv
-    JOIN users u ON u.id = pv.visitor_id
-    WHERE pv.visited_id=?
-    ORDER BY pv.created_at DESC
-    LIMIT 10
-  `, [user.id]);
-
+  const me = res.locals.me;
 
   const friend = await db.get("SELECT 1 FROM friendships WHERE user_id=? AND friend_id=?", [meId, user.id]);
 
   const reqOut = await db.get("SELECT status FROM friend_requests WHERE from_user_id=? AND to_user_id=?", [meId, user.id]);
   const reqIn = await db.get("SELECT status FROM friend_requests WHERE from_user_id=? AND to_user_id=?", [user.id, meId]);
+
+  // Registrar visita ao perfil (se não for eu mesmo e se NÃO estiver em modo invisível)
+  if (!isMe && me && Number(me.invisible_visits || 0) === 0) {
+    const recent = await db.get(`
+      SELECT 1
+      FROM profile_visits
+      WHERE visitor_id=? AND visited_id=?
+        AND created_at > NOW() - INTERVAL '10 minutes'
+      LIMIT 1
+    `, [meId, user.id]);
+
+    if (!recent) {
+      await db.run("INSERT INTO profile_visits (visitor_id, visited_id) VALUES (?,?)", [meId, user.id]);
+
+      // Notificação de visita (se o dono permitir)
+      if (Number(user.notify_profile_visits ?? 1) === 1) {
+        await addNotif(user.id, "visit", `${me.username} visitou seu perfil.`, "/me/visitors");
+      }
+    }
+  }
 
   const scraps = await db.all(`
     SELECT s.id, s.content, s.created_at, u.username AS from_username
@@ -251,7 +244,27 @@ app.get("/u/:username", requireAuth, async (req, res) => {
 
   const friendsCount = await db.get("SELECT COUNT(*) AS c FROM friendships WHERE user_id=?", [user.id]).c;
 
-  res.render("profile", { user, isMe, visitors, friend: !!friend, reqOut, reqIn, scraps, testimonials, friendsCount });
+  // Visitas (contador + últimos visitantes)
+  const totalVisits = (await db.get("SELECT COUNT(*)::int AS c FROM profile_visits WHERE visited_id=?", [user.id]))?.c || 0;
+
+  const canSeeVisitors = isMe && me && Number(me.invisible_visits || 0) === 0;
+  const visitors = canSeeVisitors
+    ? await db.all(`
+        SELECT u.id, u.username, u.full_name, u.profile_photo, pv.created_at
+        FROM profile_visits pv
+        JOIN users u ON u.id = pv.visitor_id
+        WHERE pv.visited_id=?
+        ORDER BY pv.created_at DESC
+        LIMIT 10
+      `, [user.id])
+    : [];
+
+  res.render("profile", {
+    user, isMe,
+    friend: !!friend, reqOut, reqIn,
+    scraps, testimonials, friendsCount,
+    totalVisits, visitors, canSeeVisitors
+  });
 });
 
 app.get("/profile/edit", requireAuth, async (req, res) => {
@@ -265,18 +278,21 @@ app.post("/profile/edit", requireAuth, upload.single("profile_photo"), async (re
     full_name, bio, city, state,
     birth_date, marital_status, favorite_team, profession,
     hobbies, favorite_music, favorite_movie, favorite_game,
-    personality, looking_for, mood, daily_phrase
+    personality, looking_for, mood, daily_phrase,
+    invisible_visits, notify_profile_visits
   } = req.body;
 
   await db.run(`UPDATE users SET
       full_name=?, bio=?, city=?, state=?,
       birth_date=?, marital_status=?, favorite_team=?, profession=?,
       hobbies=?, favorite_music=?, favorite_movie=?, favorite_game=?,
-      personality=?, looking_for=?, mood=?, daily_phrase=?
+      personality=?, looking_for=?, mood=?, daily_phrase=?,
+      invisible_visits=?, notify_profile_visits=?
     WHERE id=?`, [full_name || null, bio || null, city || null, state || null,
       birth_date || null, marital_status || null, favorite_team || null, profession || null,
       hobbies || null, favorite_music || null, favorite_movie || null, favorite_game || null,
       personality || null, looking_for || null, mood || null, daily_phrase || null,
+      (invisible_visits ? 1 : 0), (notify_profile_visits ? 1 : 0),
       meId]);
 
 

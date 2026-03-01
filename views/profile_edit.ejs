@@ -92,7 +92,24 @@
       <label class="small">Frase do dia</label>
       <input name="daily_phrase" value="${me.daily_phrase || ""}" placeholder="Ex: 'Enquanto o agora existe...'" />
 
-      <br/><br/>
+      
+      <hr/>
+      <div class="h" style="margin:6px 0 10px 0;">Privacidade</div>
+
+      <label style="display:flex;gap:10px;align-items:center;">
+        <input type="checkbox" name="invisible_visits" ${me.invisible_visits ? "checked" : ""} />
+        <span>Modo invisível ao visitar perfis (não registra suas visitas)</span>
+      </label>
+      <div class="small" style="margin:6px 0 10px 0;">
+        Regra justa: enquanto estiver invisível, você não consegue ver sua lista de visitantes.
+      </div>
+
+      <label style="display:flex;gap:10px;align-items:center;">
+        <input type="checkbox" name="notify_profile_visits" ${me.notify_profile_visits === 0 ? "" : "checked"} />
+        <span>Receber notificação quando alguém visitar meu perfil</span>
+      </label>
+
+<br/><br/>
       <button class="button" type="submit">Salvar alterações</button>
       <a class="button" href="/profile/${me.username}" style="margin-left:8px;">Voltar</a>
     </form>

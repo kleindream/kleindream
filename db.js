@@ -206,6 +206,7 @@ async function init() {
     );
 
 
+    -- Profile visits (Quem visitou seu perfil)
     CREATE TABLE IF NOT EXISTS profile_visits (
       id         SERIAL PRIMARY KEY,
       visitor_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -214,6 +215,12 @@ async function init() {
     );
 
     CREATE INDEX IF NOT EXISTS idx_profile_visits_visited ON profile_visits(visited_id, created_at);
+    CREATE INDEX IF NOT EXISTS idx_profile_visits_pair_time ON profile_visits(visitor_id, visited_id, created_at);
+
+    -- User privacy/settings
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS invisible_visits INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS notify_profile_visits INTEGER NOT NULL DEFAULT 1;
+
     CREATE INDEX IF NOT EXISTS idx_scraps_to_user ON scraps(to_user_id, created_at);
     CREATE INDEX IF NOT EXISTS idx_testimonials_to_user ON testimonials(to_user_id, status, created_at);
     CREATE INDEX IF NOT EXISTS idx_messages_to_user ON messages(to_user_id, is_read, created_at);
