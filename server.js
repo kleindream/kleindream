@@ -1,6 +1,8 @@
 const path = require("path");
 const fs = require("fs");
 const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
 const session = require("express-session");
 const PgSession = require("connect-pg-simple")(session);
 const bcrypt = require("bcryptjs");
@@ -66,14 +68,13 @@ app.set("views", path.join(__dirname, "views"));
 // Middlewares
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
-app.use(
-  session({
+const sessionMiddleware = session({
     store: new PgSession({ pool, tableName: "session", createTableIfMissing: true }),
     secret: process.env.SESSION_SECRET || "kleindream_dev_secret",
     resave: false,
     saveUninitialized: false
-  })
-);
+  });
+app.use(sessionMiddleware);
 
 // Helpers
 async function getUserById(id) {
@@ -142,6 +143,7 @@ app.post("/login", async (req, res) => {
   if (!ok) return res.render("login", { error: "Senha incorreta." });
 
   req.session.userId = user.id;
+    req.session.username = user.username;
   res.redirect("/home");
 });
 
@@ -311,6 +313,15 @@ app.post("/profile/edit", requireAuth, upload.single("profile_photo"), async (re
     res.render("profile_edit", { me: await getUserById(meId), error: null, ok: "Perfil atualizado." });
 });
 // ===== VISITANTES (Histórico) =====
+
+
+// ===== BATE-PAPO (1 sala) =====
+app.get("/chat", requireAuth, async (req, res, next) => {
+  try {
+    res.render("chat", { title: "Bate-papo" });
+  } catch (err) { return next(err); }
+});
+
 app.get("/me/visitors", requireAuth, async (req, res) => {
   const me = await getUserById(req.session.userId);
 
@@ -933,7 +944,48 @@ app.post("/notifications/readall", requireAuth, async (req, res) => {
 async function main() {
   await init();
 
-  app.listen(PORT, () => {
+  const server = http.createServer(app);
+
+  const io = new Server(server);
+
+  // Compartilhar sessão com Socket.IO
+  io.use((socket, next) => {
+    sessionMiddleware(socket.request, {}, next);
+  });
+
+  const chatHistory = [];
+  const CHAT_MAX_HISTORY = 80;
+
+  io.on("connection", (socket) => {
+    const sess = socket.request.session;
+    if (!sess || !sess.userId) {
+      socket.disconnect(true);
+      return;
+    }
+
+    const userId = sess.userId;
+    const username = (sess.username || "membro");
+
+    // Enviar histórico
+    socket.emit("history", chatHistory);
+
+    socket.on("chat:message", (payload) => {
+      try {
+        const text = (payload && payload.text ? String(payload.text) : "").trim();
+        if (!text) return;
+        if (text.length > 500) return;
+
+        const msg = { id: Date.now() + Math.random().toString(16).slice(2), userId, username, text, ts: new Date().toISOString() };
+        chatHistory.push(msg);
+        while (chatHistory.length > CHAT_MAX_HISTORY) chatHistory.shift();
+        io.emit("chat:message", msg);
+      } catch (e) {
+        // ignore
+      }
+    });
+  });
+
+  server.listen(PORT, () => {
     console.log(`KleinDream rodando em http://localhost:${PORT}`);
   });
 }

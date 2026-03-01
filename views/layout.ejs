@@ -7,6 +7,16 @@
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
+  <div id="kdLoader" class="kd-loader" aria-hidden="true">
+    <div class="kd-loader-inner">
+      <div class="kd-spinner" aria-hidden="true"></div>
+      <div class="kd-loader-text">Conectando…</div>
+      <div class="kd-loader-sub">um segundinho 💙</div>
+    </div>
+  </div>
+
+  <div id="kdToasts" class="kd-toasts" aria-live="polite" aria-atomic="true"></div>
+
   <div class="topbar">
     <div class="container">
       <div class="brand"><a href="/"><span>Klein</span>Dream</a></div>
@@ -20,7 +30,9 @@
           <a href="/messages">Mensagens</a>
           <a href="/search">Buscar</a>
           <a href="/me/visitors">Visitantes</a>
-          <a href="/notifications">Notificações <span class="badge"><%= notifCount %></span></a>
+          <a href="/notifications">Notificações <span class="badge <%= (notifCount||0) > 0 ? 'pulse' : '' %>"><%= notifCount %></span></a>
+          <a href="/chat">Bate-papo</a>
+          <button id="kdThemeToggle" class="btn ghost" type="button" title="Trocar tema">Tema</button>
           <form method="post" action="/logout" style="display:inline;">
             <button class="btn secondary" type="submit">Sair</button>
           </form>
@@ -83,5 +95,7 @@
       });
     })();
   </script>
+
+  <script src="/kd.js"></script>
 </body>
 </html>

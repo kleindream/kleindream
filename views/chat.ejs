@@ -1,0 +1,84 @@
+<%- include("layout", { title: "Bate-papo", body: `
+  <div class="page-header">
+    <h1>Bate-papo</h1>
+    <div class="small">Uma sala só • só membros do KleinDream • sem limite de gente</div>
+  </div>
+
+  <div class="chat-wrap">
+    <div id="chatLog" class="chat-log" aria-live="polite"></div>
+
+    <form id="chatForm" class="chat-form" autocomplete="off">
+      <input id="chatInput" class="chat-input" name="text" maxlength="500" placeholder="Escreva sua mensagem…" />
+      <button class="btn" type="submit">Enviar</button>
+    </form>
+
+    <div class="small" style="opacity:.75; margin-top:10px;">
+      Dica: pressione <b>Enter</b> para enviar. Use com carinho 💙
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    (function(){
+      const log = document.getElementById("chatLog");
+      const form = document.getElementById("chatForm");
+      const input = document.getElementById("chatInput");
+
+      function addMsg(m){
+        const row = document.createElement("div");
+        row.className = "chat-msg";
+
+        const meta = document.createElement("div");
+        meta.className = "chat-meta";
+
+        const name = document.createElement("span");
+        name.className = "chat-user";
+        name.textContent = m.username || "membro";
+
+        const time = document.createElement("span");
+        time.className = "chat-time";
+        try {
+          const d = new Date(m.ts);
+          time.textContent = d.toLocaleString();
+        } catch(e) {
+          time.textContent = "";
+        }
+
+        meta.appendChild(name);
+        meta.appendChild(document.createTextNode(" • "));
+        meta.appendChild(time);
+
+        const text = document.createElement("div");
+        text.className = "chat-text";
+        text.textContent = m.text || "";
+
+        row.appendChild(meta);
+        row.appendChild(text);
+        log.appendChild(row);
+
+        // auto-scroll
+        log.scrollTop = log.scrollHeight;
+      }
+
+      const socket = io();
+
+      socket.on("history", (items) => {
+        log.innerHTML = "";
+        (items || []).forEach(addMsg);
+      });
+
+      socket.on("chat:message", addMsg);
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const text = (input.value || "").trim();
+        if(!text) return;
+        socket.emit("chat:message", { text });
+        input.value = "";
+        input.focus();
+      });
+
+      input.focus();
+    })();
+  </script>
+` }) %>
