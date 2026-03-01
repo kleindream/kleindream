@@ -296,3 +296,67 @@ hr{ border:0; border-top:1px solid var(--border); margin:10px 0; }
 .visitor-item{display:flex;gap:10px;align-items:center;padding:6px 0;}
 .visitor-item img{width:44px;height:44px;border-radius:10px;object-fit:cover;border:1px solid rgba(255,255,255,.08);}
 .visitor-ph{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--panel2);color:var(--muted);font-weight:900;border:1px solid rgba(255,255,255,.08);}
+
+/* Layout helpers */
+.stack{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.stack .btn, .stack button.btn{
+  width:100%;
+  text-align:center;
+}
+
+/* Compact textarea (used in recados) */
+.textarea-compact{
+  min-height:60px !important;
+  resize:vertical;
+}
+
+
+/* Visitors page helpers */
+.notice{
+  padding:10px 12px;
+  border:1px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.06);
+  border-radius:12px;
+  margin-top:10px;
+}
+.filters{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.filters a{
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.15);
+  text-decoration:none;
+  font-size:12px;
+  opacity:.9;
+}
+.filters a.active{
+  background:rgba(255,255,255,.12);
+  opacity:1;
+}
+.pager{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-top:12px;
+}
+.avatar{
+  width:48px;
+  height:48px;
+  object-fit:cover;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.18);
+}
+.avatar.sm{
+  width:32px;
+  height:32px;
+  border-radius:8px;
+}
+

@@ -1,50 +1,49 @@
 <%- include("layout", { title: "Visitantes", body: `
   <div class="card">
     <div class="h">Meus visitantes</div>
+
     ${blocked ? `
-      <div class="card" style="border-color:#6b2033;background:#2a0a12;">
-        Você está com <b>Modo Invisível</b> ativado. Por regra, não dá para ver a lista de visitantes enquanto estiver invisível.
-        <div class="small" style="margin-top:6px;">Dica: desative em <a href="/profile/edit">Editar perfil</a>.</div>
+      <div class="notice">
+        Você está em <b>modo invisível</b>. Para ver seus visitantes, desative em
+        <a href="/profile/edit">Editar perfil</a>.
       </div>
     ` : `
-      <div class="small">Total: <b>${total}</b></div>
-      <div class="row" style="margin-top:10px;flex-wrap:wrap;">
-        <a class="btn secondary" href="/me/visitors?period=all">Tudo</a>
-        <a class="btn secondary" href="/me/visitors?period=day">24h</a>
-        <a class="btn secondary" href="/me/visitors?period=week">7 dias</a>
-        <a class="btn secondary" href="/me/visitors?period=month">30 dias</a>
-      </div>
-    `}
-  </div>
-
-  ${(!blocked) ? `
-    <div class="card">
-      ${visitors.length ? visitors.map(v => `
-        <div class="visitor-item">
-          ${
-            v.profile_photo
-              ? `<img src="${(v.profile_photo || "").startsWith("http") ? v.profile_photo : `/uploads/${v.profile_photo}`}" alt="Foto" />`
-              : `<div class="visitor-ph">?</div>`
-          }
-          <div>
-            <div><a href="/u/${v.username}"><b>${v.username}</b></a> ${v.full_name ? `<span class="small">(${escapeHtml(v.full_name)})</span>` : ``}</div>
-            <div class="small">${v.created_at}</div>
-          </div>
+      <div class="row" style="justify-content:space-between; align-items:center; gap:10px;">
+        <div class="small">Total: <b>${total}</b></div>
+        <div class="filters">
+          <a class="${range==='all'?'active':''}" href="/me/visitors?range=all">Tudo</a>
+          <a class="${range==='24h'?'active':''}" href="/me/visitors?range=24h">24h</a>
+          <a class="${range==='7d'?'active':''}" href="/me/visitors?range=7d">7 dias</a>
+          <a class="${range==='30d'?'active':''}" href="/me/visitors?range=30d">30 dias</a>
         </div>
-        <hr/>
-      `).join("") : `<div class="small">Nenhuma visita ainda.</div>`}
+      </div>
+      <hr/>
+
+      ${visits.length ? `
+        <table class="table">
+          <thead><tr><th>Usuário</th><th>Nome</th><th>Quando</th></tr></thead>
+          <tbody>
+            ${visits.map(v => `
+              <tr>
+                <td style="display:flex; align-items:center; gap:10px;">
+                  <img class="avatar sm" src="${v.profile_photo || '/default.png'}" alt="" />
+                  <a href="/u/${v.username}">${v.username}</a>
+                </td>
+                <td>${v.full_name || ""}</td>
+                <td class="small">${new Date(v.created_at).toLocaleString()}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      ` : `<div class="small">Sem visitas nesse período.</div>`}
 
       ${pages > 1 ? `
-        <div class="row" style="justify-content:space-between;align-items:center;">
-          <div class="small">Página ${page} de ${pages}</div>
-          <div class="row">
-            ${page > 1 ? `<a class="btn secondary" href="/me/visitors?period=${period}&page=${page-1}">Anterior</a>` : ``}
-            ${page < pages ? `<a class="btn secondary" href="/me/visitors?period=${period}&page=${page+1}">Próxima</a>` : ``}
-          </div>
+        <div class="pager">
+          ${page > 1 ? `<a class="btn secondary" href="/me/visitors?range=${range}&page=${page-1}">← Anterior</a>` : `<span></span>`}
+          <div class="small">Página <b>${page}</b> de <b>${pages}</b></div>
+          ${page < pages ? `<a class="btn secondary" href="/me/visitors?range=${range}&page=${page+1}">Próxima →</a>` : `<span></span>`}
         </div>
       ` : ``}
-    </div>
-  ` : ``}
+    `}
+  </div>
 ` }) %>
-
-<% function escapeHtml(str){ return String(str).replace(/[&<>"\']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); } %>

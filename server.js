@@ -310,6 +310,52 @@ app.post("/profile/edit", requireAuth, upload.single("profile_photo"), async (re
 
     res.render("profile_edit", { me: await getUserById(meId), error: null, ok: "Perfil atualizado." });
 });
+// ===== VISITANTES (Histórico) =====
+app.get("/me/visitors", requireAuth, async (req, res) => {
+  const me = await getUserById(req.session.userId);
+
+  // Regra justa: em modo invisível você não vê seus visitantes
+  if (Number(me?.invisible_visits || 0) === 1) {
+    return res.render("visitors", {
+      blocked: true,
+      range: "all",
+      page: 1,
+      pages: 1,
+      total: 0,
+      visits: []
+    });
+  }
+
+  const range = (req.query.range || "all").toString();
+  const page = Math.max(1, parseInt((req.query.page || "1").toString(), 10) || 1);
+  const limit = 20;
+  const offset = (page - 1) * limit;
+
+  let whereRange = "";
+  if (range === "24h") whereRange = "AND pv.created_at > NOW() - INTERVAL '24 hours'";
+  else if (range === "7d") whereRange = "AND pv.created_at > NOW() - INTERVAL '7 days'";
+  else if (range === "30d") whereRange = "AND pv.created_at > NOW() - INTERVAL '30 days'";
+
+  const total = (await db.get(`
+    SELECT COUNT(*)::int AS c
+    FROM profile_visits pv
+    WHERE pv.visited_id=? ${whereRange}
+  `, [me.id]))?.c || 0;
+
+  const pages = Math.max(1, Math.ceil(total / limit));
+
+  const visits = await db.all(`
+    SELECT u.id, u.username, u.full_name, u.profile_photo, pv.created_at
+    FROM profile_visits pv
+    JOIN users u ON u.id = pv.visitor_id
+    WHERE pv.visited_id=? ${whereRange}
+    ORDER BY pv.created_at DESC
+    LIMIT ${limit} OFFSET ${offset}
+  `, [me.id]);
+
+  res.render("visitors", { blocked: false, range, page, pages, total, visits });
+});
+
 
 // ===== AMIZADES =====
 app.get("/friends", requireAuth, async (req, res) => {
@@ -366,8 +412,8 @@ app.post("/friends/accept/:requestId", requireAuth, async (req, res) => {
 
   await db.run("UPDATE friend_requests SET status='accepted' WHERE id=?", [reqId]);
 
-  await db.run("INSERT INTO friendships (user_id, friend_id) VALUES (?,?) ON CONFLICT (user_id, friend_id) DO NOTHING", [fr.from_user_id, fr.to_user_id]);
-  await db.run("INSERT INTO friendships (user_id, friend_id) VALUES (?,?) ON CONFLICT (user_id, friend_id) DO NOTHING", [fr.to_user_id, fr.from_user_id]);
+  await db.run("INSERT INTO friendships (user_id, friend_id) VALUES (?,?) ON CONFLICT DO NOTHING", [fr.from_user_id, fr.to_user_id]);
+  await db.run("INSERT INTO friendships (user_id, friend_id) VALUES (?,?) ON CONFLICT DO NOTHING", [fr.to_user_id, fr.from_user_id]);
 
   await addNotif(fr.from_user_id, "friend_accept", "Seu pedido de amizade foi aceito.", `/u/${(await getUserById(meId)).username}`);
   res.redirect("/friends");
@@ -687,7 +733,7 @@ app.post("/groups/:id/join", requireAuth, async (req, res) => {
   const group = await db.get("SELECT * FROM groups WHERE id=?", [groupId]);
   if (!group) return res.redirect("/groups");
 
-  await db.run("INSERT INTO group_members (group_id, user_id, role) VALUES (?,?, 'member') ON CONFLICT (group_id, user_id) DO NOTHING", [groupId, meId]);
+  await db.run("INSERT INTO group_members (group_id, user_id, role) VALUES (?,?, 'member') ON CONFLICT DO NOTHING", [groupId, meId]);
   res.redirect(`/groups/${groupId}`);
 });
 
