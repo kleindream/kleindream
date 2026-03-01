@@ -91,13 +91,17 @@ async function migrate() {
     .sort();
 
   for (const file of files) {
-    const already = await get("SELECT 1 FROM schema_migrations WHERE name=?", [file]);
+    const already = await get("SELECT 1 FROM schema_migrations WHERE name=$1", [file]);
     if (already) continue;
-    const sql = fs.readFileSync(path.join(migrationsDir, file), "utf-8");
+    const sqlRaw = fs.readFileSync(path.join(migrationsDir, file), "utf-8");
+    // Safety fixups for legacy migration typos (Postgres has no "group_id" in group_posts; it uses topic_id)
+    let sql = sqlRaw;
+    sql = sql.replace(/group_posts\s*\(\s*group_id\s*,/g, "group_posts(topic_id,");
+    sql = sql.replace(/group_posts\s*\(\s*group_id\s*\)/g, "group_posts(topic_id)");
     if (sql.trim()) {
       await query(sql);
     }
-    await run("INSERT INTO schema_migrations (name) VALUES (?)", [file]);
+    await run("INSERT INTO schema_migrations (name) VALUES ($1)", [file]);
   }
 }
 
