@@ -785,3 +785,9 @@ input:focus, textarea:focus{
 .chat-msg.system .chat-user{opacity:.95;}
 .chat-msg.system .chat-text{opacity:.95;}
 @media (max-width: 520px){ .chat-log{height:360px;} .chat-form{flex-direction:column;} }
+
+
+/* About */
+.about-list{margin:10px 0 0 18px;}
+.about-list li{margin:6px 0;}
+.about-note{margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);}

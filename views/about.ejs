@@ -7,29 +7,25 @@
   <div class="card" style="padding:18px;">
     <h3 style="margin-top:0;">Nossa história</h3>
     <p>
-      O KleinDream nasceu para trazer de volta aquela sensação boa de entrar numa rede social e encontrar pessoas de verdade,
-      com recados, depoimentos, fotos e conversas que ficam na memória.
+      O KleinDream nasceu para trazer de volta aquela sensação boa de entrar numa rede social e se sentir em casa.
+      Aqui é sobre gente, memórias, conversas e aquela nostalgia que dá vontade de ficar mais um pouco.
     </p>
 
-    <h3>Agradecimentos (fictícios — editar depois)</h3>
-    <ul class="list">
-      <li><b>Aos primeiros membros</b> que acreditaram na ideia quando ainda era só um protótipo.</li>
-      <li><b>Aos amigos do bairro</b> que testaram tudo e apontaram bugs sem dó (do jeito certo 😄).</li>
-      <li><b>À internet raiz</b> — fóruns, blogs, lan houses e noites viradas — por inspirar esse clima.</li>
-      <li><b>A você</b>, que está aqui agora: obrigado por fazer parte.</li>
+    <h3>Agradecimentos (fictícios)</h3>
+    <ul class="about-list">
+      <li><b>Equipe Beta</b> — por testar tudo antes de ir pro ar.</li>
+      <li><b>Moderadores</b> — por manterem o clima leve e respeitoso.</li>
+      <li><b>Comunidade</b> — por dar vida ao KleinDream todos os dias.</li>
+      <li><b>Você</b> — por acreditar em internet com coração.</li>
     </ul>
 
-    <div class="kd-alert" style="margin-top:14px;">
-      <b>Dica:</b> esse texto é um rascunho. Você pode editar livremente e colocar seus agradecimentos reais.
+    <div class="about-note">
+      <b>Nota:</b> você pode editar esses agradecimentos e colocar os seus.
     </div>
 
     <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
-      <a class="btn" href="/home">Voltar para o início</a>
-      <% if (me) { %>
-        <a class="btn secondary" href="/u/<%= me.username %>">Meu perfil</a>
-      <% } else { %>
-        <a class="btn secondary" href="/login">Entrar</a>
-      <% } %>
+      <a class="btn secondary" href="/">Voltar</a>
+      <a class="btn" href="/login">Entrar</a>
     </div>
   </div>
 ` }) %>

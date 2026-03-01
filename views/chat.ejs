@@ -159,12 +159,6 @@
 
       socket.on("chat:message", addMsg);
 
-      socket.on('chat:presence', (p)=>{
-        if(!presence) return;
-        const n = (p && typeof p.onlineUsers === 'number') ? p.onlineUsers : 0;
-        presence.innerHTML = `Online agora: <b>${n}</b>`;
-      });
-
       socket.on('chat:error', (e)=>{
         toast((e && e.text) ? e.text : 'Ops!');
       });
