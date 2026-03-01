@@ -1,23 +1,150 @@
-
-<%- include("layout", { title: "Início", body: `  
+<%- include("layout", { title: "Início", body: `
   <div class="grid">
     <div>
       <div class="card">
-        <div class="h" style="font-size: 2rem; font-weight: 900; color: var(--accent);">Atalhos para a diversão!</div>
-        <p style="font-size: 1.2rem; color: var(--text); font-style: italic;">Vamos reviver os melhores momentos! Clique em qualquer um dos atalhos abaixo para acessar seu perfil, recados e fotos — tudo ao estilo dos velhos tempos!</p>
-        <div class="row" style="gap:6px;">
+        <div class="h" style="font-size:2.1rem;font-weight:900;color:var(--accent);">Seu perfil é seu espaço.</div>
+        <p style="font-size:1.1rem;color:var(--text);line-height:1.6;">
+          Aqui ninguém te empurra conteúdo. Não tem pressa, não tem algoritmo, não tem “viral”.
+          Tem gente. Tem recado. Tem presença.
+        </p>
+        <p style="font-size:1.05rem;color:var(--muted);line-height:1.6;margin-top:10px;">
+          O KleinDream é pra quem ainda gosta de <b>ter</b> um perfil — cuidar dele, deixar um pedaço de si,
+          e voltar porque faz sentido.
+        </p>
+        <div class="row" style="gap:6px;margin-top:10px;flex-wrap:wrap;">
           <a class="button secondary" href="/u/${me.username}">Meu perfil</a>
           <a class="button secondary" href="/scraps/${me.username}">Recados</a>
-          <a class="button secondary" href="/testimonials/${me.username}">Depoimentos</a>
           <a class="button secondary" href="/photos/${me.username}">Fotos</a>
+          <a class="button secondary" href="/testimonials/${me.username}">Depoimentos</a>
+        </div>
+        <div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap;">
+          <a class="button" href="/mural">Ir pro Mural público</a>
+          <a class="button secondary" href="/friends">Amigos</a>
+          <a class="button secondary" href="/messages">Mensagens</a>
+        </div>
+        <div class="hr"></div>
+        <div style="color:var(--faint);font-size:.95rem;">
+          Dica: quanto mais você “bota a cara”, mais o KleinDream vira uma comunidade de verdade.
         </div>
       </div>
     </div>
+
     <div>
-      <div class="card" style="background: var(--panel2);">
-        <div class="h" style="font-size: 2rem; font-weight: 900; color: var(--accent);">Bem-vindo de volta!</div>
-        <p style="font-size: 1.2rem; color: var(--text);">A nostalgia está no ar! Vamos aproveitar para curtir as boas memórias e deixar as novas começarem? Não esqueça de compartilhar seu estilo com a galera!</p>
+      <div class="card" style="background:var(--panel2);">
+        <div class="h" style="font-size:2rem;font-weight:900;color:var(--accent);">Bem-vindo de volta, ${me.full_name || me.username}!</div>
+        <p style="font-size:1.05rem;color:var(--text);line-height:1.6;">
+          Se quiser deixar a sua marca hoje, começa simples: um post no mural, um recado pra alguém, uma foto
+          ou um depoimento sincero.
+        </p>
+
+        <div class="grid" style="grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
+          <div class="card" style="margin:0;background:var(--panel);">
+            <div class="h" style="font-size:1.25rem;font-weight:900;color:var(--accent);">Pendências</div>
+            <div style="color:var(--muted);font-size:1rem;line-height:1.6;">
+              <div>Pedidos de amizade: <b>${(incomingRequests||[]).length}</b></div>
+              <div>Depoimentos pendentes: <b>${(pendingTestimonials||[]).length}</b></div>
+              <div>Mensagens não lidas: <b>${(unreadMessages||[]).length}</b></div>
+            </div>
+          </div>
+
+          <div class="card" style="margin:0;background:var(--panel);">
+            <div class="h" style="font-size:1.25rem;font-weight:900;color:var(--accent);">Ações rápidas</div>
+            <div class="row" style="gap:6px;flex-wrap:wrap;">
+              <a class="button secondary" href="/settings">Editar perfil</a>
+              <a class="button secondary" href="/search">Procurar gente</a>
+              <a class="button secondary" href="/mural">Postar no mural</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div style="color:var(--faint);font-size:.95rem;line-height:1.6;">
+          “Nem tudo precisa ser rápido. Algumas coisas só precisam ser verdadeiras.”
+        </div>
       </div>
     </div>
+  </div>
+
+  <div class="grid" style="margin-top:12px;">
+    <div>
+      <div class="card">
+        <div class="h" style="font-size:1.4rem;font-weight:900;color:var(--accent);">Pedidos de amizade</div>
+        <% if ((incomingRequests||[]).length === 0) { %>
+          <div style="color:var(--muted);">Nenhum pedido por enquanto.</div>
+        <% } else { %>
+          <ul class="list">
+            <% incomingRequests.slice(0,10).forEach(r => { %>
+              <li>
+                <a href="/u/<%= r.username %>"><b><%= r.full_name || r.username %></b></a>
+                <span style="color:var(--faint);"> pediu amizade</span>
+              </li>
+            <% }) %>
+          </ul>
+          <div style="margin-top:8px;"><a class="button secondary" href="/friends">Gerenciar</a></div>
+        <% } %>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="h" style="font-size:1.4rem;font-weight:900;color:var(--accent);">Depoimentos pendentes</div>
+        <% if ((pendingTestimonials||[]).length === 0) { %>
+          <div style="color:var(--muted);">Nada pendente. Seu perfil está limpinho 😌</div>
+        <% } else { %>
+          <ul class="list">
+            <% pendingTestimonials.slice(0,10).forEach(t => { %>
+              <li>
+                <a href="/u/<%= t.username %>"><b><%= t.full_name || t.username %></b></a>
+                <span style="color:var(--faint);"> deixou um depoimento</span>
+              </li>
+            <% }) %>
+          </ul>
+          <div style="margin-top:8px;">
+            <a class="button secondary" href="/testimonials/<%= me.username %>">Revisar</a>
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="h" style="font-size:1.4rem;font-weight:900;color:var(--accent);">Mensagens não lidas</div>
+        <% if ((unreadMessages||[]).length === 0) { %>
+          <div style="color:var(--muted);">Caixa de entrada tranquila.</div>
+        <% } else { %>
+          <ul class="list">
+            <% unreadMessages.slice(0,10).forEach(m => { %>
+              <li>
+                <a href="/messages"><b><%= m.from_username %></b></a>
+                <span style="color:var(--faint);"> — <%= (m.subject || "sem assunto") %></span>
+              </li>
+            <% }) %>
+          </ul>
+          <div style="margin-top:8px;"><a class="button secondary" href="/messages">Abrir inbox</a></div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:12px;">
+    <div class="h" style="font-size:1.6rem;font-weight:900;color:var(--accent);">Recados recentes pra você</div>
+    <% if ((latestScraps||[]).length === 0) { %>
+      <div style="color:var(--muted);">Ainda não chegaram recados. Que tal mandar um primeiro recado pra alguém?</div>
+      <div style="margin-top:8px;"><a class="button secondary" href="/search">Procurar pessoas</a></div>
+    <% } else { %>
+      <ul class="list">
+        <% latestScraps.slice(0,10).forEach(s => { %>
+          <li style="margin-bottom:8px;">
+            <div>
+              <a href="/u/<%= s.from_username %>"><b><%= s.from_username %></b></a>
+              <span style="color:var(--faint);"> disse:</span>
+            </div>
+            <div style="color:var(--text);white-space:pre-wrap;"><%= s.content %></div>
+          </li>
+        <% }) %>
+      </ul>
+      <div style="margin-top:8px;"><a class="button secondary" href="/scraps/${me.username}">Ver todos</a></div>
+    <% } %>
   </div>
 ` }) %>
