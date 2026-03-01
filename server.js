@@ -104,7 +104,8 @@ app.use(flash());
 
 // Helpers
 async function getUserById(id) {
-  return await db.get("SELECT id, email, username, full_name, bio, city, state, profile_photo, birth_date, marital_status, favorite_team, profession, hobbies, favorite_music, favorite_movie, favorite_game, personality, looking_for, mood, daily_phrase, created_at FROM users WHERE id=?", [id]);
+  return await db.get("SELECT id, email, username, full_name, bio, city, state, profile_photo, birth_date, marital_status, favorite_team, profession, hobbies, favorite_music, favorite_movie, favorite_game,
+    time_of, personality, looking_for, mood, daily_phrase, created_at FROM users WHERE id=?", [id]);
 }
 
 // Datas no fuso do Brasil (GMT-3 / America/Sao_Paulo)
@@ -270,10 +271,111 @@ app.post("/mural", limiterWrite, requireAuth, async (req, res) => {
 });
 
 
+// ===== NOSSO TEMPO =====
+const NOSSO_TEMPO_PROMPTS = [
+  "a internet fazia barulho ao conectar?",
+  "o MSN avisava que alguém entrou?",
+  "a gente escolhia música pro status?",
+  "lan house era ponto de encontro?",
+  "a foto tinha data amarela no canto?",
+  "a gente salvava coisa em disquete?",
+  "a fita VHS precisava rebobinar?",
+  "a gente esperava a página carregar sem reclamar?",
+  "o Orkut era a primeira coisa que abria?",
+  "a madrugada parecia infinita?"
+];
+
+function promptOfDay() {
+  const d = new Date();
+  const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
+  // hash simples (estável por dia)
+  let h = 0;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+  const idx = h % NOSSO_TEMPO_PROMPTS.length;
+  return NOSSO_TEMPO_PROMPTS[idx];
+}
+
+async function safeOnlineCount() {
+  try {
+    const r = await pool.query("SELECT COUNT(*)::int AS c FROM session WHERE expire > NOW()");
+    return r.rows?.[0]?.c || 0;
+  } catch (e) {
+    return 0;
+  }
+}
+
+app.get("/nosso-tempo", requireAuth, async (req, res) => {
+  const prompt = promptOfDay();
+
+  const totalUsersRow = await db.get("SELECT COUNT(*)::int AS c FROM users");
+  const weekRow = await db.get("SELECT COUNT(*)::int AS c FROM users WHERE created_at >= (NOW() - INTERVAL '7 days')");
+  const onlineNow = await safeOnlineCount();
+
+  // Conexões: "eu sou do tempo de..."
+  const timeOfTop = await db.all(`
+    SELECT time_of, COUNT(*)::int AS c
+    FROM users
+    WHERE time_of IS NOT NULL AND TRIM(time_of) <> ''
+    GROUP BY time_of
+    ORDER BY c DESC, time_of ASC
+    LIMIT 8
+  `);
+
+  // Mapa emocional: humor do dia
+  const moodTop = await db.all(`
+    SELECT mood, COUNT(*)::int AS c
+    FROM users
+    WHERE mood IS NOT NULL AND TRIM(mood) <> ''
+    GROUP BY mood
+    ORDER BY c DESC, mood ASC
+    LIMIT 8
+  `);
+
+  const posts = await db.all(`
+    SELECT p.id, p.body, p.created_at, u.username, u.full_name, u.profile_photo
+    FROM nosso_tempo_posts p
+    JOIN users u ON u.id = p.user_id
+    WHERE p.kind = 'remember' AND p.prompt_text = ?
+    ORDER BY p.created_at DESC
+    LIMIT 30
+  `, [prompt]);
+
+  for (const p of posts) p.created_at = formatDateBR(p.created_at);
+
+  res.render("nosso_tempo", {
+    prompt,
+    stats: {
+      totalUsers: totalUsersRow?.c || 0,
+      onlineNow,
+      joinedWeek: weekRow?.c || 0
+    },
+    timeOfTop,
+    moodTop,
+    posts
+  });
+});
+
+app.post("/nosso-tempo/remember", limiterWrite, requireAuth, async (req, res) => {
+  const prompt = String(req.body.prompt || "").trim() || promptOfDay();
+  const body = String(req.body.body || "").trim();
+
+  if (!body) return res.redirect("/nosso-tempo");
+
+  const clipped = body.slice(0, 280);
+  await db.run(
+    "INSERT INTO nosso_tempo_posts (user_id, kind, prompt_text, body) VALUES (?,?,?,?)",
+    [req.session.userId, "remember", prompt, clipped]
+  );
+
+  res.redirect("/nosso-tempo");
+});
+
+
 // ===== PERFIL =====
 app.get("/u/:username", requireAuth, async (req, res) => {
   const meId = req.session.userId;
-  const user = await db.get("SELECT id, username, full_name, bio, city, state, profile_photo, birth_date, marital_status, favorite_team, profession, hobbies, favorite_music, favorite_movie, favorite_game, personality, looking_for, mood, daily_phrase, invisible_visits, notify_profile_visits, created_at FROM users WHERE username=?", [req.params.username]);
+  const user = await db.get("SELECT id, username, full_name, bio, city, state, profile_photo, birth_date, marital_status, favorite_team, profession, hobbies, favorite_music, favorite_movie, favorite_game,
+    time_of, personality, looking_for, mood, daily_phrase, invisible_visits, notify_profile_visits, created_at FROM users WHERE username=?", [req.params.username]);
   if (!user) return res.status(404).send("Usuário não encontrado.");
 
   const isMe = user.id === meId;
@@ -365,6 +467,7 @@ app.post("/profile/edit", limiterActions, requireAuth, upload.single("profile_ph
     full_name, bio, city, state,
     birth_date, marital_status, favorite_team, profession,
     hobbies, favorite_music, favorite_movie, favorite_game,
+    time_of,
     personality, looking_for, mood, daily_phrase,
     invisible_visits, notify_profile_visits
   } = req.body;
@@ -373,11 +476,12 @@ app.post("/profile/edit", limiterActions, requireAuth, upload.single("profile_ph
       full_name=?, bio=?, city=?, state=?,
       birth_date=?, marital_status=?, favorite_team=?, profession=?,
       hobbies=?, favorite_music=?, favorite_movie=?, favorite_game=?,
+      time_of=?,
       personality=?, looking_for=?, mood=?, daily_phrase=?,
       invisible_visits=?, notify_profile_visits=?
     WHERE id=?`, [full_name || null, bio || null, city || null, state || null,
       birth_date || null, marital_status || null, favorite_team || null, profession || null,
-      hobbies || null, favorite_music || null, favorite_movie || null, favorite_game || null,
+      hobbies || null, favorite_music || null, favorite_movie || null, favorite_game || null, time_of || null,
       personality || null, looking_for || null, mood || null, daily_phrase || null,
       (invisible_visits ? 1 : 0), (notify_profile_visits ? 1 : 0),
       meId]);

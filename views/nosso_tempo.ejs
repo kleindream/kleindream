@@ -1,0 +1,86 @@
+<%- include("layout", { title: "Nosso Tempo", body: `
+  <div class="card">
+    <div class="h">🌌 Nosso Tempo</div>
+    <div class="small muted" style="margin-top:4px;">
+      Este espaço não é público. É nosso. 💙
+    </div>
+
+    <div class="grid2" style="margin-top:12px;">
+      <div class="card" style="padding:12px;">
+        <div class="small muted">Quem somos agora</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;">
+          <div class="pill">👥 <b>${stats.totalUsers}</b> sonhadores</div>
+          <div class="pill">🟢 <b>${stats.onlineNow}</b> online</div>
+          <div class="pill">✨ <b>${stats.joinedWeek}</b> chegaram na semana</div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:12px;">
+        <div class="small muted">Conexões do dia</div>
+        <div class="small" style="margin-top:8px;opacity:.95;">
+          ${timeOfTop && timeOfTop.length
+            ? timeOfTop.map(r => `💙 <b>${r.c}</b> são do tempo de <span class="muted">${escapeHtml(r.time_of)}</span>`).join("<br/>")
+            : `<span class="muted">Ainda ninguém preencheu “eu sou do tempo de…”.</span>`
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px;padding:12px;">
+      <div class="small muted">Mapa emocional</div>
+      <div class="small" style="margin-top:8px;opacity:.95;">
+        ${moodTop && moodTop.length
+          ? moodTop.map(r => `🌈 <b>${r.c}</b> estão <span class="muted">${escapeHtml(r.mood)}</span>`).join(" · ")
+          : `<span class="muted">Sem humor definido hoje (por enquanto).</span>`
+        }
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px;padding:12px;border-color:rgba(255,255,255,.18);">
+      <div class="h" style="font-size:16px;margin:0;">🕰 Lembra quando…</div>
+      <div style="margin-top:6px;font-size:15px;line-height:1.35;">
+        ${escapeHtml(prompt)}
+      </div>
+      <div class="small muted" style="margin-top:6px;">Conta uma lembrança curta. Só coisa boa. 😊</div>
+
+      <form method="post" action="/nosso-tempo/remember" style="margin-top:10px;">
+        <input type="hidden" name="prompt" value="${escapeHtml(prompt)}" />
+        <textarea name="body" rows="3" maxlength="280" placeholder="O que você lembra quando pensa nisso?" style="width:100%;"></textarea>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:10px;flex-wrap:wrap;">
+          <div class="small muted">Dica: coisas simples marcam mais.</div>
+          <button class="btn" type="submit">Publicar lembrança</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card" style="margin-top:12px;padding:12px;">
+      <div class="h" style="font-size:16px;margin:0;">💬 Lembranças de hoje</div>
+
+      ${posts && posts.length ? `
+        <div style="margin-top:10px;display:flex;flex-direction:column;gap:10px;">
+          ${posts.map(p => `
+            <div class="card" style="padding:10px;">
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <a href="/u/${p.username}">
+                  <img class="avatar" src="${(p.profile_photo && String(p.profile_photo).startsWith("http")) ? p.profile_photo : (p.profile_photo ? `/uploads/${p.profile_photo}` : "/default-avatar.png")}" style="width:44px;height:44px;border-radius:12px;object-fit:cover;" alt="avatar" />
+                </a>
+                <div style="flex:1;">
+                  <div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;">
+                    <a href="/u/${p.username}" style="font-weight:800;">${p.full_name ? escapeHtml(p.full_name) : escapeHtml(p.username)}</a>
+                    <span class="small muted">${p.created_at}</span>
+                  </div>
+                  <div style="margin-top:6px;white-space:pre-wrap;">${escapeHtml(p.body)}</div>
+                  <div class="small muted" style="margin-top:6px;">— Escrito no KleinDream</div>
+                </div>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      ` : `
+        <div class="small muted" style="margin-top:8px;">Ainda não tem lembranças aqui… seja o primeiro. 💙</div>
+      `}
+    </div>
+  </div>
+`}) %>
+
+<% function escapeHtml(s){ return String(s||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"); } %>
