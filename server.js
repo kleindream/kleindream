@@ -533,9 +533,8 @@ app.get("/friends", requireAuth, async (req, res, next) => {
     ORDER BY fr.created_at DESC
   `, [meId]);
 
-  res.render("friends", { friends, incomingRequests, outgoingRequests, page, pages, total 
+  res.render("friends", { friends, incomingRequests, outgoingRequests, page, pages, total });
   } catch (err) { return next(err); }
-});
 });
 
 app.post("/friends/request/:userId", limiterActions, requireAuth, async (req, res) => {
