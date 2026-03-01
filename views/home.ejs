@@ -1,52 +1,3 @@
-<%
-  // Helpers: escape básico pra evitar HTML injetado no mural
-  const esc = (s) => String(s ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-
-  const fmtDate = (d) => {
-    try {
-      const dt = new Date(d);
-      if (Number.isNaN(dt.getTime())) return "";
-      return dt.toLocaleString("pt-BR");
-    } catch {
-      return "";
-    }
-  };
-
-  // Você pode mandar do backend como muralPosts (recomendado)
-  // mas deixei fallback pra "posts" também, caso você já use esse nome.
-  const muralPostsRaw = (locals.muralPosts || locals.posts || []);
-  const muralPosts = Array.isArray(muralPostsRaw) ? muralPostsRaw.slice(0, 25) : [];
-
-  const muralHtml = muralPosts.length
-    ? muralPosts.map((p) => {
-        const author =
-          esc(p.author_username || p.username || p.from_username || "alguém");
-        const when = esc(fmtDate(p.created_at || p.createdAt || p.date));
-        const content = esc(p.content || p.text || p.message || "");
-
-        return `
-          <div class="card" style="margin-top:10px; background: var(--panel2);">
-            <div class="row" style="justify-content: space-between; gap: 10px; align-items: baseline;">
-              <div style="font-weight: 900; color: var(--accent);">${author}</div>
-              <div style="opacity:.75; font-size: .9rem;">${when}</div>
-            </div>
-            <div style="margin-top: 8px; line-height: 1.45; white-space: pre-wrap;">${content}</div>
-          </div>
-        `;
-      }).join("")
-    : `
-      <div class="card" style="margin-top:10px; background: var(--panel2);">
-        <div style="opacity:.85;">
-          Ainda não há nada no mural. Seja a primeira pessoa a deixar sua marca. 💙
-        </div>
-      </div>
-    `;
-%>
 
 <%- include("layout", { title: "Início", body: `  
   <div class="grid">
@@ -67,37 +18,6 @@
         <div class="h" style="font-size: 2rem; font-weight: 900; color: var(--accent);">Bem-vindo de volta!</div>
         <p style="font-size: 1.2rem; color: var(--text);">A nostalgia está no ar! Vamos aproveitar para curtir as boas memórias e deixar as novas começarem? Não esqueça de compartilhar seu estilo com a galera!</p>
       </div>
-    </div>
-  </div>
-
-  <!-- MURAL (híbrido) -->
-  <div class="card" style="margin-top: 12px;">
-    <div class="h" style="font-size: 1.6rem; font-weight: 900; color: var(--accent);">Deixe sua marca no mural.</div>
-    <p style="margin-top: 6px; opacity: .9;">
-      Sem algoritmo, sem pressão. Só presença — do jeito que a internet deveria ser.
-    </p>
-
-    <form method="post" action="/mural" style="margin-top: 10px;">
-      <textarea
-        name="content"
-        rows="4"
-        maxlength="500"
-        placeholder="Escreva algo curto… ou um textão nostálgico. Aqui pode."
-        style="width: 100%; resize: vertical; padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,.12); background: rgba(0,0,0,.12); color: var(--text);"
-        required
-      ></textarea>
-
-      <div class="row" style="margin-top: 8px; justify-content: space-between; gap: 10px;">
-        <div style="opacity:.75; font-size: .95rem;">
-          Dica: seja você. A vibe aqui é 90/2000 com maturidade.
-        </div>
-        <button class="button" type="submit">Publicar</button>
-      </div>
-    </form>
-
-    <div style="margin-top: 14px;">
-      <div class="h" style="font-size: 1.2rem; font-weight: 900; color: var(--accent);">Últimas marcas no mural</div>
-      ${muralHtml}
     </div>
   </div>
 ` }) %>

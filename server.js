@@ -244,6 +244,32 @@ app.get("/home", requireAuth, async (req, res) => {
   res.render("home", { incomingRequests, pendingTestimonials, unreadMessages, latestScraps });
 });
 
+
+// ===== MURAL (PÚBLICO) =====
+app.get("/mural", requireAuth, async (req, res) => {
+  const posts = await db.all(`
+    SELECT p.id, p.content, p.created_at,
+           u.username, u.full_name, u.profile_photo
+    FROM posts p
+    JOIN users u ON u.id = p.user_id
+    ORDER BY p.created_at DESC
+    LIMIT 50
+  `);
+
+  res.render("mural", { posts });
+});
+
+app.post("/mural", limiterWrite, requireAuth, async (req, res) => {
+  const content = String(req.body.content || "").trim();
+  if (!content) return res.redirect("/mural");
+
+  const clipped = content.slice(0, 800);
+  await db.run("INSERT INTO posts (user_id, content) VALUES (?,?)", [req.session.userId, clipped]);
+
+  res.redirect("/mural");
+});
+
+
 // ===== PERFIL =====
 app.get("/u/:username", requireAuth, async (req, res) => {
   const meId = req.session.userId;

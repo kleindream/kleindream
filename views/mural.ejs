@@ -1,0 +1,46 @@
+<%- include("layout", { title: "Mural", body: `
+  <div class="card">
+    <div class="h" style="font-size: 1.4rem; font-weight: 900; color: var(--accent);">Mural público</div>
+    <div class="small" style="margin-top: 6px; opacity: .9;">
+      Aqui é “botar a cara”: todo mundo vê, todo mundo comenta na vida real — e aqui a gente publica com nome e sobrenome (quase 😄).
+    </div>
+
+    <form method="post" action="/mural" style="margin-top: 12px;">
+      <label class="small" style="color: var(--text);">Escrever no mural</label>
+      <textarea class="textarea-compact" name="content" rows="3" maxlength="800" placeholder="Conta uma novidade, solta uma lembrança, diz um ‘oi’..."></textarea>
+      <div class="row" style="justify-content: space-between; margin-top: 8px;">
+        <div class="small" style="opacity:.8;">Dica: mensagens curtas e sinceras ficam com cara de Orkut 😌</div>
+        <button class="btn" type="submit">Publicar</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="h" style="font-size: 1.2rem; font-weight: 900; color: var(--accent);">Últimas postagens</div>
+
+    ${posts.length ? posts.map(p => `
+      <div class="card" style="margin-top: 10px; background: var(--panel2);">
+        <div class="row" style="justify-content: space-between; align-items: center;">
+          <div class="row" style="gap: 10px;">
+            <img class="avatar sm" src="${p.profile_photo || '/default-avatar.png'}" alt="Foto de ${p.username}" onerror="this.src='/default-avatar.png'" />
+            <div>
+              <div class="h" style="margin:0; color: var(--accent);">
+                <a href="/u/${p.username}">${p.username}</a>
+                ${p.full_name ? `<span class="small" style="opacity:.85;">(${escapeHtml(p.full_name)})</span>` : ``}
+              </div>
+              <div class="small" style="opacity:.8;">${new Date(p.created_at).toLocaleString()}</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 10px; color: var(--text); white-space: pre-wrap;">${escapeHtml(p.content)}</div>
+      </div>
+    `).join("") : `
+      <div class="notice" style="margin-top: 10px;">
+        Ainda não tem posts por aqui. Seja o primeiro a deixar o mural com cara de 2004 💙
+      </div>
+    `}
+  </div>
+` }) %>
+
+<% function escapeHtml(str){ return String(str ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); } %>
