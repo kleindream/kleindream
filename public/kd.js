@@ -125,4 +125,5 @@
   // Expose for inline scripts if needed
   window.KD = window.KD || {};
   window.KD.toast = toast;
+  window.kdToast = toast;
 })();

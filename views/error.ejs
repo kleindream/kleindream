@@ -1,0 +1,19 @@
+<%- include("layout", { title: title || "Erro", body: `
+  <div class="card" style="max-width:720px;margin:0 auto;">
+    <div class="h">${title || "Ops!"}</div>
+    <p style="margin-top:10px;opacity:.95;">${message || "Algo deu errado."}</p>
+    <div class="card" style="margin-top:14px;background:rgba(0,0,0,.12);border-color:rgba(255,255,255,.12);">
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+        <div><b>Status:</b> ${status || 500}</div>
+        <div><b>ID:</b> <span style="font-family:monospace">${requestId || (typeof window !== 'undefined' ? '' : '')}</span></div>
+      </div>
+      <div style="margin-top:8px;opacity:.85;font-size:.95em;">
+        Se você precisar reportar, mande esse ID pra mim.
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;">
+      <a class="btn" href="/home">Ir para o início</a>
+      <a class="btn ghost" href="/" onclick="history.back();return false;">Voltar</a>
+    </div>
+  </div>
+` }) %>

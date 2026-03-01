@@ -17,7 +17,17 @@
             </tr>
           `).join("")}
         </tbody>
+      
       </table>
+      <div class="kd-pagination" style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap;">
+        <div style="opacity:.9;">Total: ${total}</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          ${page > 1 ? `<a class="btn ghost" href="/friends?page=${page-1}">← Anterior</a>` : `<span class="btn ghost" style="opacity:.4;pointer-events:none;">← Anterior</span>`}
+          <span style="opacity:.85;">Página ${page} de ${pages}</span>
+          ${page < pages ? `<a class="btn ghost" href="/friends?page=${page+1}">Próxima →</a>` : `<span class="btn ghost" style="opacity:.4;pointer-events:none;">Próxima →</span>`}
+        </div>
+      </div>
+    
     ` : `<div class="small">Você ainda não tem amigos aqui.</div>`}
   </div>
 

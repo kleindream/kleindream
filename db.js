@@ -5,6 +5,8 @@
 // Postgres keeps your users, profiles, messages, etc. persistent across deploys.
 
 const { Pool } = require("pg");
+const fs = require("fs");
+const path = require("path");
 
 if (!process.env.DATABASE_URL) {
   console.warn(
@@ -69,6 +71,34 @@ async function all(sql, params = []) {
 
 async function run(sql, params = []) {
   return query(sql, params);
+}
+
+
+async function migrate() {
+  const migrationsDir = path.join(__dirname, "migrations");
+  if (!fs.existsSync(migrationsDir)) return;
+
+  await query(`
+    CREATE TABLE IF NOT EXISTS schema_migrations (
+      id SERIAL PRIMARY KEY,
+      name TEXT UNIQUE NOT NULL,
+      applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
+
+  const files = fs.readdirSync(migrationsDir)
+    .filter(f => f.endsWith(".sql"))
+    .sort();
+
+  for (const file of files) {
+    const already = await get("SELECT 1 FROM schema_migrations WHERE name=?", [file]);
+    if (already) continue;
+    const sql = fs.readFileSync(path.join(migrationsDir, file), "utf-8");
+    if (sql.trim()) {
+      await query(sql);
+    }
+    await run("INSERT INTO schema_migrations (name) VALUES (?)", [file]);
+  }
 }
 
 async function init() {
@@ -261,4 +291,4 @@ async function init() {
 
 const db = { query, get, all, run, pool };
 
-module.exports = { db, init, pool };
+module.exports = { db, init, migrate, pool };

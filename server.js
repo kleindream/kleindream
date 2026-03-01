@@ -4,12 +4,14 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const session = require("express-session");
+const flash = require("connect-flash");
 const PgSession = require("connect-pg-simple")(session);
 const bcrypt = require("bcryptjs");
 const multer = require("multer");
+const rateLimit = require("express-rate-limit");
 const { createClient } = require("@supabase/supabase-js");
 
-const { db, init, pool } = require("./db");
+const { db, init, migrate, pool } = require("./db");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -67,6 +69,29 @@ app.set("views", path.join(__dirname, "views"));
 
 // Middlewares
 app.use(express.urlencoded({ extended: true }));
+
+// Rate limiting (anti-spam básico)
+const limiterAuth = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  limit: 30,
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+const limiterActions = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 60,
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+const limiterWrite = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
 app.use(express.static(path.join(__dirname, "public")));
 const sessionMiddleware = session({
     store: new PgSession({ pool, tableName: "session", createTableIfMissing: true }),
@@ -75,6 +100,7 @@ const sessionMiddleware = session({
     saveUninitialized: false
   });
 app.use(sessionMiddleware);
+app.use(flash());
 
 // Helpers
 async function getUserById(id) {
@@ -98,9 +124,20 @@ async function addNotif(userId, type, text, link = null) {
   await db.run("INSERT INTO notifications (user_id, type, text, link) VALUES (?,?,?,?)", [userId, type, text, link]);
 }
 
+app.use((req, res, next) => {
+  req.requestId = Math.random().toString(36).slice(2, 10) + '-' + Date.now().toString(36);
+  res.locals.requestId = req.requestId;
+  next();
+});
+
 app.use(async (req, res, next) => {
   try {
   res.locals.me = req.session.userId ? await getUserById(req.session.userId) : null;
+  res.locals.flash = {
+    success: req.flash('success'),
+    error: req.flash('error'),
+    info: req.flash('info')
+  };
   if (req.session.userId) {
     const notifs = await db.all("SELECT * FROM notifications WHERE user_id=? AND is_read=0 ORDER BY created_at DESC LIMIT 20", [req.session.userId]);
     res.locals.notifCount = notifs.length;
@@ -130,7 +167,7 @@ app.get("/about", async (req, res) => {
 });
 
 app.get("/register", async (req, res) => res.render("register", { error: null }));
-app.post("/register", async (req, res) => {
+app.post("/register", limiterAuth, async (req, res) => {
   const { email, username, password, full_name } = req.body;
 
   if (!email || !username || !password) return res.render("register", { error: "Preencha e-mail, usuário e senha." });
@@ -143,11 +180,12 @@ app.post("/register", async (req, res) => {
   const info = await db.run("INSERT INTO users (email, username, password_hash, full_name) VALUES (?,?,?,?) RETURNING id", [email, username, hash, full_name || null]);
 
   req.session.userId = info.rows[0].id;
+  req.flash("success", "Conta criada! Bem-vindo(a) ao KleinDream 💙");
   res.redirect("/home");
 });
 
 app.get("/login", async (req, res) => res.render("login", { error: null }));
-app.post("/login", async (req, res) => {
+app.post("/login", limiterAuth, async (req, res) => {
   const { usernameOrEmail, password } = req.body;
   const user = await db.get("SELECT * FROM users WHERE email=? OR username=?", [usernameOrEmail, usernameOrEmail]);
   if (!user) return res.render("login", { error: "Usuário não encontrado." });
@@ -157,6 +195,7 @@ app.post("/login", async (req, res) => {
 
   req.session.userId = user.id;
     req.session.username = user.username;
+  req.flash("success", "Bem-vindo(a) de volta!");
   res.redirect("/home");
 });
 
@@ -294,7 +333,7 @@ app.get("/profile/edit", requireAuth, async (req, res) => {
   res.render("profile_edit", { me, error: null, ok: null });
 });
 
-app.post("/profile/edit", requireAuth, upload.single("profile_photo"), async (req, res) => {
+app.post("/profile/edit", limiterActions, requireAuth, upload.single("profile_photo"), async (req, res) => {
   const meId = req.session.userId;
   const {
     full_name, bio, city, state,
@@ -389,8 +428,85 @@ app.get("/me/visitors", requireAuth, async (req, res) => {
 
 
 // ===== AMIZADES =====
-app.get("/friends", requireAuth, async (req, res) => {
+
+// ===== CONTA (Excluir) =====
+app.get("/account/delete", requireAuth, async (req, res) => {
+  res.render("account_delete", { error: null });
+});
+
+app.post("/account/delete", limiterActions, requireAuth, async (req, res, next) => {
+  try {
+    const meId = req.session.userId;
+    const password = String(req.body.password || "");
+    const confirm = String(req.body.confirm || "").trim().toUpperCase();
+
+    if (confirm !== "EXCLUIR") {
+      return res.render("account_delete", { error: "Digite EXCLUIR para confirmar." });
+    }
+
+    const me = await db.get("SELECT id, password_hash, username FROM users WHERE id=?", [meId]);
+    if (!me) return res.redirect("/logout");
+
+    const ok = await bcrypt.compare(password, me.password_hash);
+    if (!ok) {
+      return res.render("account_delete", { error: "Senha incorreta." });
+    }
+
+    // Capturar arquivos para tentar limpar (se armazenados localmente).
+    const photos = await db.all("SELECT filename FROM photos WHERE user_id=?", [meId]);
+    const profile = await db.get("SELECT profile_photo FROM users WHERE id=?", [meId]);
+
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      // Apagar usuário (cascata cuida do resto)
+      await client.query("DELETE FROM users WHERE id=$1", [meId]);
+      await client.query("COMMIT");
+    } catch (e) {
+      await client.query("ROLLBACK");
+      throw e;
+    } finally {
+      client.release();
+    }
+
+    // Tentativa best-effort de apagar arquivos locais (se existirem)
+    const localPaths = [];
+    const maybeLocal = (urlOrPath) => {
+      if (!urlOrPath) return;
+      // Se for URL (Supabase), não dá para apagar aqui.
+      if (/^https?:\/\//i.test(urlOrPath)) return;
+      localPaths.push(urlOrPath);
+    };
+    photos.forEach(p => maybeLocal(p.filename));
+    maybeLocal(profile && profile.profile_photo);
+
+    for (const p of localPaths) {
+      try {
+        const abs = path.isAbsolute(p) ? p : path.join(__dirname, "public", p.replace(/^\//, ""));
+        if (fs.existsSync(abs)) fs.unlinkSync(abs);
+      } catch (_) {}
+    }
+
+    req.session.destroy(() => {});
+    req.flash("success", "Conta excluída com sucesso.");
+    res.redirect("/");
+  } catch (err) {
+    return next(err);
+  }
+});
+
+
+app.get("/friends", requireAuth, async (req, res, next) => {
+  try {
   const meId = req.session.userId;
+
+  const page = Math.max(1, Number(req.query.page || 1));
+  const limit = 50;
+  const offset = (page - 1) * limit;
+
+  const totalRow = await db.get("SELECT COUNT(*)::int AS c FROM friendships WHERE user_id=?", [meId]);
+  const total = (totalRow && (totalRow.c ?? totalRow.count ?? 0)) || 0;
+  const pages = Math.max(1, Math.ceil(total / limit));
 
   const friends = await db.all(`
     SELECT u.id, u.username, u.full_name
@@ -398,6 +514,7 @@ app.get("/friends", requireAuth, async (req, res) => {
     JOIN users u ON u.id = f.friend_id
     WHERE f.user_id=?
     ORDER BY u.username
+    LIMIT ${limit} OFFSET ${offset}
   `, [meId]);
 
   const incomingRequests = await db.all(`
@@ -416,10 +533,12 @@ app.get("/friends", requireAuth, async (req, res) => {
     ORDER BY fr.created_at DESC
   `, [meId]);
 
-  res.render("friends", { friends, incomingRequests, outgoingRequests });
+  res.render("friends", { friends, incomingRequests, outgoingRequests, page, pages, total 
+  } catch (err) { return next(err); }
+});
 });
 
-app.post("/friends/request/:userId", requireAuth, async (req, res) => {
+app.post("/friends/request/:userId", limiterActions, requireAuth, async (req, res) => {
   const meId = req.session.userId;
   const otherId = Number(req.params.userId);
   if (otherId === meId) return res.redirect("back");
@@ -434,7 +553,7 @@ app.post("/friends/request/:userId", requireAuth, async (req, res) => {
   res.redirect("back");
 });
 
-app.post("/friends/accept/:requestId", requireAuth, async (req, res) => {
+app.post("/friends/accept/:requestId", limiterActions, requireAuth, async (req, res) => {
   const meId = req.session.userId;
   const reqId = Number(req.params.requestId);
 
@@ -447,20 +566,22 @@ app.post("/friends/accept/:requestId", requireAuth, async (req, res) => {
   await db.run("INSERT INTO friendships (user_id, friend_id) VALUES (?,?) ON CONFLICT DO NOTHING", [fr.to_user_id, fr.from_user_id]);
 
   await addNotif(fr.from_user_id, "friend_accept", "Seu pedido de amizade foi aceito.", `/u/${(await getUserById(meId)).username}`);
+  req.flash("success", "Amizade aceita!");
   res.redirect("/friends");
 });
 
-app.post("/friends/reject/:requestId", requireAuth, async (req, res) => {
+app.post("/friends/reject/:requestId", limiterActions, requireAuth, async (req, res) => {
   const meId = req.session.userId;
   const reqId = Number(req.params.requestId);
   await db.run("UPDATE friend_requests SET status='rejected' WHERE id=? AND to_user_id=?", [reqId, meId]);
   res.redirect("/friends");
 });
 
-app.post("/friends/remove/:userId", requireAuth, async (req, res) => {
+app.post("/friends/remove/:userId", limiterActions, requireAuth, async (req, res) => {
   const meId = req.session.userId;
   const otherId = Number(req.params.userId);
   await db.run("DELETE FROM friendships WHERE (user_id=? AND friend_id=?) OR (user_id=? AND friend_id=?)", [meId, otherId, otherId, meId]);
+  req.flash("info", "Amigo removido.");
   res.redirect("/friends");
 });
 
@@ -503,7 +624,7 @@ app.get("/scraps/:username", requireAuth, async (req, res) => {
   res.render("scraps", { user, scraps, commentsByScrap });
 });
 
-app.post("/scraps/:username", requireAuth, async (req, res) => {
+app.post("/scraps/:username", limiterWrite, requireAuth, async (req, res) => {
   const meId = req.session.userId;
   const { content } = req.body;
   const to = await db.get("SELECT id FROM users WHERE username=?", [req.params.username]);
@@ -512,6 +633,7 @@ app.post("/scraps/:username", requireAuth, async (req, res) => {
 
   await db.run("INSERT INTO scraps (from_user_id, to_user_id, content) VALUES (?,?,?)", [meId, to.id, content.trim()]);
   await addNotif(to.id, "scrap", "Você recebeu um recado.", `/scraps/${req.params.username}`);
+  req.flash("success", "Recado enviado!");
   res.redirect(`/scraps/${req.params.username}`);
 });
 
@@ -600,7 +722,7 @@ app.get("/testimonials/:username", requireAuth, async (req, res) => {
   res.render("testimonials", { user, approved, pendingMine });
 });
 
-app.post("/testimonials/:username", requireAuth, async (req, res) => {
+app.post("/testimonials/:username", limiterWrite, requireAuth, async (req, res) => {
   const meId = req.session.userId;
   const { content } = req.body;
   const to = await db.get("SELECT id FROM users WHERE username=?", [req.params.username]);
@@ -644,7 +766,7 @@ app.get("/photos/:username", requireAuth, async (req, res) => {
   res.render("photos", { user, albums, photos, error });
 });
 
-app.post("/albums/create", requireAuth, async (req, res) => {
+app.post("/albums/create", limiterActions, requireAuth, async (req, res) => {
   const meId = req.session.userId;
   const title = (req.body.title || "").trim();
   if (!title) return res.redirect(`/photos/${(await getUserById(meId)).username}`);
@@ -652,7 +774,7 @@ app.post("/albums/create", requireAuth, async (req, res) => {
   res.redirect(`/photos/${(await getUserById(meId)).username}`);
 });
 
-app.post("/photos/upload/:albumId", requireAuth, upload.single("photo"), async (req, res) => {
+app.post("/photos/upload/:albumId", limiterWrite, requireAuth, upload.single("photo"), async (req, res) => {
   const meId = req.session.userId;
   const albumId = Number(req.params.albumId);
 
@@ -702,7 +824,7 @@ app.get("/groups", requireAuth, async (req, res) => {
   res.render("groups", { groups, myGroups, error: null });
 });
 
-app.post("/groups/create", requireAuth, async (req, res) => {
+app.post("/groups/create", limiterActions, requireAuth, async (req, res) => {
   const meId = req.session.userId;
   const name = (req.body.name || "").trim();
   const description = (req.body.description || "").trim();
@@ -758,7 +880,7 @@ app.get("/groups/:id", requireAuth, async (req, res) => {
   res.render("group_view", { group, membership, members, topics });
 });
 
-app.post("/groups/:id/join", requireAuth, async (req, res) => {
+app.post("/groups/:id/join", limiterActions, requireAuth, async (req, res) => {
   const meId = req.session.userId;
   const groupId = Number(req.params.id);
   const group = await db.get("SELECT * FROM groups WHERE id=?", [groupId]);
@@ -768,7 +890,7 @@ app.post("/groups/:id/join", requireAuth, async (req, res) => {
   res.redirect(`/groups/${groupId}`);
 });
 
-app.post("/groups/:id/leave", requireAuth, async (req, res) => {
+app.post("/groups/:id/leave", limiterActions, requireAuth, async (req, res) => {
   const meId = req.session.userId;
   const groupId = Number(req.params.id);
 
@@ -779,7 +901,7 @@ app.post("/groups/:id/leave", requireAuth, async (req, res) => {
   res.redirect(`/groups/${groupId}`);
 });
 
-app.post("/groups/:id/topics/create", requireAuth, async (req, res) => {
+app.post("/groups/:id/topics/create", limiterWrite, requireAuth, async (req, res) => {
   const meId = req.session.userId;
   const groupId = Number(req.params.id);
   const title = (req.body.title || "").trim();
@@ -828,7 +950,7 @@ app.get("/groups/:groupId/topic/:topicId", requireAuth, async (req, res) => {
   res.render("group_topic", { group, topic, posts, membership });
 });
 
-app.post("/groups/:groupId/topic/:topicId/reply", requireAuth, async (req, res) => {
+app.post("/groups/:groupId/topic/:topicId/reply", limiterWrite, requireAuth, async (req, res) => {
   const meId = req.session.userId;
   const groupId = Number(req.params.groupId);
   const topicId = Number(req.params.topicId);
@@ -868,7 +990,7 @@ app.get("/messages", requireAuth, async (req, res) => {
   res.render("messages", { inbox, outbox, error: null, ok: null });
 });
 
-app.post("/messages/send", requireAuth, async (req, res) => {
+app.post("/messages/send", limiterWrite, requireAuth, async (req, res) => {
   const meId = req.session.userId;
   const toUsername = (req.body.to || "").trim();
   const subject = (req.body.subject || "").trim();
@@ -960,9 +1082,36 @@ app.post("/notifications/readall", requireAuth, async (req, res) => {
   res.redirect("/notifications");
 });
 
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).render("error", {
+    title: "Página não encontrada",
+    message: "Não achamos essa página.",
+    status: 404,
+    requestId: req.requestId
+  });
+});
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error("[KleinDream] ERROR", req.requestId, err && err.stack ? err.stack : err);
+  const status = err && err.status ? err.status : 500;
+  res.status(status).render("error", {
+    title: status === 500 ? "Erro interno" : "Ops!",
+    message: status === 500
+      ? "Aconteceu um erro aqui. Já estamos cuidando disso. 💙"
+      : (err.message || "Algo deu errado."),
+    status,
+    requestId: req.requestId
+  });
+});
+
+
 // ===== START =====
 async function main() {
   await init();
+  await migrate();
 
   const server = http.createServer(app);
 

@@ -98,6 +98,23 @@
     })();
   </script>
 
-  <script src="/kd.js"></script>
+  
+  <script>
+    // Flash -> toasts
+    (function(){
+      const flash = <%- JSON.stringify(flash || {}) %>;
+      if (!flash) return;
+      function push(list, type){
+        if (!list) return;
+        (Array.isArray(list)?list:[list]).forEach(m=>{
+          if (m) window.kdToast && window.kdToast(String(m), type);
+        });
+      }
+      push(flash.success, 'success');
+      push(flash.error, 'error');
+      push(flash.info, 'info');
+    })();
+  </script>
+<script src="/kd.js"></script>
 </body>
 </html>
