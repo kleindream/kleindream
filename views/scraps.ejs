@@ -1,4 +1,3 @@
-
 <%- include("layout", { title: "Recados", body: `  
   <div class="card">
     <div class="h" style="font-size: 2rem; font-weight: 900; color: var(--accent);">Recados de ${user.username}</div>
@@ -12,11 +11,45 @@
 
   <div class="card">
     <div class="h" style="font-size: 2rem; font-weight: 900; color: var(--accent);">Recados de amigos e fãs</div>
+
     ${scraps.length ? scraps.map(s => `
-      <div class="card" style="margin-top: 10px;">
-        <div class="h" style="color: var(--accent);">De: ${s.from}</div>
-        <p style="color: var(--text);">${s.content}</p>
+      <div class="card" style="margin-top: 10px; background: var(--panel2);">
+        <div class="row" style="justify-content: space-between; align-items: center;">
+          <div class="h" style="color: var(--accent); margin: 0;">
+            De: <a href="/u/${s.from_username}">${s.from_username}</a>
+          </div>
+
+          <div class="row" style="gap: 8px;">
+            <form method="post" action="/scraps/like/${s.id}">
+              <input type="hidden" name="returnTo" value="/scraps/${user.username}" />
+              <button class="btn ${s.liked ? "secondary" : ""}" type="submit">
+                ${s.liked ? "Curtido" : "Curtir"} • ${s.like_count || 0}
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <p style="color: var(--text); margin-top: 8px;">${escapeHtml(s.content)}</p>
+
+        <div class="small" style="margin-top: 8px; opacity: .85;">Comentários</div>
+        <div style="margin-top: 6px;">
+          ${(commentsByScrap[s.id] || []).map(c => `
+            <div class="small" style="margin: 6px 0;">
+              <b><a href="/u/${c.author}">${c.author}</a></b>: ${escapeHtml(c.content)}
+            </div>
+          `).join("") || `<div class="small" style="color: var(--muted);">Nenhum comentário ainda.</div>`}
+        </div>
+
+        <form method="post" action="/scraps/comment/${s.id}" style="margin-top: 10px;">
+          <input type="hidden" name="returnTo" value="/scraps/${user.username}" />
+          <input name="content" placeholder="Comentar..." style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,.12); background: rgba(0,0,0,.15); color: var(--text);" />
+          <div style="margin-top:8px;">
+            <button class="btn" type="submit">Comentar</button>
+          </div>
+        </form>
       </div>
     `).join('') : `<p style="color: var(--muted);">Nenhum recado ainda. Deixe o seu primeiro recado para ${user.username}!</p>`}
   </div>
 ` }) %>
+
+<% function escapeHtml(str){ return String(str ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); } %>

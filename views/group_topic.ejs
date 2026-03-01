@@ -9,8 +9,16 @@
     <div class="h">Mensagens</div>
     ${posts.map(p => `
       <div class="card" style="background:var(--panel2);">
-        <div class="small">${p.author} • ${p.created_at}</div>
-        <div>${escapeHtml(p.content)}</div>
+        <div class="row" style="justify-content: space-between; align-items:center;">
+          <div class="small">${p.author} • ${p.created_at}</div>
+          <form method="post" action="/groups/post/like/${p.id}">
+            <input type="hidden" name="returnTo" value="/groups/${group.id}/topic/${topic.id}" />
+            <button class="btn ${p.liked ? "secondary" : ""}" type="submit">
+              ${p.liked ? "Curtido" : "Curtir"} • ${p.like_count || 0}
+            </button>
+          </form>
+        </div>
+        <div style="margin-top:8px;">${escapeHtml(p.content)}</div>
       </div>
     `).join("")}
   </div>
@@ -27,4 +35,4 @@
   </div>
 ` }) %>
 
-<% function escapeHtml(str){ return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); } %>
+<% function escapeHtml(str){ return String(str ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); } %>

@@ -366,8 +366,8 @@ app.post("/friends/accept/:requestId", requireAuth, async (req, res) => {
 
   await db.run("UPDATE friend_requests SET status='accepted' WHERE id=?", [reqId]);
 
-  await db.run("INSERT OR IGNORE INTO friendships (user_id, friend_id) VALUES (?,?)", [fr.from_user_id, fr.to_user_id]);
-  await db.run("INSERT OR IGNORE INTO friendships (user_id, friend_id) VALUES (?,?)", [fr.to_user_id, fr.from_user_id]);
+  await db.run("INSERT INTO friendships (user_id, friend_id) VALUES (?,?) ON CONFLICT (user_id, friend_id) DO NOTHING", [fr.from_user_id, fr.to_user_id]);
+  await db.run("INSERT INTO friendships (user_id, friend_id) VALUES (?,?) ON CONFLICT (user_id, friend_id) DO NOTHING", [fr.to_user_id, fr.from_user_id]);
 
   await addNotif(fr.from_user_id, "friend_accept", "Seu pedido de amizade foi aceito.", `/u/${(await getUserById(meId)).username}`);
   res.redirect("/friends");
@@ -392,16 +392,38 @@ app.get("/scraps/:username", requireAuth, async (req, res) => {
   const user = await db.get("SELECT id, username, full_name FROM users WHERE username=?", [req.params.username]);
   if (!user) return res.status(404).send("Usuário não encontrado.");
 
+  const meId = req.session.userId;
+
   const scraps = await db.all(`
-    SELECT s.id, s.content, s.created_at, u.username AS from_username, u.id AS from_id
+    SELECT
+      s.id, s.content, s.created_at,
+      u.username AS from_username, u.id AS from_id,
+      (SELECT COUNT(*) FROM scrap_likes sl WHERE sl.scrap_id = s.id) AS like_count,
+      EXISTS(SELECT 1 FROM scrap_likes sl WHERE sl.scrap_id = s.id AND sl.user_id = ?) AS liked
     FROM scraps s
     JOIN users u ON u.id = s.from_user_id
     WHERE s.to_user_id=?
     ORDER BY s.created_at DESC
     LIMIT 100
-  `, [user.id]);
+  `, [meId, user.id]);
 
-  res.render("scraps", { user, scraps });
+  const scrapIds = scraps.map(s => s.id);
+  let commentsByScrap = {};
+  if (scrapIds.length) {
+    const comments = await db.all(`
+      SELECT c.id, c.scrap_id, c.content, c.created_at, u.username AS author
+      FROM scrap_comments c
+      JOIN users u ON u.id = c.user_id
+      WHERE c.scrap_id = ANY(?::int[])
+      ORDER BY c.created_at ASC
+    `, [scrapIds]);
+    for (const c of comments) {
+      if (!commentsByScrap[c.scrap_id]) commentsByScrap[c.scrap_id] = [];
+      commentsByScrap[c.scrap_id].push(c);
+    }
+  }
+
+  res.render("scraps", { user, scraps, commentsByScrap });
 });
 
 app.post("/scraps/:username", requireAuth, async (req, res) => {
@@ -414,6 +436,64 @@ app.post("/scraps/:username", requireAuth, async (req, res) => {
   await db.run("INSERT INTO scraps (from_user_id, to_user_id, content) VALUES (?,?,?)", [meId, to.id, content.trim()]);
   await addNotif(to.id, "scrap", "Você recebeu um recado.", `/scraps/${req.params.username}`);
   res.redirect(`/scraps/${req.params.username}`);
+});
+
+// ===== CURTIDAS E COMENTÁRIOS (Reactions) =====
+app.post('/scraps/like/:scrapId', requireAuth, async (req, res) => {
+  const meId = req.session.userId;
+  const scrapId = Number(req.params.scrapId);
+  const returnTo = req.body.returnTo || req.get('referer') || '/home';
+
+  const scrap = await db.get('SELECT id, to_user_id FROM scraps WHERE id=?', [scrapId]);
+  if (!scrap) return res.redirect(returnTo);
+
+  const existing = await db.get('SELECT 1 FROM scrap_likes WHERE user_id=? AND scrap_id=?', [meId, scrapId]);
+  if (existing) {
+    await db.run('DELETE FROM scrap_likes WHERE user_id=? AND scrap_id=?', [meId, scrapId]);
+  } else {
+    await db.run('INSERT INTO scrap_likes (user_id, scrap_id) VALUES (?,?) ON CONFLICT (user_id, scrap_id) DO NOTHING', [meId, scrapId]);
+    if (scrap.to_user_id !== meId) {
+      await addNotif(scrap.to_user_id, 'like', 'Alguém curtiu um recado seu.', returnTo);
+    }
+  }
+  res.redirect(returnTo);
+});
+
+app.post('/scraps/comment/:scrapId', requireAuth, async (req, res) => {
+  const meId = req.session.userId;
+  const scrapId = Number(req.params.scrapId);
+  const content = (req.body.content || '').trim();
+  const returnTo = req.body.returnTo || req.get('referer') || '/home';
+  if (!content) return res.redirect(returnTo);
+
+  const scrap = await db.get('SELECT id, to_user_id FROM scraps WHERE id=?', [scrapId]);
+  if (!scrap) return res.redirect(returnTo);
+
+  await db.run('INSERT INTO scrap_comments (scrap_id, user_id, content) VALUES (?,?,?)', [scrapId, meId, content]);
+  if (scrap.to_user_id !== meId) {
+    await addNotif(scrap.to_user_id, 'comment', 'Alguém comentou um recado seu.', returnTo);
+  }
+  res.redirect(returnTo);
+});
+
+app.post('/groups/post/like/:postId', requireAuth, async (req, res) => {
+  const meId = req.session.userId;
+  const postId = Number(req.params.postId);
+  const returnTo = req.body.returnTo || req.get('referer') || '/groups';
+
+  const gp = await db.get('SELECT p.id, t.group_id, p.user_id AS owner_id FROM group_posts p JOIN group_topics t ON t.id=p.topic_id WHERE p.id=?', [postId]);
+  if (!gp) return res.redirect(returnTo);
+
+  const existing = await db.get('SELECT 1 FROM group_post_likes WHERE user_id=? AND post_id=?', [meId, postId]);
+  if (existing) {
+    await db.run('DELETE FROM group_post_likes WHERE user_id=? AND post_id=?', [meId, postId]);
+  } else {
+    await db.run('INSERT INTO group_post_likes (user_id, post_id) VALUES (?,?) ON CONFLICT (user_id, post_id) DO NOTHING', [meId, postId]);
+    if (gp.owner_id !== meId) {
+      await addNotif(gp.owner_id, 'like', 'Alguém curtiu sua mensagem no grupo.', returnTo);
+    }
+  }
+  res.redirect(returnTo);
 });
 
 // ===== DEPOIMENTOS =====
@@ -607,7 +687,7 @@ app.post("/groups/:id/join", requireAuth, async (req, res) => {
   const group = await db.get("SELECT * FROM groups WHERE id=?", [groupId]);
   if (!group) return res.redirect("/groups");
 
-  await db.run("INSERT OR IGNORE INTO group_members (group_id, user_id, role) VALUES (?,?, 'member')", [groupId, meId]);
+  await db.run("INSERT INTO group_members (group_id, user_id, role) VALUES (?,?, 'member') ON CONFLICT (group_id, user_id) DO NOTHING", [groupId, meId]);
   res.redirect(`/groups/${groupId}`);
 });
 
@@ -658,12 +738,15 @@ app.get("/groups/:groupId/topic/:topicId", requireAuth, async (req, res) => {
   const membership = await db.get("SELECT * FROM group_members WHERE group_id=? AND user_id=?", [groupId, meId]);
 
   const posts = await db.all(`
-    SELECT p.*, u.username AS author
+    SELECT
+      p.*, u.username AS author,
+      (SELECT COUNT(*) FROM group_post_likes gpl WHERE gpl.post_id = p.id) AS like_count,
+      EXISTS(SELECT 1 FROM group_post_likes gpl WHERE gpl.post_id = p.id AND gpl.user_id = ?) AS liked
     FROM group_posts p
     JOIN users u ON u.id = p.user_id
     WHERE p.topic_id=?
     ORDER BY p.created_at ASC
-  `, [topicId]);
+  `, [meId, topicId]);
 
   res.render("group_topic", { group, topic, posts, membership });
 });

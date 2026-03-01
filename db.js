@@ -126,6 +126,27 @@ async function init() {
       created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
+    -- Curtidas em recados
+    CREATE TABLE IF NOT EXISTS scrap_likes (
+      id         SERIAL PRIMARY KEY,
+      scrap_id   INTEGER NOT NULL REFERENCES scraps(id) ON DELETE CASCADE,
+      user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE(scrap_id, user_id)
+    );
+
+    -- Comentários em recados
+    CREATE TABLE IF NOT EXISTS scrap_comments (
+      id         SERIAL PRIMARY KEY,
+      scrap_id   INTEGER NOT NULL REFERENCES scraps(id) ON DELETE CASCADE,
+      user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      content    TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_scrap_likes_scrap ON scrap_likes(scrap_id, created_at);
+    CREATE INDEX IF NOT EXISTS idx_scrap_comments_scrap ON scrap_comments(scrap_id, created_at);
+
     CREATE TABLE IF NOT EXISTS testimonials (
       id           SERIAL PRIMARY KEY,
       from_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -184,6 +205,16 @@ async function init() {
       content    TEXT NOT NULL,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+
+    -- Curtidas em mensagens de tópicos (posts de grupo)
+    CREATE TABLE IF NOT EXISTS group_post_likes (
+      id         SERIAL PRIMARY KEY,
+      post_id    INTEGER NOT NULL REFERENCES group_posts(id) ON DELETE CASCADE,
+      user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE(post_id, user_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_group_post_likes_post ON group_post_likes(post_id, created_at);
 
     CREATE TABLE IF NOT EXISTS messages (
       id           SERIAL PRIMARY KEY,
