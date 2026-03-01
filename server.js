@@ -104,8 +104,16 @@ app.use(flash());
 
 // Helpers
 async function getUserById(id) {
-  return await db.get("SELECT id, email, username, full_name, bio, city, state, profile_photo, birth_date, marital_status, favorite_team, profession, hobbies, favorite_music, favorite_movie, favorite_game,
-    time_of, personality, looking_for, mood, daily_phrase, created_at FROM users WHERE id=?", [id]);
+  // Use template literal so the SQL can be formatted across lines safely.
+  return await db.get(`
+    SELECT
+      id, email, username, full_name, bio, city, state,
+      profile_photo, birth_date, marital_status, favorite_team,
+      profession, hobbies, favorite_music, favorite_movie, favorite_game,
+      time_of, personality, looking_for, mood, daily_phrase, created_at
+    FROM users
+    WHERE id=?
+  `, [id]);
 }
 
 // Datas no fuso do Brasil (GMT-3 / America/Sao_Paulo)
@@ -374,8 +382,16 @@ app.post("/nosso-tempo/remember", limiterWrite, requireAuth, async (req, res) =>
 // ===== PERFIL =====
 app.get("/u/:username", requireAuth, async (req, res) => {
   const meId = req.session.userId;
-  const user = await db.get("SELECT id, username, full_name, bio, city, state, profile_photo, birth_date, marital_status, favorite_team, profession, hobbies, favorite_music, favorite_movie, favorite_game,
-    time_of, personality, looking_for, mood, daily_phrase, invisible_visits, notify_profile_visits, created_at FROM users WHERE username=?", [req.params.username]);
+  const user = await db.get(`
+    SELECT
+      id, username, full_name, bio, city, state,
+      profile_photo, birth_date, marital_status, favorite_team,
+      profession, hobbies, favorite_music, favorite_movie, favorite_game,
+      time_of, personality, looking_for, mood, daily_phrase,
+      invisible_visits, notify_profile_visits, created_at
+    FROM users
+    WHERE username=?
+  `, [req.params.username]);
   if (!user) return res.status(404).send("Usuário não encontrado.");
 
   const isMe = user.id === meId;
@@ -1399,8 +1415,8 @@ async function main() {
     });
   });
 
-  server.listen(PORT, () => {
-    console.log(`KleinDream rodando em http://localhost:${PORT}`);
+  server.listen(PORT, "0.0.0.0", () => {
+    console.log(`KleinDream rodando em http://0.0.0.0:${PORT}`);
   });
 }
 
