@@ -81,6 +81,14 @@ async function getUserById(id) {
   return await db.get("SELECT id, email, username, full_name, bio, city, state, profile_photo, birth_date, marital_status, favorite_team, profession, hobbies, favorite_music, favorite_movie, favorite_game, personality, looking_for, mood, daily_phrase, created_at FROM users WHERE id=?", [id]);
 }
 
+// Datas no fuso do Brasil (GMT-3 / America/Sao_Paulo)
+function formatDateBR(value) {
+  if (!value) return "";
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return String(value);
+  return d.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+}
+
 function requireAuth(req, res, next) {
   if (!req.session.userId) return res.redirect("/login");
   next();
@@ -244,7 +252,12 @@ app.get("/u/:username", requireAuth, async (req, res) => {
     LIMIT 20
   `, [user.id]);
 
-  const friendsCount = await db.get("SELECT COUNT(*) AS c FROM friendships WHERE user_id=?", [user.id]).c;
+  // Formatar datas para GMT-3
+  user.created_at = formatDateBR(user.created_at);
+  for (const s of scraps) s.created_at = formatDateBR(s.created_at);
+  for (const t of testimonials) t.created_at = formatDateBR(t.created_at);
+
+  const friendsCount = Number((await db.get("SELECT COUNT(*)::int AS c FROM friendships WHERE user_id=?", [user.id]))?.c || 0);
 
   // Visitas (contador + últimos visitantes)
   const totalVisits = (await db.get("SELECT COUNT(*)::int AS c FROM profile_visits WHERE visited_id=?", [user.id]))?.c || 0;
@@ -260,6 +273,8 @@ app.get("/u/:username", requireAuth, async (req, res) => {
         LIMIT 10
       `, [user.id])
     : [];
+
+  for (const v of visitors) v.created_at = formatDateBR(v.created_at);
 
   res.render("profile", {
     user, isMe,
