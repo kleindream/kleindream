@@ -1,68 +1,88 @@
 <%- include("layout", { title: user.username, body: `
-  <div class="grid">
-    <div>
-      <div class="card">
-        <div class="h">Perfil</div>
-        ${user.profile_photo ? `<img src="${(user.profile_photo || "").startsWith("http") ? user.profile_photo : `/uploads/${user.profile_photo}`}" alt="Foto de perfil" class="kd-zoom" style="width:140px;height:140px;border-radius:18px;object-fit:cover;display:block;margin:0 auto 10px auto;border:1px solid rgba(255,255,255,.08);" />` : `<div style="width:140px;height:140px;border-radius:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px auto;background:var(--panel2);color:var(--muted);font-weight:900;">Sem foto</div>`}
-        <div style="font-size:18px;font-weight:bold;text-align:center;">${user.username}</div>
-        <div class="small">${user.full_name || ""}</div>
-        <hr/>
-        <div class="kv">
-          <div class="small">Cidade</div><div>${user.city || "-"}</div>
-          <div class="small">Estado</div><div>${user.state || "-"}</div>
-          <div class="small">Nascimento</div><div>${user.birth_date || "-"}</div>
-          <div class="small">Estado civil</div><div>${user.marital_status || "-"}</div>
-          <div class="small">Time</div><div>${user.favorite_team || "-"}</div>
-          <div class="small">Profissão</div><div>${user.profession || "-"}</div>
-          <div class="small">Humor</div><div>${user.mood || "-"}</div>
-          <div class="small">Procura</div><div>${user.looking_for || "-"}</div>
-          <div class="small">Entrou em</div><div>${user.created_at}</div>
-          <div class="small">Amigos</div><div>${friendsCount}</div>
-          <div class="small">Visitas</div><div>${totalVisits}</div>
+  <div class="profile-page">
+    <div class="profile-center">
+
+      <div class="card profile-hero">
+        <div class="profile-hero-top">
+          <div class="profile-photo">
+            ${
+              user.profile_photo
+                ? `<img src="${(user.profile_photo || "").startsWith("http") ? user.profile_photo : `/uploads/${user.profile_photo}`}" alt="Foto de perfil" class="kd-zoom" />`
+                : `<div class="profile-photo-ph">Sem foto</div>`
+            }
+          </div>
+
+          <div class="profile-meta">
+            <div class="profile-name">
+              <div class="profile-username">${user.username}</div>
+              <div class="small">${user.full_name || ""}</div>
+            </div>
+
+            <div class="profile-actions">
+              <a class="btn secondary" href="/scraps/${user.username}">Recados</a>
+              <a class="btn secondary" href="/testimonials/${user.username}">Depoimentos</a>
+              <a class="btn secondary" href="/photos/${user.username}">Fotos</a>
+
+              ${isMe ? `
+                <a class="btn" href="/profile/edit">Editar perfil</a>
+              ` : `
+                ${friend ? `<span class="badge">Vocês são amigos</span>` : ``}
+
+                ${(!friend && !reqOut && !reqIn) ? `
+                  <form method="post" action="/friends/request/${user.id}" class="inline">
+                    <button class="btn" type="submit">Adicionar como amigo</button>
+                  </form>
+                ` : ``}
+
+                ${reqOut ? `<span class="badge">Pedido enviado</span>` : ``}
+                ${reqIn ? `<span class="badge">Você tem um pedido dele(a)</span>` : ``}
+              `}
+            </div>
+
+            <div class="profile-stats">
+              <div class="stat"><div class="k">Amigos</div><div class="v">${friendsCount}</div></div>
+              <div class="stat"><div class="k">Visitas</div><div class="v">${totalVisits}</div></div>
+              ${user.mood ? `<div class="stat"><div class="k">Humor</div><div class="v">${escapeHtml(user.mood)}</div></div>` : ``}
+            </div>
+          </div>
         </div>
 
-        ${user.daily_phrase ? `<hr/><div class="small">Frase do dia</div><div>${escapeHtml(user.daily_phrase)}</div>` : ``}
-
-        <hr/>
-        <div class="small">Sobre</div>
-        <div>${escapeHtml(user.bio || "—")}</div>
-
-        ${(user.hobbies || user.favorite_music || user.favorite_movie || user.favorite_game || user.personality) ? `
-          <hr/>
-          <div class="h">Gostos</div>
-          <div class="kv">
-            <div class="small">Hobbies</div><div>${escapeHtml(user.hobbies || "-")}</div>
-            <div class="small">Música</div><div>${escapeHtml(user.favorite_music || "-")}</div>
-            <div class="small">Filme</div><div>${escapeHtml(user.favorite_movie || "-")}</div>
-            <div class="small">Jogo</div><div>${escapeHtml(user.favorite_game || "-")}</div>
-            <div class="small">Personalidade</div><div>${escapeHtml(user.personality || "-")}</div>
+        <div class="profile-hero-body">
+          <div class="profile-kv">
+            <div class="small">Cidade</div><div>${escapeHtml(user.city || "-")}</div>
+            <div class="small">Estado</div><div>${escapeHtml(user.state || "-")}</div>
+            <div class="small">Nascimento</div><div>${escapeHtml(user.birth_date || "-")}</div>
+            <div class="small">Estado civil</div><div>${escapeHtml(user.marital_status || "-")}</div>
+            <div class="small">Time</div><div>${escapeHtml(user.favorite_team || "-")}</div>
+            <div class="small">Profissão</div><div>${escapeHtml(user.profession || "-")}</div>
+            <div class="small">Procura</div><div>${escapeHtml(user.looking_for || "-")}</div>
+            <div class="small">Entrou em</div><div>${user.created_at}</div>
           </div>
-        ` : ``}
 
-        ${isMe ? `
-          <hr/>
-          <a class="btn secondary" href="/profile/edit">Editar perfil</a>
-        ` : `
-          <hr/>
-          ${friend ? `<div class="badge">Vocês são amigos</div>` : ``}
-
-          ${(!friend && !reqOut && !reqIn) ? `
-            <form method="post" action="/friends/request/${user.id}">
-              <button class="btn" type="submit">Adicionar como amigo</button>
-            </form>
+          ${user.daily_phrase ? `
+            <div class="profile-highlight">
+              <div class="small">Frase do dia</div>
+              <div>${escapeHtml(user.daily_phrase)}</div>
+            </div>
           ` : ``}
 
-          ${reqOut ? `<div class="small">Pedido enviado: ${reqOut.status}</div>` : ``}
-          ${reqIn ? `<div class="small">Esse usuário já te enviou pedido: ${reqIn.status} (veja em Amigos)</div>` : ``}
-        `}
-      </div>
+          <div class="profile-about">
+            <div class="small">Sobre</div>
+            <div>${escapeHtml(user.bio || "—")}</div>
+          </div>
 
-      <div class="card">
-        <div class="h">Ações</div>
-        <div class="stack">
-          <a class="btn secondary" href="/scraps/${user.username}">Recados</a>
-          <a class="btn secondary" href="/testimonials/${user.username}">Depoimentos</a>
-          <a class="btn secondary" href="/photos/${user.username}">Fotos</a>
+          ${(user.hobbies || user.favorite_music || user.favorite_movie || user.favorite_game || user.personality) ? `
+            <div class="profile-highlight">
+              <div class="h">Gostos</div>
+              <div class="profile-kv">
+                <div class="small">Hobbies</div><div>${escapeHtml(user.hobbies || "-")}</div>
+                <div class="small">Música</div><div>${escapeHtml(user.favorite_music || "-")}</div>
+                <div class="small">Filme</div><div>${escapeHtml(user.favorite_movie || "-")}</div>
+                <div class="small">Jogo</div><div>${escapeHtml(user.favorite_game || "-")}</div>
+                <div class="small">Personalidade</div><div>${escapeHtml(user.personality || "-")}</div>
+              </div>
+            </div>
+          ` : ``}
         </div>
       </div>
 
@@ -91,30 +111,33 @@
           `}
         </div>
       ` : ``}
-    </div>
 
-    <div
-      <div class="card">
-        <div class="h">Recados (últimos)</div>
-        ${scraps.length ? scraps.map(s => `
-          <div>
-            <div class="small">de ${s.from_username} • ${s.created_at}</div>
-            <div>${escapeHtml(s.content)}</div>
-          </div><hr/>
-        `).join("") : `<div class="small">Sem recados.</div>`}
-        <a class="btn secondary" href="/scraps/${user.username}">Ver todos</a>
+      <div class="card profile-activity">
+        <div class="section">
+          <div class="h">Recados (últimos)</div>
+          ${scraps.length ? scraps.map(s => `
+            <div class="item">
+              <div class="small">de <a href="/u/${s.from_username}"><b>${s.from_username}</b></a> • ${s.created_at}</div>
+              <div>${escapeHtml(s.content)}</div>
+            </div>
+          `).join("") : `<div class="small">Sem recados.</div>`}
+          <div style="margin-top:10px;"><a class="btn secondary" href="/scraps/${user.username}">Ver todos</a></div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="section">
+          <div class="h">Depoimentos (aprovados)</div>
+          ${testimonials.length ? testimonials.map(t => `
+            <div class="item">
+              <div class="small">de <a href="/u/${t.from_username}"><b>${t.from_username}</b></a> • ${t.created_at}</div>
+              <div>${escapeHtml(t.content)}</div>
+            </div>
+          `).join("") : `<div class="small">Sem depoimentos aprovados.</div>`}
+          <div style="margin-top:10px;"><a class="btn secondary" href="/testimonials/${user.username}">Ver</a></div>
+        </div>
       </div>
 
-      <div class="card">
-        <div class="h">Depoimentos (aprovados)</div>
-        ${testimonials.length ? testimonials.map(t => `
-          <div>
-            <div class="small">de ${t.from_username} • ${t.created_at}</div>
-            <div>${escapeHtml(t.content)}</div>
-          </div><hr/>
-        `).join("") : `<div class="small">Sem depoimentos aprovados.</div>`}
-        <a class="btn secondary" href="/testimonials/${user.username}">Ver</a>
-      </div>
     </div>
   </div>
 ` }) %>

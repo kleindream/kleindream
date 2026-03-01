@@ -1,15 +1,54 @@
 <%- include("layout", { title: "Entrar", body: `
-  <div class="card">
-    <div class="h">Entrar</div>
-    ${error ? `<div class="card" style="border-color:#6b2033;background:#2a0a12;">${error}</div>` : ""}
-    <form method="post" action="/login">
-      <label class="small">Usuário ou e-mail</label>
-      <input name="usernameOrEmail" />
-      <br/><br/>
-      <label class="small">Senha</label>
-      <input type="password" name="password" />
-      <br/><br/>
-      <button class="btn" type="submit">Entrar</button>
-    </form>
+  <div class="auth-page">
+    <div class="auth-bg">
+      <div class="orb o1"></div>
+      <div class="orb o2"></div>
+      <div class="orb o3"></div>
+    </div>
+
+    <div class="auth-shell">
+      <div class="auth-brand">
+        <div class="brand-big"><span>Klein</span>Dream</div>
+        <div class="auth-sub">Uma rede social com alma de 2004 — recados, depoimentos, fotos e grupos.</div>
+
+        <div class="auth-bullets">
+          <div class="auth-bullet">
+            <div class="dot"></div>
+            <div><b>Recados</b> e <b>Depoimentos</b> com aquela vibe nostálgica.</div>
+          </div>
+          <div class="auth-bullet">
+            <div class="dot"></div>
+            <div><b>Grupos</b> para encontrar gente que curte o mesmo que você.</div>
+          </div>
+          <div class="auth-bullet">
+            <div class="dot"></div>
+            <div><b>Perfil</b> completo: humor, frase do dia e seus gostos.</div>
+          </div>
+        </div>
+
+        <div class="auth-note">Dica: use seu <b>usuário</b> ou <b>e-mail</b> para entrar.</div>
+      </div>
+
+      <div class="card auth-card">
+        <div class="h auth-title">Entrar</div>
+
+        ${error ? `<div class="alert danger">${error}</div>` : ""}
+
+        <form method="post" action="/login" class="auth-form">
+          <label class="small">Usuário ou e-mail</label>
+          <input name="usernameOrEmail" autocomplete="username" />
+
+          <label class="small" style="margin-top:10px;">Senha</label>
+          <input name="password" type="password" autocomplete="current-password" />
+
+          <button class="btn auth-btn" type="submit">Entrar</button>
+
+          <div class="auth-links">
+            <a class="btn secondary" href="/register">Criar conta</a>
+            <a class="link-soft" href="/">Voltar</a>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 ` }) %>
