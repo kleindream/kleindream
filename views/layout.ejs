@@ -32,6 +32,7 @@
           <a href="/me/visitors">Visitantes</a>
           <a href="/notifications">Notificações <span class="badge <%= (notifCount||0) > 0 ? 'pulse' : '' %>"><%= notifCount %></span></a>
           <a href="/chat">Bate-papo</a>
+          <a href="/about">Sobre</a>
           <button id="kdThemeToggle" class="btn ghost" type="button" title="Trocar tema">Tema</button>
           <form method="post" action="/logout" style="display:inline;">
             <button class="btn secondary" type="submit">Sair</button>
@@ -39,6 +40,7 @@
         <% } else { %>
           <a href="/login">Entrar</a>
           <a href="/register">Criar conta</a>
+          <a href="/about">Sobre</a>
         <% } %>
       </div>
     </div>

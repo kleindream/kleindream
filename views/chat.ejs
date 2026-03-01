@@ -2,12 +2,29 @@
   <div class="page-header">
     <h1>Bate-papo</h1>
     <div class="small">Uma sala só • só membros do KleinDream • sem limite de gente</div>
+    <div class="chat-head-row">
+      <div id="chatPresence" class="chat-presence" aria-live="polite">Online agora: <b>…</b></div>
+      <button id="chatClearBtn" type="button" class="btn ghost" style="display:none; padding:8px 12px;">Limpar chat</button>
+    </div>
+    <div id="chatOnlineList" class="chat-online-list small" aria-live="polite"></div>
+    <div id="chatTyping" class="chat-typing small" aria-live="polite"></div>
   </div>
 
   <div class="chat-wrap">
     <div id="chatLog" class="chat-log" aria-live="polite"></div>
 
-    <form id="chatForm" class="chat-form" autocomplete="off">
+    <div class="chat-quick">
+      <button type="button" class="chip" data-emoji="🙂">🙂</button>
+      <button type="button" class="chip" data-emoji="😄">😄</button>
+      <button type="button" class="chip" data-emoji="❤️">❤️</button>
+      <button type="button" class="chip" data-emoji="⭐">⭐</button>
+      <button type="button" class="chip" data-emoji="🔥">🔥</button>
+      <button type="button" class="chip" data-emoji="👍">👍</button>
+      <button type="button" class="chip" data-emoji="😎">😎</button>
+      <span class="small" style="opacity:.75;">toque rápido</span>
+    </div>
+
+    <form id="chatForm" data-no-loader class="chat-form" autocomplete="off">
       <input id="chatInput" class="chat-input" name="text" maxlength="500" placeholder="Escreva sua mensagem…" />
       <button class="btn" type="submit">Enviar</button>
     </form>
@@ -20,13 +37,38 @@
   <script src="/socket.io/socket.io.js"></script>
   <script>
     (function(){
+
+      // Ensure global loader (used on submits) doesn't block the chat UI
+      function _kdHideLoader(){
+        const el = document.getElementById('kdLoader');
+        if (!el) return;
+        el.classList.remove('open');
+        el.setAttribute('aria-hidden','true');
+      }
+      _kdHideLoader();
       const log = document.getElementById("chatLog");
       const form = document.getElementById("chatForm");
       const input = document.getElementById("chatInput");
+      const presence = document.getElementById('chatPresence');
+      const onlineList = document.getElementById('chatOnlineList');
+      const typingEl = document.getElementById('chatTyping');
+      const clearBtn = document.getElementById('chatClearBtn');
+      let me = { username: null, isAdmin: false };
+
+      function toast(text){
+        const root = document.getElementById('kdToasts');
+        if(!root) return alert(text);
+        const t = document.createElement('div');
+        t.className = 'kd-toast err';
+        t.textContent = text;
+        root.appendChild(t);
+        requestAnimationFrame(()=> t.classList.add('show'));
+        setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(), 250); }, 2200);
+      }
 
       function addMsg(m){
         const row = document.createElement("div");
-        row.className = "chat-msg";
+        row.className = "chat-msg" + (m && m.system ? " system" : "");
 
         const meta = document.createElement("div");
         meta.className = "chat-meta";
@@ -39,7 +81,7 @@
         time.className = "chat-time";
         try {
           const d = new Date(m.ts);
-          time.textContent = d.toLocaleString();
+          time.textContent = d.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
         } catch(e) {
           time.textContent = "";
         }
@@ -62,6 +104,54 @@
 
       const socket = io();
 
+      socket.on('connect', _kdHideLoader);
+      socket.on('connect_error', _kdHideLoader);
+
+      socket.on("chat:me", (info) => {
+        me = info || me;
+        if (me && me.isAdmin) {
+          clearBtn.style.display = "inline-flex";
+        }
+      });
+
+      socket.on("chat:presence", (p) => {
+        const n = (p && typeof p.onlineUsers === "number") ? p.onlineUsers : 0;
+        presence.innerHTML = 'Online agora: <b>' + n + '</b>';
+
+        const list = (p && Array.isArray(p.users)) ? p.users : [];
+        if (list.length) {
+          onlineList.textContent = "Online: " + list.join(", ");
+        } else {
+          onlineList.textContent = "";
+        }
+      });
+
+      socket.on("chat:typing", (p) => {
+        const list = (p && Array.isArray(p.users)) ? p.users : [];
+        const filtered = me && me.username ? list.filter(u => u !== me.username) : list;
+        if (!filtered.length) {
+          typingEl.textContent = "";
+          return;
+        }
+        if (filtered.length === 1) typingEl.textContent = filtered[0] + " está digitando…";
+        else if (filtered.length === 2) typingEl.textContent = filtered[0] + " e " + filtered[1] + " estão digitando…";
+        else typingEl.textContent = filtered.slice(0,3).join(", ") + " estão digitando…";
+      });
+
+      socket.on("chat:cleared", () => {
+        log.innerHTML = "";
+        typingEl.textContent = "";
+        onlineList.textContent = onlineList.textContent; // noop
+      });
+
+      clearBtn.addEventListener("click", () => {
+        if (!(me && me.isAdmin)) return;
+        if (confirm("Limpar o bate-papo para todos?")) {
+          socket.emit("chat:clear");
+        }
+      });
+
+
       socket.on("history", (items) => {
         log.innerHTML = "";
         (items || []).forEach(addMsg);
@@ -69,13 +159,55 @@
 
       socket.on("chat:message", addMsg);
 
+      socket.on('chat:presence', (p)=>{
+        if(!presence) return;
+        const n = (p && typeof p.onlineUsers === 'number') ? p.onlineUsers : 0;
+        presence.innerHTML = `Online agora: <b>${n}</b>`;
+      });
+
+      socket.on('chat:error', (e)=>{
+        toast((e && e.text) ? e.text : 'Ops!');
+      });
+
       form.addEventListener("submit", (e) => {
         e.preventDefault();
         const text = (input.value || "").trim();
         if(!text) return;
         socket.emit("chat:message", { text });
+        socket.emit("chat:typing", { typing: false });
         input.value = "";
         input.focus();
+      });
+
+      // Digitando...
+      let typingState = false;
+      let typingTimer = null;
+      function setTyping(on){
+        if (typingState === on) return;
+        typingState = on;
+        socket.emit("chat:typing", { typing: on });
+      }
+      function bumpTyping(){
+        const has = (input.value || "").trim().length > 0;
+        if (!has) {
+          if (typingTimer) clearTimeout(typingTimer);
+          setTyping(false);
+          return;
+        }
+        setTyping(true);
+        if (typingTimer) clearTimeout(typingTimer);
+        typingTimer = setTimeout(() => setTyping(false), 1200);
+      }
+      input.addEventListener("input", bumpTyping);
+      input.addEventListener("blur", () => setTyping(false));
+
+      // Emojis rápidos
+      document.querySelectorAll('.chat-quick .chip[data-emoji]').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const em = btn.getAttribute('data-emoji') || '';
+          input.value = (input.value || '') + em;
+          input.focus();
+        });
       });
 
       input.focus();

@@ -124,6 +124,11 @@ const upload = multer({
 // ===== ROTAS PÚBLICAS =====
 app.get("/", async (req, res) => res.render("index"));
 
+// Sobre (texto fictício para o Digão editar)
+app.get("/about", async (req, res) => {
+  res.render("about");
+});
+
 app.get("/register", async (req, res) => res.render("register", { error: null }));
 app.post("/register", async (req, res) => {
   const { email, username, password, full_name } = req.body;
@@ -971,6 +976,54 @@ async function main() {
   const chatHistory = [];
   const CHAT_MAX_HISTORY = 80;
 
+  // Presença (uma sala só)
+  // userId -> { username, sockets }
+  const online = new Map();
+
+  // Quem está digitando
+  // userId -> username
+  const typing = new Map();
+
+  // Admin do chat: configure CHAT_ADMIN_USERNAMES="user1,user2"
+  const adminUsernames = String(process.env.CHAT_ADMIN_USERNAMES || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  function isChatAdmin(sess, username) {
+    if (sess && sess.isAdmin === true) return true;
+    return adminUsernames.includes(String(username || "").trim());
+  }
+
+
+  function onlineCount() {
+    let c = 0;
+    for (const v of online.values()) c += v.sockets;
+    return c;
+  }
+
+  function emitPresence() {
+    const users = Array.from(online.values()).map((u) => u.username);
+    users.sort((a,b)=> String(a).localeCompare(String(b)));
+    io.emit("chat:presence", {
+      onlineUsers: onlineCount(),
+      users,
+    });
+  }
+
+  function emitSystem(text) {
+    const msg = {
+      id: "sys_" + Date.now() + "_" + Math.random().toString(16).slice(2),
+      system: true,
+      username: "KleinDream",
+      text,
+      ts: new Date().toISOString(),
+    };
+    chatHistory.push(msg);
+    while (chatHistory.length > CHAT_MAX_HISTORY) chatHistory.shift();
+    io.emit("chat:message", msg);
+  }
+
   io.on("connection", (socket) => {
     const sess = socket.request.session;
     if (!sess || !sess.userId) {
@@ -980,23 +1033,91 @@ async function main() {
 
     const userId = sess.userId;
     const username = (sess.username || "membro");
+    const chatAdmin = isChatAdmin(sess, username);
+
+    // informa ao cliente
+    socket.emit("chat:me", { username, isAdmin: chatAdmin });
+
+    // Presença: contabiliza conexão
+    const prev = online.get(userId);
+    if (prev) {
+      prev.sockets += 1;
+    } else {
+      online.set(userId, { username, sockets: 1 });
+      emitSystem(`${username} entrou no bate-papo.`);
+    }
+    emitPresence();
+
+    // Anti-spam simples
+    let lastMsgAt = 0;
 
     // Enviar histórico
     socket.emit("history", chatHistory);
 
+    // Digitando...
+    socket.on("chat:typing", (payload) => {
+      const isTyping = !!(payload && payload.typing);
+      if (isTyping) {
+        typing.set(userId, username);
+      } else {
+        typing.delete(userId);
+      }
+      // Envia para todos (inclui o próprio; o client pode ignorar)
+      io.emit("chat:typing", { users: Array.from(new Set(typing.values())).sort((a,b)=>String(a).localeCompare(String(b))) });
+    });
+
+    // Limpar chat (somente admin)
+    socket.on("chat:clear", () => {
+      if (!chatAdmin) return;
+      chatHistory.length = 0;
+      typing.clear();
+      io.emit("chat:cleared");
+      io.emit("chat:typing", { users: [] });
+      emitSystem(`${username} limpou o bate-papo.`);
+    });
+
     socket.on("chat:message", (payload) => {
       try {
+        const now = Date.now();
+        if (now - lastMsgAt < 2000) {
+          socket.emit("chat:error", { text: "Devagarzinho 😌 espere 2 segundos entre as mensagens." });
+          return;
+        }
+
         const text = (payload && payload.text ? String(payload.text) : "").trim();
         if (!text) return;
         if (text.length > 500) return;
 
+        lastMsgAt = now;
+
         const msg = { id: Date.now() + Math.random().toString(16).slice(2), userId, username, text, ts: new Date().toISOString() };
         chatHistory.push(msg);
         while (chatHistory.length > CHAT_MAX_HISTORY) chatHistory.shift();
+        // ao enviar, deixa de "digitando"
+        if (typing.has(userId)) {
+          typing.delete(userId);
+          io.emit("chat:typing", { users: Array.from(new Set(typing.values())).sort((a,b)=>String(a).localeCompare(String(b))) });
+        }
         io.emit("chat:message", msg);
       } catch (e) {
         // ignore
       }
+    });
+
+    socket.on("disconnect", () => {
+      // remove de digitando
+      if (typing.has(userId)) {
+        typing.delete(userId);
+        io.emit("chat:typing", { users: Array.from(new Set(typing.values())).sort((a,b)=>String(a).localeCompare(String(b))) });
+      }
+      const cur = online.get(userId);
+      if (!cur) return;
+      cur.sockets -= 1;
+      if (cur.sockets <= 0) {
+        online.delete(userId);
+        emitSystem(`${username} saiu do bate-papo.`);
+      }
+      emitPresence();
     });
   });
 
