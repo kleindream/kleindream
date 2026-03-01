@@ -64,6 +64,24 @@
           <a class="btn secondary" href="/photos/${user.username}">Fotos</a>
         </div>
       </div>
+
+      <div class="card">
+        <div class="h">Últimos visitantes</div>
+        ${visitors && visitors.length ? visitors.map(v => `
+          <div class="visitor-item">
+            ${v.profile_photo
+              ? `<img src="${(v.profile_photo || "").startsWith("http") ? v.profile_photo : `/uploads/${v.profile_photo}`}" alt="Foto" />`
+              : `<div class="visitor-ph">?</div>`}
+            <div>
+              <div><a href="/u/${v.username}">${v.username}</a></div>
+              <div class="small">${v.created_at}</div>
+            </div>
+          </div>
+        `).join("") : `<div class="small">Ainda ninguém passou por aqui.</div>`}
+      </div>
+
+
+      </div>
     </div>
 
     <div>

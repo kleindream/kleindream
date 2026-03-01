@@ -198,6 +198,34 @@ app.get("/u/:username", requireAuth, async (req, res) => {
 
   const isMe = user.id === meId;
 
+
+  // Registrar visita ao perfil (se não for o próprio perfil) com anti-spam de 10 minutos
+  if (!isMe) {
+    const recent = await db.get(`
+      SELECT id FROM profile_visits
+      WHERE visitor_id=? AND visited_id=? AND created_at > NOW() - INTERVAL '10 minutes'
+      LIMIT 1
+    `, [meId, user.id]);
+
+    if (!recent) {
+      await db.run(`
+        INSERT INTO profile_visits (visitor_id, visited_id)
+        VALUES (?, ?)
+      `, [meId, user.id]);
+    }
+  }
+
+  // Últimos visitantes
+  const visitors = await db.all(`
+    SELECT u.id, u.username, u.profile_photo, pv.created_at
+    FROM profile_visits pv
+    JOIN users u ON u.id = pv.visitor_id
+    WHERE pv.visited_id=?
+    ORDER BY pv.created_at DESC
+    LIMIT 10
+  `, [user.id]);
+
+
   const friend = await db.get("SELECT 1 FROM friendships WHERE user_id=? AND friend_id=?", [meId, user.id]);
 
   const reqOut = await db.get("SELECT status FROM friend_requests WHERE from_user_id=? AND to_user_id=?", [meId, user.id]);
@@ -223,7 +251,7 @@ app.get("/u/:username", requireAuth, async (req, res) => {
 
   const friendsCount = await db.get("SELECT COUNT(*) AS c FROM friendships WHERE user_id=?", [user.id]).c;
 
-  res.render("profile", { user, isMe, friend: !!friend, reqOut, reqIn, scraps, testimonials, friendsCount });
+  res.render("profile", { user, isMe, visitors, friend: !!friend, reqOut, reqIn, scraps, testimonials, friendsCount });
 });
 
 app.get("/profile/edit", requireAuth, async (req, res) => {
