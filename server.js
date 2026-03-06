@@ -250,27 +250,7 @@ app.get("/home", requireAuth, async (req, res) => {
     LIMIT 10
   `, [meId]);
 
-  const [friendsCountRow, fansCountRow, scrapsCountRow, photosCountRow, groupsCountRow, testimonialsCountRow, visitorsCountRow] = await Promise.all([
-    db.get("SELECT COUNT(*)::int AS c FROM friendships WHERE user1_id=? OR user2_id=?", [meId, meId]),
-    db.get("SELECT COUNT(*)::int AS c FROM fans WHERE user_id=?", [meId]),
-    db.get("SELECT COUNT(*)::int AS c FROM scraps WHERE to_user_id=?", [meId]),
-    db.get("SELECT COUNT(*)::int AS c FROM photos WHERE user_id=?", [meId]),
-    db.get("SELECT COUNT(*)::int AS c FROM group_members WHERE user_id=?", [meId]),
-    db.get("SELECT COUNT(*)::int AS c FROM testimonials WHERE to_user_id=? AND status='approved'", [meId]),
-    db.get("SELECT COUNT(*)::int AS c FROM profile_visits WHERE profile_user_id=?", [meId]),
-  ]);
-
-  const dashboardStats = {
-    friends: Number(friendsCountRow?.c || 0),
-    fans: Number(fansCountRow?.c || 0),
-    scraps: Number(scrapsCountRow?.c || 0),
-    photos: Number(photosCountRow?.c || 0),
-    groups: Number(groupsCountRow?.c || 0),
-    testimonials: Number(testimonialsCountRow?.c || 0),
-    visitors: Number(visitorsCountRow?.c || 0),
-  };
-
-  res.render("home", { incomingRequests, pendingTestimonials, unreadMessages, latestScraps, dashboardStats });
+  res.render("home", { incomingRequests, pendingTestimonials, unreadMessages, latestScraps });
 });
 
 
