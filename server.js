@@ -124,6 +124,74 @@ function formatDateBR(value) {
   return d.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
 }
 
+function getBrazilToday() {
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(now);
+  const map = Object.fromEntries(parts.filter(p => p.type !== "literal").map(p => [p.type, p.value]));
+  return {
+    year: map.year,
+    month: map.month,
+    day: map.day,
+    iso: `${map.year}-${map.month}-${map.day}`,
+    md: `${map.month}-${map.day}`
+  };
+}
+
+function formatBirthDateBR(value) {
+  if (!value) return "-";
+  const m = String(value).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return String(value);
+  return `${m[3]}/${m[2]}/${m[1]}`;
+}
+
+function getBirthdayCollections(users, daysAhead = 7) {
+  const today = getBrazilToday();
+  const targets = [];
+  const base = new Date(`${today.iso}T12:00:00-03:00`);
+
+  for (let i = 0; i <= daysAhead; i++) {
+    const d = new Date(base);
+    d.setDate(base.getDate() + i);
+    const year = d.getUTCFullYear();
+    const month = String(d.getUTCMonth() + 1).padStart(2, "0");
+    const day = String(d.getUTCDate()).padStart(2, "0");
+    targets.push({ year, month, day, md: `${month}-${day}` });
+  }
+
+  const targetIndex = new Map(targets.map((item, index) => [item.md, index]));
+  const todayBirthdays = [];
+  const upcomingBirthdays = [];
+
+  for (const user of users || []) {
+    const m = String(user.birth_date || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) continue;
+    const md = `${m[2]}-${m[3]}`;
+    if (!targetIndex.has(md)) continue;
+
+    const birthdayUser = {
+      ...user,
+      birth_date_br: formatBirthDateBR(user.birth_date),
+      isBirthdayToday: md === today.md
+    };
+
+    if (birthdayUser.isBirthdayToday) {
+      todayBirthdays.push(birthdayUser);
+    } else {
+      upcomingBirthdays.push({ ...birthdayUser, sortOrder: targetIndex.get(md) });
+    }
+  }
+
+  todayBirthdays.sort((a, b) => (a.full_name || a.username).localeCompare(b.full_name || b.username, "pt-BR"));
+  upcomingBirthdays.sort((a, b) => a.sortOrder - b.sortOrder || (a.full_name || a.username).localeCompare(b.full_name || b.username, "pt-BR"));
+
+  return { todayBirthdays, upcomingBirthdays };
+}
+
 function requireAuth(req, res, next) {
   if (!req.session.userId) return res.redirect("/login");
   next();
@@ -250,7 +318,21 @@ app.get("/home", requireAuth, async (req, res) => {
     LIMIT 10
   `, [meId]);
 
-  res.render("home", { incomingRequests, pendingTestimonials, unreadMessages, latestScraps });
+  const birthdayUsers = await db.all(`
+    SELECT id, username, full_name, profile_photo, birth_date
+    FROM users
+    WHERE birth_date IS NOT NULL AND TRIM(birth_date) <> ''
+  `);
+  const { todayBirthdays, upcomingBirthdays } = getBirthdayCollections(birthdayUsers, 7);
+
+  res.render("home", {
+    incomingRequests,
+    pendingTestimonials,
+    unreadMessages,
+    latestScraps,
+    todayBirthdays,
+    upcomingBirthdays
+  });
 });
 
 
@@ -479,6 +561,9 @@ app.get("/u/:username", requireAuth, async (req, res) => {
     LIMIT 20
   `, [user.id]);
 
+  const isBirthdayToday = !!(user.birth_date && String(user.birth_date).slice(5, 10) === getBrazilToday().md);
+  const formattedBirthDate = formatBirthDateBR(user.birth_date);
+
   // Formatar datas para GMT-3
   user.created_at = formatDateBR(user.created_at);
   for (const s of scraps) s.created_at = formatDateBR(s.created_at);
@@ -517,7 +602,8 @@ app.get("/u/:username", requireAuth, async (req, res) => {
     user, isMe,
     friend: !!friend, reqOut, reqIn,
     scraps, testimonials, friendsCount, fansCount, isFan, recentFans,
-    totalVisits, visitors, canSeeVisitors
+    totalVisits, visitors, canSeeVisitors,
+    isBirthdayToday, formattedBirthDate
   });
 });
 
