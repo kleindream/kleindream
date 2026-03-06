@@ -16,6 +16,21 @@ const { db, init, migrate, pool } = require("./db");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const BUILTIN_AVATARS = [
+  { path: '/avatars/avatar-retro-boy.svg', label: 'Retro Boy' },
+  { path: '/avatars/avatar-retro-girl.svg', label: 'Retro Girl' },
+  { path: '/avatars/avatar-nerd.svg', label: 'Nerd' },
+  { path: '/avatars/avatar-gamer.svg', label: 'Gamer' },
+  { path: '/avatars/avatar-dreamer.svg', label: 'Sonhador' },
+  { path: '/avatars/avatar-cine.svg', label: 'Cinéfilo' },
+  { path: '/avatars/avatar-reader.svg', label: 'Leitor' },
+  { path: '/avatars/avatar-music.svg', label: 'Música' },
+  { path: '/avatars/avatar-classic-blue.svg', label: 'Klein Blue' },
+  { path: '/avatars/avatar-classic-pink.svg', label: 'Klein Pink' },
+  { path: '/avatars/avatar-night.svg', label: 'Noturno' },
+  { path: '/avatars/avatar-sun.svg', label: 'Estrelinha' }
+];
+
 // Supabase Storage (for profile photos & albums)
 // Set these env vars in Render/Vercel:
 //   SUPABASE_URL
@@ -110,7 +125,8 @@ async function getUserById(id) {
       id, email, username, full_name, bio, city, state,
       profile_photo, birth_date, marital_status, favorite_team,
       profession, hobbies, favorite_music, favorite_movie, favorite_game,
-      time_of, personality, looking_for, mood, daily_phrase, created_at
+      time_of, personality, looking_for, mood, daily_phrase,
+      invisible_visits, notify_profile_visits, created_at
     FROM users
     WHERE id=?
   `, [id]);
@@ -124,73 +140,66 @@ function formatDateBR(value) {
   return d.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
 }
 
-function getBrazilToday() {
-  const now = new Date();
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Sao_Paulo",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit"
-  }).formatToParts(now);
-  const map = Object.fromEntries(parts.filter(p => p.type !== "literal").map(p => [p.type, p.value]));
-  return {
-    year: map.year,
-    month: map.month,
-    day: map.day,
-    iso: `${map.year}-${map.month}-${map.day}`,
-    md: `${map.month}-${map.day}`
-  };
+function nowInSaoPaulo() {
+  return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
 }
 
-function formatBirthDateBR(value) {
-  if (!value) return "-";
-  const m = String(value).match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (!m) return String(value);
-  return `${m[3]}/${m[2]}/${m[1]}`;
+function photoSrc(value) {
+  if (!value) return '/default-avatar.png';
+  const v = String(value).trim();
+  if (!v) return '/default-avatar.png';
+  if (/^https?:\/\//i.test(v) || v.startsWith('/')) return v;
+  return `/uploads/${v.replace(/^\/+/, '')}`;
 }
 
-function getBirthdayCollections(users, daysAhead = 7) {
-  const today = getBrazilToday();
-  const targets = [];
-  const base = new Date(`${today.iso}T12:00:00-03:00`);
+function isBuiltinAvatar(value) {
+  return BUILTIN_AVATARS.some(a => a.path === value);
+}
 
-  for (let i = 0; i <= daysAhead; i++) {
-    const d = new Date(base);
-    d.setDate(base.getDate() + i);
-    const year = d.getUTCFullYear();
-    const month = String(d.getUTCMonth() + 1).padStart(2, "0");
-    const day = String(d.getUTCDate()).padStart(2, "0");
-    targets.push({ year, month, day, md: `${month}-${day}` });
+function monthDayInSP(value) {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(String(value))) return null;
+  return String(value).slice(5, 10);
+}
+
+function monthDayLabel(value) {
+  const md = monthDayInSP(value);
+  if (!md) return '';
+  const [mm, dd] = md.split('-');
+  return `${dd}/${mm}`;
+}
+
+function currentMonthDaySP() {
+  const d = nowInSaoPaulo();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${mm}-${dd}`;
+}
+
+function getUpcomingMonthDays(daysAhead = 7) {
+  const start = nowInSaoPaulo();
+  const list = [];
+  for (let i = 0; i <= daysAhead; i += 1) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    list.push(`${mm}-${dd}`);
   }
-
-  const targetIndex = new Map(targets.map((item, index) => [item.md, index]));
-  const todayBirthdays = [];
-  const upcomingBirthdays = [];
-
-  for (const user of users || []) {
-    const m = String(user.birth_date || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (!m) continue;
-    const md = `${m[2]}-${m[3]}`;
-    if (!targetIndex.has(md)) continue;
-
-    const birthdayUser = {
-      ...user,
-      birth_date_br: formatBirthDateBR(user.birth_date),
-      isBirthdayToday: md === today.md
-    };
-
-    if (birthdayUser.isBirthdayToday) {
-      todayBirthdays.push(birthdayUser);
-    } else {
-      upcomingBirthdays.push({ ...birthdayUser, sortOrder: targetIndex.get(md) });
-    }
-  }
-
-  todayBirthdays.sort((a, b) => (a.full_name || a.username).localeCompare(b.full_name || b.username, "pt-BR"));
-  upcomingBirthdays.sort((a, b) => a.sortOrder - b.sortOrder || (a.full_name || a.username).localeCompare(b.full_name || b.username, "pt-BR"));
-
-  return { todayBirthdays, upcomingBirthdays };
+  return list;
 }
+
+function isBirthdayToday(birthDate) {
+  const md = monthDayInSP(birthDate);
+  return !!md && md === currentMonthDaySP();
+}
+
+function formatMemberSince(value) {
+  if (!value) return '';
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return String(value);
+  return d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', month: 'long', year: 'numeric' });
+}
+
 
 function requireAuth(req, res, next) {
   if (!req.session.userId) return res.redirect("/login");
@@ -215,6 +224,8 @@ app.use(async (req, res, next) => {
     error: req.flash('error'),
     info: req.flash('info')
   };
+  res.locals.photoSrc = photoSrc;
+  res.locals.builtinAvatars = BUILTIN_AVATARS;
   if (req.session.userId) {
     const notifs = await db.all("SELECT * FROM notifications WHERE user_id=? AND is_read=0 ORDER BY created_at DESC LIMIT 20", [req.session.userId]);
     res.locals.notifCount = notifs.length;
@@ -318,21 +329,24 @@ app.get("/home", requireAuth, async (req, res) => {
     LIMIT 10
   `, [meId]);
 
-  const birthdayUsers = await db.all(`
+  const birthdaysRaw = await db.all(`
     SELECT id, username, full_name, profile_photo, birth_date
     FROM users
     WHERE birth_date IS NOT NULL AND TRIM(birth_date) <> ''
+    ORDER BY username ASC
   `);
-  const { todayBirthdays, upcomingBirthdays } = getBirthdayCollections(birthdayUsers, 7);
+  const todayMD = currentMonthDaySP();
+  const upcomingWindow = getUpcomingMonthDays(7);
+  const orderMap = new Map(upcomingWindow.map((md, idx) => [md, idx]));
+  const todayBirthdays = birthdaysRaw
+    .filter(u => monthDayInSP(u.birth_date) === todayMD)
+    .map(u => ({ ...u, birth_label: monthDayLabel(u.birth_date) }));
+  const upcomingBirthdays = birthdaysRaw
+    .filter(u => { const md = monthDayInSP(u.birth_date); return md && md !== todayMD && orderMap.has(md); })
+    .map(u => ({ ...u, birth_label: monthDayLabel(u.birth_date) }))
+    .sort((a, b) => (orderMap.get(monthDayInSP(a.birth_date)) ?? 999) - (orderMap.get(monthDayInSP(b.birth_date)) ?? 999));
 
-  res.render("home", {
-    incomingRequests,
-    pendingTestimonials,
-    unreadMessages,
-    latestScraps,
-    todayBirthdays,
-    upcomingBirthdays
-  });
+  res.render("home", { incomingRequests, pendingTestimonials, unreadMessages, latestScraps, todayBirthdays, upcomingBirthdays });
 });
 
 
@@ -561,9 +575,7 @@ app.get("/u/:username", requireAuth, async (req, res) => {
     LIMIT 20
   `, [user.id]);
 
-  const isBirthdayToday = !!(user.birth_date && String(user.birth_date).slice(5, 10) === getBrazilToday().md);
-  const formattedBirthDate = formatBirthDateBR(user.birth_date);
-
+  const memberSince = formatMemberSince(user.created_at);
   // Formatar datas para GMT-3
   user.created_at = formatDateBR(user.created_at);
   for (const s of scraps) s.created_at = formatDateBR(s.created_at);
@@ -603,13 +615,14 @@ app.get("/u/:username", requireAuth, async (req, res) => {
     friend: !!friend, reqOut, reqIn,
     scraps, testimonials, friendsCount, fansCount, isFan, recentFans,
     totalVisits, visitors, canSeeVisitors,
-    isBirthdayToday, formattedBirthDate
+    isBirthdayToday: isBirthdayToday(user.birth_date), memberSince
   });
 });
 
 app.get("/profile/edit", requireAuth, async (req, res) => {
   const me = await getUserById(req.session.userId);
-  res.render("profile_edit", { me, error: null, ok: null });
+  const currentPhotoMode = isBuiltinAvatar(me?.profile_photo) ? 'avatar' : (me?.profile_photo ? 'upload' : 'keep');
+  res.render("profile_edit", { me, avatars: BUILTIN_AVATARS, currentPhotoMode, error: null, ok: null });
 });
 
 app.post("/profile/edit", limiterActions, requireAuth, upload.single("profile_photo"), async (req, res) => {
@@ -620,7 +633,8 @@ app.post("/profile/edit", limiterActions, requireAuth, upload.single("profile_ph
     hobbies, favorite_music, favorite_movie, favorite_game,
     time_of,
     personality, looking_for, mood, daily_phrase,
-    invisible_visits, notify_profile_visits
+    invisible_visits, notify_profile_visits,
+    photo_mode, selected_avatar
   } = req.body;
 
   await db.run(`UPDATE users SET
@@ -638,19 +652,25 @@ app.post("/profile/edit", limiterActions, requireAuth, upload.single("profile_ph
       meId]);
 
 
-  // Se enviou foto, salva no Supabase Storage e atualiza profile_photo (URL pública)
-  if (req.file) {
+  // Escolha entre avatar pronto ou foto enviada
+  if (photo_mode === 'avatar' && isBuiltinAvatar(selected_avatar)) {
+    await db.run("UPDATE users SET profile_photo=? WHERE id=?", [selected_avatar, meId]);
+  } else if (photo_mode === 'upload' && req.file) {
     if (!assertSupabase(res)) return;
     try {
       const { publicUrl } = await uploadToSupabaseStorage({ userId: meId, kind: "profile", file: req.file });
       await db.run("UPDATE users SET profile_photo=? WHERE id=?", [publicUrl, meId]);
     } catch (e) {
       console.error("[KleinDream] Upload profile photo error:", e);
-      return res.render("profile_edit", { me: await getUserById(meId), error: "Falha ao enviar a foto. Tente outra imagem.", ok: null });
+      const me = await getUserById(meId);
+      const currentPhotoMode = isBuiltinAvatar(me?.profile_photo) ? 'avatar' : (me?.profile_photo ? 'upload' : 'keep');
+      return res.render("profile_edit", { me, avatars: BUILTIN_AVATARS, currentPhotoMode, error: "Falha ao enviar a foto. Tente outra imagem.", ok: null });
     }
   }
 
-    res.render("profile_edit", { me: await getUserById(meId), error: null, ok: "Perfil atualizado." });
+  const me = await getUserById(meId);
+  const currentPhotoMode = isBuiltinAvatar(me?.profile_photo) ? 'avatar' : (me?.profile_photo ? 'upload' : 'keep');
+  res.render("profile_edit", { me, avatars: BUILTIN_AVATARS, currentPhotoMode, error: null, ok: "Perfil atualizado." });
 });
 // ===== VISITANTES (Histórico) =====
 

@@ -7,20 +7,34 @@
 
     <form method="post" action="/profile/edit" enctype="multipart/form-data">
       <div class="card" style="margin-top:10px;">
-        <div class="h" style="margin-bottom:8px;">Foto de perfil</div>
+        <div class="h" style="margin-bottom:8px;">Foto ou avatar</div>
         <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
           <div>
-            ${
-              me.profile_photo
-                ? `<img src="${(me.profile_photo || "").startsWith("http") ? me.profile_photo : `/uploads/${me.profile_photo}`}" class="avatar kd-zoom" alt="Foto de perfil" style="width:96px;height:96px;border-radius:14px;object-fit:cover;" />`
-                : `<div class="avatar" style="width:96px;height:96px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:var(--panel2);color:var(--muted);font-weight:800;">Sem foto</div>`
-            }
+            <img src="${photoSrc(me.profile_photo)}" class="avatar kd-zoom" alt="Foto de perfil" style="width:96px;height:96px;border-radius:14px;object-fit:cover;" />
           </div>
           <div style="flex:1;min-width:220px;">
-            <label class="small">Enviar nova foto</label>
-            <input type="file" name="profile_photo" accept="image/*" />
-            <div class="small" style="margin-top:6px;opacity:.9;">Dica: clique numa foto para ampliar.</div>
+            <div class="small" style="margin-bottom:6px;opacity:.9;">Você pode usar uma foto real ou escolher um avatar retrô da Klein Dream.</div>
+            <div class="mode-switch">
+              <label><input type="radio" name="photo_mode" value="keep" ${(currentPhotoMode === 'keep') ? 'checked' : ''} /> Manter atual</label>
+              <label><input type="radio" name="photo_mode" value="upload" ${(currentPhotoMode === 'upload') ? 'checked' : ''} /> Usar minha foto</label>
+              <label><input type="radio" name="photo_mode" value="avatar" ${(currentPhotoMode === 'avatar') ? 'checked' : ''} /> Usar avatar</label>
+            </div>
+            <div style="margin-top:10px;">
+              <label class="small">Enviar nova foto</label>
+              <input type="file" name="profile_photo" accept="image/*" />
+            </div>
           </div>
+        </div>
+
+        <div class="small" style="margin-top:12px;opacity:.9;">Galeria de avatares retrô</div>
+        <div class="avatar-choice-grid">
+          ${(avatars || []).map(a => `
+            <label class="avatar-choice">
+              <input type="radio" name="selected_avatar" value="${a.path}" ${(me.profile_photo === a.path) ? 'checked' : ''} />
+              <img src="${a.path}" alt="${escapeHtml(a.label)}" />
+              <span class="small">${escapeHtml(a.label)}</span>
+            </label>
+          `).join('')}
         </div>
       </div>
 
@@ -44,7 +58,7 @@
       <div class="h" style="margin-top:12px;">Detalhes</div>
 
       <label class="small">Data de nascimento</label>
-      <input type="date" name="birth_date" value="${me.birth_date || ""}" placeholder="Ex: 1990-05-21" />
+      <input type="date" name="birth_date" value="${me.birth_date || ""}" />
 
       <br/><br/>
       <label class="small">Estado civil</label>
@@ -72,10 +86,9 @@
       <input name="favorite_movie" value="${me.favorite_movie || ""}" />
 
       <br/><br/>
-      
-<label class="small">Eu sou do tempo de…</label>
-<input name="time_of" value="${me.time_of || ""}" placeholder="ex: internet discada, lan house, MSN, VHS, Mega Drive…" />
-<div class="small" style="opacity:.9;margin-bottom:8px;">Uma lembrança simples que te define. Vai aparecer em “Nosso Tempo”.</div>
+      <label class="small">Eu sou do tempo de…</label>
+      <input name="time_of" value="${me.time_of || ""}" placeholder="ex: internet discada, lan house, MSN, VHS, Mega Drive…" />
+      <div class="small" style="opacity:.9;margin-bottom:8px;">Uma lembrança simples que te define. Vai aparecer em “Nosso Tempo”.</div>
 
       <label class="small">Jogo favorito</label>
       <input name="favorite_game" value="${me.favorite_game || ""}" />
@@ -97,7 +110,6 @@
       <label class="small">Frase do dia</label>
       <input name="daily_phrase" value="${me.daily_phrase || ""}" placeholder="Ex: 'Enquanto o agora existe...'" />
 
-      
       <hr/>
       <div class="h" style="margin:6px 0 10px 0;">Privacidade</div>
 
@@ -114,7 +126,7 @@
         <span>Receber notificação quando alguém visitar meu perfil</span>
       </label>
 
-<br/><br/>
+      <br/><br/>
       <button class="button" type="submit">Salvar alterações</button>
       <a class="button" href="/u/${me.username}" style="margin-left:8px;">Voltar</a>
     </form>
@@ -126,3 +138,4 @@
 
   </div>
 ` }) %>
+<% function escapeHtml(str){ return String(str ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); } %>

@@ -26,7 +26,7 @@
             ${visits.map(v => `
               <tr>
                 <td style="display:flex; align-items:center; gap:10px;">
-                  <img class="avatar sm" src="${v.profile_photo || '/default.png'}" alt="" />
+                  <img class="avatar sm" src="${photoSrc(v.profile_photo)}" alt="" />
                   <a href="/u/${v.username}">${v.username}</a>
                 </td>
                 <td>${v.full_name || ""}</td>

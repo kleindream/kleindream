@@ -9,7 +9,7 @@
           ${fans.map(f => `
             <a class="thumb-card" href="/u/${f.username}">
               ${f.profile_photo
-                ? `<img class="thumb-avatar kd-zoom" src="${(f.profile_photo || '').startsWith('http') ? f.profile_photo : `/uploads/${f.profile_photo}`}" alt="${escapeHtml(f.username)}" />`
+                ? `<img class="thumb-avatar kd-zoom" src="${photoSrc(f.profile_photo)}" alt="${escapeHtml(f.username)}" />`
                 : `<div class="thumb-avatar ph">?</div>`}
               <div class="thumb-name">${escapeHtml(f.username)}</div>
               <div class="small">${f.created_at}</div>

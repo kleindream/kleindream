@@ -22,7 +22,7 @@
       <div class="card" style="margin-top: 10px; background: var(--panel2);">
         <div class="row" style="justify-content: space-between; align-items: center;">
           <div class="row" style="gap: 10px;">
-            <img class="avatar sm" src="${p.profile_photo || '/default-avatar.png'}" alt="Foto de ${p.username}" onerror="this.src='/default-avatar.png'" />
+            <img class="avatar sm" src="${photoSrc(p.profile_photo)}" alt="Foto de ${p.username}" onerror="this.src='/default-avatar.png'" />
             <div>
               <div class="h" style="margin:0; color: var(--accent);">
                 <a href="/u/${p.username}">${p.username}</a>

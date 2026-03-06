@@ -883,3 +883,25 @@ input:focus, textarea:focus{
   .dashboard-title{font-size:1.65rem;}
   .dashboard-hero-actions{grid-template-columns:1fr;}
 }
+
+
+/* Avatar gallery + mascot */
+.kd-brand-mascot{width:28px;height:28px;object-fit:contain;vertical-align:middle;filter:drop-shadow(0 0 8px rgba(125,179,255,.28));}
+.brand a{gap:8px;align-items:center;}
+.brand-text{display:inline-flex;gap:2px;align-items:baseline;}
+.mascot-chip{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));}
+.mascot-chip img{width:84px;height:84px;object-fit:contain;filter:drop-shadow(0 8px 18px rgba(0,0,0,.22));}
+.birthday-list{display:flex;flex-direction:column;gap:10px;}
+.birthday-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);}
+.birthday-item img,.birthday-item .ph{width:44px;height:44px;border-radius:12px;object-fit:cover;}
+.birthday-item .ph{display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);font-weight:900;color:var(--muted);}
+.avatar-choice-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:10px;margin-top:10px;}
+.avatar-choice{display:flex;flex-direction:column;gap:6px;align-items:center;text-align:center;padding:10px 8px;border-radius:14px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);cursor:pointer;}
+.avatar-choice:hover{background:rgba(255,255,255,.08);}
+.avatar-choice input{accent-color:var(--accent);}
+.avatar-choice img{width:64px;height:64px;border-radius:16px;object-fit:cover;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.02);}
+.mode-switch{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
+.mode-switch label{display:flex;gap:8px;align-items:center;padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);cursor:pointer;}
+.profile-birthday-banner{margin-top:12px;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg, rgba(125,179,255,.18), rgba(255,255,255,.04));}
+.kd-mini-muted{color:var(--muted);font-size:.92rem;line-height:1.5;}
+@media (max-width:700px){.mascot-chip{align-items:flex-start;}.mascot-chip img{width:64px;height:64px;}}

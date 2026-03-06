@@ -5,16 +5,12 @@
       <div class="card profile-hero">
         <div class="profile-hero-top">
           <div class="profile-photo">
-            ${
-              user.profile_photo
-                ? `<img src="${(user.profile_photo || "").startsWith("http") ? user.profile_photo : `/uploads/${user.profile_photo}`}" alt="Foto de perfil" class="kd-zoom" />`
-                : `<div class="profile-photo-ph">Sem foto</div>`
-            }
+            ${ user.profile_photo ? `<img src="${photoSrc(user.profile_photo)}" alt="Foto de perfil" class="kd-zoom" />` : `<div class="profile-photo-ph">Sem foto</div>` }
           </div>
 
           <div class="profile-meta">
             <div class="profile-name">
-              <div class="profile-username">${user.username}${isBirthdayToday ? ` <span title="Aniversariante de hoje">🎂</span>` : ``}</div>
+              <div class="profile-username">${user.username}${isBirthdayToday ? ' 🎂' : ''}</div>
               <div class="small">${user.full_name || ""}</div>
             </div>
 
@@ -48,23 +44,23 @@
           </div>
         </div>
 
-        <div class="profile-hero-body">
-          ${isBirthdayToday ? `
-            <div class="profile-highlight" style="border-color:rgba(255,255,255,.14);background:rgba(255,255,255,.04);">
-              <div class="h">🎉 Hoje é aniversário ${isMe ? 'seu' : 'deste usuário'}!</div>
-              <div style="margin-top:6px;">${isMe ? 'Aproveite seu dia especial no Klein Dream.' : 'Passe nos recados e deixe uma mensagem especial.'}</div>
-            </div>
-          ` : ``}
+        ${isBirthdayToday ? `
+          <div class="profile-birthday-banner">
+            <div class="h" style="margin:0 0 4px 0;">🎉 Hoje é aniversário deste usuário!</div>
+            <div class="kd-mini-muted">Passe nos recados e deixe uma mensagem especial.</div>
+          </div>
+        ` : ``}
 
+        <div class="profile-hero-body">
           <div class="profile-kv">
             <div class="small">Cidade</div><div>${escapeHtml(user.city || "-")}</div>
             <div class="small">Estado</div><div>${escapeHtml(user.state || "-")}</div>
-            <div class="small">Nascimento</div><div>${escapeHtml(formattedBirthDate || "-")}</div>
+            <div class="small">Nascimento</div><div>${escapeHtml(user.birth_date || "-")}</div>
             <div class="small">Estado civil</div><div>${escapeHtml(user.marital_status || "-")}</div>
             <div class="small">Time</div><div>${escapeHtml(user.favorite_team || "-")}</div>
             <div class="small">Profissão</div><div>${escapeHtml(user.profession || "-")}</div>
             <div class="small">Procura</div><div>${escapeHtml(user.looking_for || "-")}</div>
-            <div class="small">Entrou em</div><div>${user.created_at}</div>
+            <div class="small">Membro desde</div><div>${escapeHtml(memberSince || "-")}</div>
           </div>
 
           ${user.daily_phrase ? `
@@ -91,9 +87,7 @@
               <div class="thumb-grid">
                 ${recentFans.map(f => `
                   <a class="thumb-card" href="/u/${f.username}" title="${escapeHtml(f.username)}">
-                    ${f.profile_photo
-                      ? `<img class="thumb-avatar kd-zoom" src="${(f.profile_photo || '').startsWith('http') ? f.profile_photo : `/uploads/${f.profile_photo}`}" alt="${escapeHtml(f.username)}" />`
-                      : `<div class="thumb-avatar ph">?</div>`}
+                    ${f.profile_photo ? `<img class="thumb-avatar kd-zoom" src="${photoSrc(f.profile_photo)}" alt="${escapeHtml(f.username)}" />` : `<div class="thumb-avatar ph">?</div>`}
                     <div class="thumb-name">${escapeHtml(f.username)}</div>
                   </a>
                 `).join('')}
@@ -123,11 +117,7 @@
           ${canSeeVisitors ? `
             ${visitors.length ? visitors.map(v => `
               <div class="visitor-item">
-                ${
-                  v.profile_photo
-                    ? `<img src="${(v.profile_photo || "").startsWith("http") ? v.profile_photo : `/uploads/${v.profile_photo}`}" alt="Foto" />`
-                    : `<div class="visitor-ph">?</div>`
-                }
+                ${ v.profile_photo ? `<img src="${photoSrc(v.profile_photo)}" alt="Foto" />` : `<div class="visitor-ph">?</div>` }
                 <div>
                   <div><a href="/u/${v.username}"><b>${v.username}</b></a></div>
                   <div class="small">${v.created_at}</div>

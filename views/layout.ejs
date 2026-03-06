@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title><%= title || "KleinDream" %></title>
+  <link rel="icon" type="image/png" href="/img/favicon.png" />
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
@@ -19,7 +20,7 @@
 
   <div class="topbar">
     <div class="container">
-      <div class="brand"><a href="/"><span>Klein</span>Dream</a></div>
+      <div class="brand"><a href="/"><img class="kd-brand-mascot" src="/img/sr-disquete.png" alt="Sr. Disquete" /><span class="brand-text"><span>Klein</span>Dream</span></a></div>
 
       <div class="nav">
         <% if (me) { %>
@@ -68,54 +69,20 @@
       const modal = document.getElementById("kdModal");
       const img = document.getElementById("kdModalImg");
       const closeBtn = modal.querySelector(".close");
-
-      function open(src, alt) {
-        img.src = src;
-        img.alt = alt || "Imagem ampliada";
-        modal.classList.add("open");
-        modal.setAttribute("aria-hidden", "false");
-        document.body.style.overflow = "hidden";
-      }
-      function close() {
-        modal.classList.remove("open");
-        modal.setAttribute("aria-hidden", "true");
-        img.src = "";
-        document.body.style.overflow = "";
-      }
-
-      document.addEventListener("click", function (e) {
-        const t = e.target;
-        if (t && t.tagName === "IMG" && t.classList.contains("kd-zoom")) {
-          e.preventDefault();
-          open(t.src, t.alt);
-        }
-      });
-
+      function open(src, alt) { img.src = src; img.alt = alt || "Imagem ampliada"; modal.classList.add("open"); modal.setAttribute("aria-hidden", "false"); document.body.style.overflow = "hidden"; }
+      function close() { modal.classList.remove("open"); modal.setAttribute("aria-hidden", "true"); img.src = ""; document.body.style.overflow = ""; }
+      document.addEventListener("click", function (e) { const t = e.target; if (t && t.tagName === "IMG" && t.classList.contains("kd-zoom")) { e.preventDefault(); open(t.src, t.alt); } });
       closeBtn.addEventListener("click", close);
-      modal.addEventListener("click", function (e) {
-        if (e.target === modal) close();
-      });
-      document.addEventListener("keydown", function (e) {
-        if (e.key === "Escape") close();
-      });
+      modal.addEventListener("click", function (e) { if (e.target === modal) close(); });
+      document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
     })();
   </script>
-
-  
   <script>
-    // Flash -> toasts
     (function(){
       const flash = <%- JSON.stringify(flash || {}) %>;
       if (!flash) return;
-      function push(list, type){
-        if (!list) return;
-        (Array.isArray(list)?list:[list]).forEach(m=>{
-          if (m) window.kdToast && window.kdToast(String(m), type);
-        });
-      }
-      push(flash.success, 'success');
-      push(flash.error, 'error');
-      push(flash.info, 'info');
+      function push(list, type){ if (!list) return; (Array.isArray(list)?list:[list]).forEach(m=>{ if (m) window.kdToast && window.kdToast(String(m), type); }); }
+      push(flash.success, 'success'); push(flash.error, 'error'); push(flash.info, 'info');
     })();
   </script>
 <script src="/kd.js"></script>

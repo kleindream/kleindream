@@ -1,6 +1,18 @@
 <%- include("layout", { title: "Início", body: `
   <div class="grid">
     <div>
+      <div class="card mascot-chip">
+        <img src="/img/sr-disquete.png" alt="Sr. Disquete" class="kd-zoom" />
+        <div>
+          <div class="h" style="font-size:1.5rem;font-weight:900;color:var(--accent);">💾 Dica do Sr. Disquete</div>
+          <p style="font-size:1rem;line-height:1.6;margin:6px 0 0 0;">Aqui vale mais quem volta porque gosta do lugar. Complete seu perfil, escolha um avatar retrô ou mande sua foto e deixe a Klein Dream com a sua cara.</p>
+          <div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap;">
+            <a class="button" href="/profile/edit">Escolher avatar</a>
+            <a class="button secondary" href="/u/${me.username}">Ver meu perfil</a>
+          </div>
+        </div>
+      </div>
+
       <div class="card">
         <div class="h" style="font-size:2.1rem;font-weight:900;color:var(--accent);">Seu perfil é seu espaço.</div>
         <p style="font-size:1.1rem;color:var(--text);line-height:1.6;">
@@ -64,6 +76,43 @@
           “Nem tudo precisa ser rápido. Algumas coisas só precisam ser verdadeiras.”
         </div>
       </div>
+
+      <div class="card">
+        <div class="h" style="font-size:1.4rem;font-weight:900;color:var(--accent);">🎂 Aniversários</div>
+        ${((todayBirthdays||[]).length === 0 && (upcomingBirthdays||[]).length === 0)
+          ? `<div class="kd-mini-muted">Ainda não há aniversários cadastrados para aparecer aqui.</div>`
+          : `
+            ${((todayBirthdays||[]).length > 0) ? `
+              <div class="small" style="margin-bottom:8px;">Quem está soprando velinhas hoje</div>
+              <div class="birthday-list">
+                ${(todayBirthdays||[]).map(u => `
+                  <div class="birthday-item">
+                    <img src="${photoSrc(u.profile_photo)}" alt="${escapeHtml(u.username)}" />
+                    <div>
+                      <a href="/u/${u.username}"><b>${escapeHtml(u.full_name || u.username)}</b></a>
+                      <div class="small">Faz aniversário hoje 🎉</div>
+                    </div>
+                  </div>
+                `).join("")}
+              </div>
+            ` : ``}
+
+            ${((upcomingBirthdays||[]).length > 0) ? `
+              <div class="small" style="margin:12px 0 8px 0;">Próximos 7 dias</div>
+              <div class="birthday-list">
+                ${(upcomingBirthdays||[]).map(u => `
+                  <div class="birthday-item">
+                    <img src="${photoSrc(u.profile_photo)}" alt="${escapeHtml(u.username)}" />
+                    <div>
+                      <a href="/u/${u.username}"><b>${escapeHtml(u.full_name || u.username)}</b></a>
+                      <div class="small">Aniversário em ${escapeHtml(u.birth_label || "")}</div>
+                    </div>
+                  </div>
+                `).join("")}
+              </div>
+            ` : ``}
+          `}
+      </div>
     </div>
   </div>
 
@@ -123,51 +172,6 @@
               `).join("")}
             </ul>
             <div style="margin-top:8px;"><a class="button secondary" href="/messages">Abrir inbox</a></div>
-          `}
-      </div>
-    </div>
-  </div>
-
-  <div class="grid" style="margin-top:12px;">
-    <div>
-      <div class="card">
-        <div class="h" style="font-size:1.4rem;font-weight:900;color:var(--accent);">🎂 Aniversários</div>
-        ${((todayBirthdays||[]).length === 0 && (upcomingBirthdays||[]).length === 0)
-          ? `<div style="color:var(--muted);">Ainda não há aniversários cadastrados para hoje ou para os próximos dias.</div>`
-          : `
-            ${((todayBirthdays||[]).length > 0)
-              ? `
-                <div style="font-weight:700;margin-bottom:8px;">Quem está soprando velinhas hoje</div>
-                <ul class="list" style="margin-bottom:10px;">
-                  ${(todayBirthdays||[]).map(u => `
-                    <li>
-                      <a href="/u/${u.username}"><b>${escapeHtml(u.full_name || u.username)}</b></a>
-                      <span style="color:var(--faint);"> faz aniversário hoje 🎉</span>
-                    </li>
-                  `).join("")}
-                </ul>
-              `
-              : `<div style="color:var(--muted);margin-bottom:10px;">Hoje ninguém está fazendo aniversário.</div>`
-            }
-
-            ${((upcomingBirthdays||[]).length > 0)
-              ? `
-                <div style="font-weight:700;margin-bottom:8px;">Próximos 7 dias</div>
-                <ul class="list">
-                  ${(upcomingBirthdays||[]).map(u => `
-                    <li>
-                      <a href="/u/${u.username}"><b>${escapeHtml(u.full_name || u.username)}</b></a>
-                      <span style="color:var(--faint);"> — ${escapeHtml(u.birth_date_br)}</span>
-                    </li>
-                  `).join("")}
-                </ul>
-              `
-              : ``
-            }
-
-            <div style="margin-top:8px;color:var(--faint);font-size:.95rem;line-height:1.5;">
-              Passe no perfil e deixe um recado carinhoso para quem estiver comemorando.
-            </div>
           `}
       </div>
     </div>

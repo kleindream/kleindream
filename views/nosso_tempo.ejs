@@ -62,7 +62,7 @@
             <div class="card" style="padding:10px;">
               <div style="display:flex;gap:10px;align-items:flex-start;">
                 <a href="/u/${p.username}">
-                  <img class="avatar" src="${(p.profile_photo && String(p.profile_photo).startsWith("http")) ? p.profile_photo : (p.profile_photo ? `/uploads/${p.profile_photo}` : "/default-avatar.png")}" style="width:44px;height:44px;border-radius:12px;object-fit:cover;" alt="avatar" />
+                  <img class="avatar" src="${photoSrc(p.profile_photo)}" style="width:44px;height:44px;border-radius:12px;object-fit:cover;" alt="avatar" />
                 </a>
                 <div style="flex:1;">
                   <div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;">
