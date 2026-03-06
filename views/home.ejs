@@ -1,154 +1,166 @@
 <%- include("layout", { title: "Início", body: `
-  <div class="grid">
-    <div>
-      <div class="card">
-        <div class="h" style="font-size:2.1rem;font-weight:900;color:var(--accent);">Seu perfil é seu espaço.</div>
-        <p style="font-size:1.1rem;color:var(--text);line-height:1.6;">
-          Aqui ninguém te empurra conteúdo. Não tem pressa, não tem algoritmo, não tem “viral”.
-          Tem gente. Tem recado. Tem presença.
+  <div class="dashboard-shell">
+    <section class="card dashboard-hero">
+      <div class="dashboard-hero-copy">
+        <div class="eyebrow">Painel do Klein Dream</div>
+        <div class="dashboard-title">Bem-vindo de volta, ${(me && (me.full_name || me.username)) ? escapeHtml(me.full_name || me.username) : ""}.</div>
+        <p class="dashboard-lead">
+          Aqui o começo da sua rede já mostra o que importa: gente, recados, movimento e atalhos.
+          Sem confusão, sem pressa e sem te empurrar coisa que você não pediu.
         </p>
-        <p style="font-size:1.05rem;color:var(--muted);line-height:1.6;margin-top:10px;">
-          O KleinDream é pra quem ainda gosta de <b>ter</b> um perfil — cuidar dele, deixar um pedaço de si,
-          e voltar porque faz sentido.
-        </p>
-
-        <div class="row" style="gap:6px;margin-top:10px;flex-wrap:wrap;">
-          <a class="button secondary" href="/u/${me.username}">Meu perfil</a>
-          <a class="button secondary" href="/scraps/${me.username}">Recados</a>
-          <a class="button secondary" href="/photos/${me.username}">Fotos</a>
-          <a class="button secondary" href="/testimonials/${me.username}">Depoimentos</a>
-        </div>
-        <div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap;">
-          <a class="button" href="/mural">Ir pro Mural público</a>
-          <a class="button secondary" href="/friends">Amigos</a>
-          <a class="button secondary" href="/messages">Mensagens</a>
-        </div>
-
-        <div class="hr"></div>
-        <div style="color:var(--faint);font-size:.95rem;">
-          Dica: quanto mais você “bota a cara”, mais o Klein Dream vira uma comunidade de verdade.
-        </div>
       </div>
-    </div>
+      <div class="dashboard-hero-actions">
+        <a class="button" href="/u/${me.username}">👤 Meu perfil</a>
+        <a class="button secondary" href="/mural">📰 Ir pro mural</a>
+        <a class="button secondary" href="/search">🔎 Procurar gente</a>
+        <a class="button secondary" href="/profile/edit">✏️ Editar perfil</a>
+      </div>
+    </section>
 
-    <div>
-      <div class="card" style="background:var(--panel2);">
-        <div class="h" style="font-size:2rem;font-weight:900;color:var(--accent);">Bem-vindo de volta, ${(me && (me.full_name || me.username)) ? escapeHtml(me.full_name || me.username) : ""}!</div>
-        <p style="font-size:1.05rem;color:var(--text);line-height:1.6;">
-          Se quiser deixar a sua marca hoje, começa simples: um post no mural, um recado pra alguém, uma foto
-          ou um depoimento sincero.
-        </p>
+    <section class="dashboard-stats-grid">
+      <a class="card stat-card" href="/friends">
+        <div class="stat-label">👥 Amigos</div>
+        <div class="stat-value">${dashboardStats?.friends || 0}</div>
+        <div class="stat-meta">laços já confirmados</div>
+      </a>
+      <a class="card stat-card" href="/fans/${me.username}">
+        <div class="stat-label">⭐ Fãs</div>
+        <div class="stat-value">${dashboardStats?.fans || 0}</div>
+        <div class="stat-meta">quem curte seu perfil</div>
+      </a>
+      <a class="card stat-card" href="/scraps/${me.username}">
+        <div class="stat-label">💬 Recados</div>
+        <div class="stat-value">${dashboardStats?.scraps || 0}</div>
+        <div class="stat-meta">mensagens no seu cantinho</div>
+      </a>
+      <a class="card stat-card" href="/me/visitors">
+        <div class="stat-label">👁 Visitantes</div>
+        <div class="stat-value">${dashboardStats?.visitors || 0}</div>
+        <div class="stat-meta">passagens pelo seu perfil</div>
+      </a>
+      <a class="card stat-card" href="/photos/${me.username}">
+        <div class="stat-label">📷 Fotos</div>
+        <div class="stat-value">${dashboardStats?.photos || 0}</div>
+        <div class="stat-meta">memórias publicadas</div>
+      </a>
+      <a class="card stat-card" href="/groups">
+        <div class="stat-label">👪 Grupos</div>
+        <div class="stat-value">${dashboardStats?.groups || 0}</div>
+        <div class="stat-meta">lugares onde você participa</div>
+      </a>
+    </section>
 
-        <div class="grid" style="grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
-          <div class="card" style="margin:0;background:var(--panel);">
-            <div class="h" style="font-size:1.25rem;font-weight:900;color:var(--accent);">Pendências</div>
-            <div style="color:var(--muted);font-size:1rem;line-height:1.6;">
-              <div>Pedidos de amizade: <b>${(incomingRequests||[]).length}</b></div>
-              <div>Depoimentos pendentes: <b>${(pendingTestimonials||[]).length}</b></div>
-              <div>Mensagens não lidas: <b>${(unreadMessages||[]).length}</b></div>
+    <div class="dashboard-main-grid">
+      <div class="dashboard-main-column">
+        <section class="card dashboard-focus-card">
+          <div class="section-title">⚡ O que merece sua atenção agora</div>
+          <div class="dashboard-focus-grid">
+            <div class="focus-mini-card">
+              <div class="focus-title">Pedidos de amizade</div>
+              <div class="focus-number">${(incomingRequests||[]).length}</div>
+              <div class="focus-text">pessoas esperando sua resposta</div>
+              <a class="button secondary" href="/friends">Gerenciar</a>
             </div>
-          </div>
-
-          <div class="card" style="margin:0;background:var(--panel);">
-            <div class="h" style="font-size:1.25rem;font-weight:900;color:var(--accent);">Ações rápidas</div>
-            <div class="row" style="gap:6px;flex-wrap:wrap;">
-              <a class="button secondary" href="/profile/edit">Editar perfil</a>
-              <a class="button secondary" href="/search">Procurar gente</a>
-              <a class="button secondary" href="/mural">Postar no mural</a>
-            </div>
-          </div>
-        </div>
-
-        <div class="hr"></div>
-        <div style="color:var(--faint);font-size:.95rem;line-height:1.6;">
-          “Nem tudo precisa ser rápido. Algumas coisas só precisam ser verdadeiras.”
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="grid" style="margin-top:12px;">
-    <div>
-      <div class="card">
-        <div class="h" style="font-size:1.4rem;font-weight:900;color:var(--accent);">Pedidos de amizade</div>
-        ${((incomingRequests||[]).length === 0)
-          ? `<div style="color:var(--muted);">Nenhum pedido por enquanto.</div>`
-          : `
-            <ul class="list">
-              ${(incomingRequests||[]).slice(0,10).map(r => `
-                <li>
-                  <a href="/u/${r.username}"><b>${escapeHtml(r.full_name || r.username)}</b></a>
-                  <span style="color:var(--faint);"> pediu amizade</span>
-                </li>
-              `).join("")}
-            </ul>
-            <div style="margin-top:8px;"><a class="button secondary" href="/friends">Gerenciar</a></div>
-          `}
-      </div>
-    </div>
-
-    <div>
-      <div class="card">
-        <div class="h" style="font-size:1.4rem;font-weight:900;color:var(--accent);">Depoimentos pendentes</div>
-        ${((pendingTestimonials||[]).length === 0)
-          ? `<div style="color:var(--muted);">Nada pendente. Seu perfil está limpinho 😌</div>`
-          : `
-            <ul class="list">
-              ${(pendingTestimonials||[]).slice(0,10).map(t => `
-                <li>
-                  <a href="/u/${t.username}"><b>${escapeHtml(t.full_name || t.username)}</b></a>
-                  <span style="color:var(--faint);"> deixou um depoimento</span>
-                </li>
-              `).join("")}
-            </ul>
-            <div style="margin-top:8px;">
+            <div class="focus-mini-card">
+              <div class="focus-title">Depoimentos pendentes</div>
+              <div class="focus-number">${(pendingTestimonials||[]).length}</div>
+              <div class="focus-text">mensagens que precisam da sua aprovação</div>
               <a class="button secondary" href="/testimonials/${me.username}">Revisar</a>
             </div>
-          `}
+            <div class="focus-mini-card">
+              <div class="focus-title">Mensagens não lidas</div>
+              <div class="focus-number">${(unreadMessages||[]).length}</div>
+              <div class="focus-text">conversas esperando você abrir</div>
+              <a class="button secondary" href="/messages">Abrir inbox</a>
+            </div>
+          </div>
+        </section>
+
+        <section class="card dashboard-list-card">
+          <div class="section-title">💬 Recados recentes pra você</div>
+          ${((latestScraps||[]).length === 0)
+            ? `
+              <div class="empty-state">Ainda não chegaram recados. Que tal mandar um primeiro recado pra alguém?</div>
+              <div style="margin-top:8px;"><a class="button secondary" href="/search">Procurar pessoas</a></div>
+            `
+            : `
+              <ul class="list dashboard-list">
+                ${(latestScraps||[]).slice(0,10).map(s => `
+                  <li>
+                    <div>
+                      <a href="/u/${s.from_username}"><b>${escapeHtml(s.from_username)}</b></a>
+                      <span style="color:var(--faint);"> disse:</span>
+                    </div>
+                    <div class="dashboard-list-text">${escapeHtml(s.content)}</div>
+                  </li>
+                `).join("")}
+              </ul>
+              <div style="margin-top:8px;"><a class="button secondary" href="/scraps/${me.username}">Ver todos</a></div>
+            `}
+        </section>
       </div>
+
+      <aside class="dashboard-side-column">
+        <section class="card dashboard-list-card compact">
+          <div class="section-title">👥 Pedidos de amizade</div>
+          ${((incomingRequests||[]).length === 0)
+            ? `<div class="empty-state">Nenhum pedido por enquanto.</div>`
+            : `
+              <ul class="list dashboard-list compact-list">
+                ${(incomingRequests||[]).slice(0,8).map(r => `
+                  <li>
+                    <a href="/u/${r.username}"><b>${escapeHtml(r.full_name || r.username)}</b></a>
+                    <span style="color:var(--faint);"> pediu amizade</span>
+                  </li>
+                `).join("")}
+              </ul>
+              <div style="margin-top:8px;"><a class="button secondary" href="/friends">Ver pedidos</a></div>
+            `}
+        </section>
+
+        <section class="card dashboard-list-card compact">
+          <div class="section-title">📝 Depoimentos pendentes</div>
+          ${((pendingTestimonials||[]).length === 0)
+            ? `<div class="empty-state">Nada pendente. Seu perfil está em ordem.</div>`
+            : `
+              <ul class="list dashboard-list compact-list">
+                ${(pendingTestimonials||[]).slice(0,8).map(t => `
+                  <li>
+                    <a href="/u/${t.username}"><b>${escapeHtml(t.full_name || t.username)}</b></a>
+                    <span style="color:var(--faint);"> deixou um depoimento</span>
+                  </li>
+                `).join("")}
+              </ul>
+              <div style="margin-top:8px;"><a class="button secondary" href="/testimonials/${me.username}">Revisar</a></div>
+            `}
+        </section>
+
+        <section class="card dashboard-list-card compact">
+          <div class="section-title">✉️ Mensagens não lidas</div>
+          ${((unreadMessages||[]).length === 0)
+            ? `<div class="empty-state">Caixa de entrada tranquila.</div>`
+            : `
+              <ul class="list dashboard-list compact-list">
+                ${(unreadMessages||[]).slice(0,8).map(m => `
+                  <li>
+                    <a href="/messages"><b>${escapeHtml(m.from_username)}</b></a>
+                    <span style="color:var(--faint);"> — ${escapeHtml(m.subject || "sem assunto")}</span>
+                  </li>
+                `).join("")}
+              </ul>
+              <div style="margin-top:8px;"><a class="button secondary" href="/messages">Abrir inbox</a></div>
+            `}
+        </section>
+      </aside>
     </div>
 
-    <div>
-      <div class="card">
-        <div class="h" style="font-size:1.4rem;font-weight:900;color:var(--accent);">Mensagens não lidas</div>
-        ${((unreadMessages||[]).length === 0)
-          ? `<div style="color:var(--muted);">Caixa de entrada tranquila.</div>`
-          : `
-            <ul class="list">
-              ${(unreadMessages||[]).slice(0,10).map(m => `
-                <li>
-                  <a href="/messages"><b>${escapeHtml(m.from_username)}</b></a>
-                  <span style="color:var(--faint);"> — ${escapeHtml(m.subject || "sem assunto")}</span>
-                </li>
-              `).join("")}
-            </ul>
-            <div style="margin-top:8px;"><a class="button secondary" href="/messages">Abrir inbox</a></div>
-          `}
-      </div>
-    </div>
-  </div>
-
-  <div class="card" style="margin-top:12px;">
-    <div class="h" style="font-size:1.6rem;font-weight:900;color:var(--accent);">Recados recentes pra você</div>
-    ${((latestScraps||[]).length === 0)
-      ? `
-        <div style="color:var(--muted);">Ainda não chegaram recados. Que tal mandar um primeiro recado pra alguém?</div>
-        <div style="margin-top:8px;"><a class="button secondary" href="/search">Procurar pessoas</a></div>
-      `
-      : `
-        <ul class="list">
-          ${(latestScraps||[]).slice(0,10).map(s => `
-            <li style="margin-bottom:8px;">
-              <div>
-                <a href="/u/${s.from_username}"><b>${escapeHtml(s.from_username)}</b></a>
-                <span style="color:var(--faint);"> disse:</span>
-              </div>
-              <div style="color:var(--text);white-space:pre-wrap;">${escapeHtml(s.content)}</div>
-            </li>
-          `).join("")}
-        </ul>
-        <div style="margin-top:8px;"><a class="button secondary" href="/scraps/${me.username}">Ver todos</a></div>
-      `}
+    <section class="card dashboard-footer-note">
+      <div class="section-title">💙 Seu espaço, do seu jeito</div>
+      <p>
+        O Klein Dream funciona melhor quando tudo está claro: primeiro o que pede atenção, depois o que mostra movimento,
+        e por fim os atalhos para continuar vivendo a rede. É um painel de controle com alma de internet antiga.
+      </p>
+    </section>
   </div>
 ` }) %>
 
