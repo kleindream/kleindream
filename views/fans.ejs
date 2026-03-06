@@ -1,0 +1,6 @@
+<h2>⭐ Fãs de <%= profile.username %></h2>
+<ul>
+<% fans.forEach(f=>{ %>
+<li><a href="/u/<%= f.username %>"><%= f.username %></a></li>
+<% }) %>
+</ul>

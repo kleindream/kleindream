@@ -1424,3 +1424,28 @@ main().catch((err) => {
   console.error("[KleinDream] Falha ao iniciar:", err);
   process.exit(1);
 });
+
+/* ==== Fans System ==== */
+app.post("/fan/:username", requireAuth, (req,res)=>{
+  const profile=db.prepare("SELECT id FROM users WHERE username=?").get(req.params.username);
+  if(!profile) return res.redirect("/");
+  const me=req.session.user.id;
+  if(profile.id===me) return res.redirect("/u/"+req.params.username);
+  try{
+    db.prepare("INSERT OR IGNORE INTO fans (user_id,fan_user_id) VALUES (?,?)")
+      .run(profile.id,me);
+  }catch(e){}
+  res.redirect("/u/"+req.params.username);
+});
+
+app.get("/fans/:username",(req,res)=>{
+  const profile=db.prepare("SELECT id,username FROM users WHERE username=?").get(req.params.username);
+  if(!profile) return res.redirect("/");
+  const fans=db.prepare(`
+    SELECT u.username
+    FROM fans f
+    JOIN users u ON u.id=f.fan_user_id
+    WHERE f.user_id=?
+  `).all(profile.id);
+  res.render("fans",{profile,fans});
+});
