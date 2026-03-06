@@ -1,29 +1,15 @@
 (() => {
   const questions = [
-    { q: 'Qual rede ficou famosa pelos scraps e comunidades?', a: ['Orkut', 'ICQ', 'Fotolog'], c: 0 },
-    { q: 'Antes do WhatsApp, muita gente conversava em qual mensageiro?', a: ['MSN Messenger', 'Napster', 'Winamp'], c: 0 },
-    { q: 'O barulho da internet discada acontecia em qual tipo de conexão?', a: ['ADSL', 'Discada', 'Fibra'], c: 1 },
-    { q: 'Qual objeto era muito usado para salvar arquivos pequenos?', a: ['Disquete', 'Blu-ray', 'SSD NVMe'], c: 0 },
-    { q: 'No Orkut, depoimentos e recados eram sinais de quê?', a: ['Presença no perfil', 'Atualização automática', 'Anúncio patrocinado'], c: 0 }
+    {q:'Qual mensageiro ficou famoso pelo som “uh-oh”?', a:['ICQ','MSN Messenger','Skype'], c:0},
+    {q:'No Orkut, como eram chamados os recados públicos no perfil?', a:['Posts','Scraps','DMs'], c:1},
+    {q:'Qual item era muito usado para salvar arquivos nos anos 90?', a:['Disquete','SSD NVMe','Blu-ray'], c:0},
+    {q:'Qual rede social era conhecida pelas comunidades e depoimentos?', a:['LinkedIn','Orkut','TikTok'], c:1},
+    {q:'Na internet discada, o que era bem comum acontecer?', a:['A ligação cair ao conectar','Velocidade de fibra','Vídeo 4K instantâneo'], c:0}
   ];
-  const questionEl = document.getElementById('quizQuestion');
-  const optionsEl = document.getElementById('quizOptions');
-  const statusEl = document.getElementById('quizStatus');
-  const progressEl = document.getElementById('quizProgress');
-  const scoreEl = document.getElementById('quizScore');
-  const restartBtn = document.getElementById('quizRestart');
-  let index = 0, score = 0, locked = false;
-  function render(){
-    const item = questions[index]; locked = false; progressEl.textContent = `${index+1}/${questions.length}`; scoreEl.textContent = String(score);
-    questionEl.textContent = item.q; optionsEl.innerHTML = '';
-    item.a.forEach((opt,i) => { const btn = document.createElement('button'); btn.type='button'; btn.className='quiz-option'; btn.textContent=opt; btn.addEventListener('click',()=>answer(i,btn)); optionsEl.appendChild(btn); });
-    statusEl.textContent = 'Escolha uma resposta.';
-  }
-  function answer(choice, btn){ if (locked) return; locked = true; const item = questions[index]; const buttons=[...document.querySelectorAll('.quiz-option')]; buttons[item.c].classList.add('correct');
-    if (choice === item.c){ score += 1; scoreEl.textContent = String(score); statusEl.textContent = 'Acertou!'; }
-    else { btn.classList.add('wrong'); statusEl.textContent = 'Não foi dessa vez.'; }
-    setTimeout(() => { index += 1; if (index >= questions.length){ questionEl.textContent = `Fim do quiz! Você fez ${score} de ${questions.length}.`; optionsEl.innerHTML = ''; statusEl.textContent = score >= 4 ? 'Veterano da internet detectado.' : 'Mandou bem — e ainda dá para melhorar na próxima.'; progressEl.textContent = `${questions.length}/${questions.length}`; return; } render(); }, 900);
-  }
-  function reset(){ index = 0; score = 0; render(); }
-  restartBtn.addEventListener('click', reset); reset();
+  const qEl = document.getElementById('quizQuestion'); const optsEl = document.getElementById('quizOptions'); const scoreEl = document.getElementById('quizScore'); const statusEl = document.getElementById('quizStatus'); const restartBtn = document.getElementById('quizRestart');
+  let idx=0, score=0;
+  function render(){ const item=questions[idx]; qEl.textContent = `${idx+1}. ${item.q}`; optsEl.innerHTML=''; statusEl.textContent=''; item.a.forEach((opt,i)=>{ const b=document.createElement('button'); b.type='button'; b.className='quiz-option'; b.textContent=opt; b.addEventListener('click',()=>answer(i)); optsEl.appendChild(b); }); }
+  function answer(i){ const item=questions[idx]; if(i===item.c){ score++; scoreEl.textContent=String(score); statusEl.textContent='Acertou!'; } else { statusEl.textContent=`Errou. A resposta certa era: ${item.a[item.c]}.`; } idx++; if(idx>=questions.length){ qEl.textContent=`Fim do quiz! Você fez ${score} de ${questions.length}.`; optsEl.innerHTML=''; restartBtn.style.display='inline-flex'; return; } setTimeout(render, 550); }
+  restartBtn.addEventListener('click', ()=>{ idx=0; score=0; scoreEl.textContent='0'; restartBtn.style.display='none'; render(); });
+  render();
 })();

@@ -1,35 +1,13 @@
 <%- include("layout", { title: "Jogos Retrô", body: `
-  <div class="card">
+  <div class="card game-wrap">
     <div class="h" style="font-size:2rem;font-weight:900;color:var(--accent);">🎮 Jogos Retrô</div>
-    <p style="line-height:1.7;color:var(--muted);font-size:1.04rem;">Um cantinho leve da Klein Dream para brincar sem pressa. Tudo roda direto no navegador e combina com o clima nostálgico da rede.</p>
+    <p style="line-height:1.7;color:var(--muted);font-size:1.04rem;">Um cantinho leve da Klein Dream para brincar sem pressa, no estilo da internet antiga.</p>
     <div class="games-grid">
-      <div class="game-card">
-        <h3>🧠 Jogo da Memória</h3>
-        <p>Encontre os pares de ícones clássicos da informática e tente vencer em menos jogadas.</p>
-        <a class="button" href="/games/memory">Abrir</a>
-      </div>
-      <div class="game-card">
-        <h3>🐍 Snake</h3>
-        <p>O clássico da cobrinha, com pontuação ao vivo e velocidade crescendo aos poucos.</p>
-        <a class="button" href="/games/snake">Abrir</a>
-      </div>
-      <div class="game-card">
-        <h3>✊ Pedra, Papel e Tesoura</h3>
-        <p>Uma disputa rápida contra o site para ver quem está com a sorte e a estratégia em dia.</p>
-        <a class="button" href="/games/rps">Abrir</a>
-      </div>
-      <div class="game-card">
-        <h3>❌ Jogo da Velha</h3>
-        <p>Partida contra a Klein Dream em uma grade 3x3, simples e viciante como antigamente.</p>
-        <a class="button" href="/games/velha">Abrir</a>
-      </div>
-      <div class="game-card">
-        <h3>📺 Quiz Nostalgia</h3>
-        <p>Perguntas sobre internet antiga, mensageiros e velhos hábitos de quem viveu os anos 2000 online.</p>
-        <a class="button" href="/games/quiz">Abrir</a>
-      </div>
+      <div class="game-card"><h3>🧠 Jogo da Memória</h3><p>Encontre os pares de ícones clássicos da informática.</p><a class="button" href="/games/memory">Abrir</a></div>
+      <div class="game-card"><h3>🐍 Snake</h3><p>O clássico da cobrinha, com pontuação e reinício rápido.</p><a class="button" href="/games/snake">Abrir</a></div>
+      <div class="game-card"><h3>✊ Pedra, Papel e Tesoura</h3><p>Uma disputa rápida contra o próprio site.</p><a class="button" href="/games/rps">Abrir</a></div>
+      <div class="game-card"><h3>❌ Jogo da Velha</h3><p>Grade 3x3 contra a Klein Dream.</p><a class="button" href="/games/velha">Abrir</a></div>
+      <div class="game-card"><h3>📺 Quiz Nostalgia</h3><p>Perguntas sobre a internet e os mensageiros dos anos 2000.</p><a class="button" href="/games/quiz">Abrir</a></div>
     </div>
-    <div class="hr"></div>
-    <div class="game-note">Dica do Sr. Disquete: depois a gente pode ligar isso a rankings, medalhas e recordes no perfil.</div>
   </div>
 ` }) %>

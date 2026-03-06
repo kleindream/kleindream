@@ -291,7 +291,7 @@ app.post("/logout", async (req, res) => {
   req.session.destroy(() => res.redirect("/"));
 });
 
-// ===== HOME =====
+
 app.get("/games", requireAuth, async (req, res) => {
   res.render("games");
 });
@@ -300,6 +300,23 @@ app.get("/games/memory", requireAuth, async (req, res) => {
   res.render("game_memory");
 });
 
+app.get("/games/snake", requireAuth, async (req, res) => {
+  res.render("game_snake");
+});
+
+app.get("/games/rps", requireAuth, async (req, res) => {
+  res.render("game_rps");
+});
+
+app.get("/games/velha", requireAuth, async (req, res) => {
+  res.render("game_velha");
+});
+
+app.get("/games/quiz", requireAuth, async (req, res) => {
+  res.render("game_quiz");
+});
+
+// ===== HOME =====
 app.get("/home", requireAuth, async (req, res) => {
   const meId = req.session.userId;
 

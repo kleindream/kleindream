@@ -1,20 +1,13 @@
 <%- include("layout", { title: "Quiz Nostalgia", body: `
-  <div class="card game-shell">
-    <div>
-      <div class="h" style="font-size:1.9rem;font-weight:900;color:var(--accent);">📺 Quiz Nostalgia</div>
-      <p style="line-height:1.7;color:var(--muted);">Perguntas rápidas para quem viveu a internet com calma, recados e janelinhas de bate-papo.</p>
-    </div>
-    <div class="game-toolbar">
-      <span class="game-badge">Pergunta: <b id="quizProgress">1/5</b></span>
-      <span class="game-badge">Pontos: <b id="quizScore">0</b></span>
-      <button class="btn secondary" id="quizRestart" type="button">Recomeçar</button>
-      <a class="button secondary" href="/games">Voltar aos jogos</a>
-    </div>
-    <div>
-      <div class="h" id="quizQuestion" style="font-size:1.25rem;font-weight:800;"></div>
-      <div id="quizOptions" class="quiz-options"></div>
-      <div id="quizStatus" class="game-note"></div>
-    </div>
+<div class="card game-wrap">
+  <div class="h" style="font-size:1.8rem;font-weight:900;color:var(--accent);">📺 Quiz Nostalgia</div>
+  <div class="game-stage quiz-box">
+    <div class="game-toolbar"><span class="pill">Acertos: <b id="quizScore">0</b></span><a class="button secondary" href="/games">Voltar</a></div>
+    <div id="quizQuestion" style="font-size:1.15rem;font-weight:700"></div>
+    <div id="quizOptions" class="quiz-options"></div>
+    <div id="quizStatus"></div>
+    <button class="button secondary" id="quizRestart" type="button" style="display:none;">Jogar de novo</button>
   </div>
-  <script src="/games/quiz.js"></script>
+</div>
+<script src="/games/quiz.js"></script>
 ` }) %>
