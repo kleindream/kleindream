@@ -84,6 +84,7 @@ app.set("views", path.join(__dirname, "views"));
 
 // Middlewares
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
 // Rate limiting (anti-spam básico)
 const limiterAuth = rateLimit({
@@ -247,6 +248,59 @@ const upload = multer({
 });
 
 // ===== ROTAS PÚBLICAS =====
+
+const GAME_META = {
+  memory: { label: "Jogo da Memória", icon: "🧠" },
+  snake: { label: "Snake", icon: "🐍" },
+  rps: { label: "Pedra, Papel e Tesoura", icon: "✊" },
+  velha: { label: "Jogo da Velha", icon: "❌" },
+  quiz: { label: "Quiz Nostalgia", icon: "📺" }
+};
+
+function getGameMeta(game) {
+  return GAME_META[game] || { label: game, icon: "🎮" };
+}
+
+async function getGameRanking(game, limit = 10) {
+  return db.all(`
+    SELECT ranked.username, ranked.score, ranked.played_at
+    FROM (
+      SELECT DISTINCT ON (gs.user_id)
+        gs.user_id,
+        u.username,
+        gs.score,
+        gs.played_at
+      FROM game_scores gs
+      JOIN users u ON u.id = gs.user_id
+      WHERE gs.game = ?
+      ORDER BY gs.user_id, gs.score DESC, gs.played_at ASC
+    ) ranked
+    ORDER BY ranked.score DESC, ranked.played_at ASC
+    LIMIT ?
+  `, [game, limit]);
+}
+
+async function getMyBestScore(userId, game) {
+  return db.get(`
+    SELECT score, played_at
+    FROM game_scores
+    WHERE user_id = ? AND game = ?
+    ORDER BY score DESC, played_at ASC
+    LIMIT 1
+  `, [userId, game]);
+}
+
+async function getGamesOverview(limit = 5) {
+  const entries = await Promise.all(
+    Object.keys(GAME_META).map(async (game) => ({
+      game,
+      meta: getGameMeta(game),
+      ranking: await getGameRanking(game, limit)
+    }))
+  );
+  return entries;
+}
+
 app.get("/", async (req, res) => res.render("index"));
 
 // Sobre (texto fictício para o Digão editar)
@@ -293,27 +347,67 @@ app.post("/logout", async (req, res) => {
 
 
 app.get("/games", requireAuth, async (req, res) => {
-  res.render("games");
+  const overview = await getGamesOverview(5);
+  res.render("games", { overview });
 });
 
+async function renderGamePage(req, res, viewName, game) {
+  const [ranking, myBest] = await Promise.all([
+    getGameRanking(game, 10),
+    getMyBestScore(req.session.userId, game)
+  ]);
+  res.render(viewName, {
+    ranking,
+    myBest,
+    gameKey: game,
+    gameMeta: getGameMeta(game)
+  });
+}
+
 app.get("/games/memory", requireAuth, async (req, res) => {
-  res.render("game_memory");
+  await renderGamePage(req, res, "game_memory", "memory");
 });
 
 app.get("/games/snake", requireAuth, async (req, res) => {
-  res.render("game_snake");
+  await renderGamePage(req, res, "game_snake", "snake");
 });
 
 app.get("/games/rps", requireAuth, async (req, res) => {
-  res.render("game_rps");
+  await renderGamePage(req, res, "game_rps", "rps");
 });
 
 app.get("/games/velha", requireAuth, async (req, res) => {
-  res.render("game_velha");
+  await renderGamePage(req, res, "game_velha", "velha");
 });
 
 app.get("/games/quiz", requireAuth, async (req, res) => {
-  res.render("game_quiz");
+  await renderGamePage(req, res, "game_quiz", "quiz");
+});
+
+app.post("/api/games/score", requireAuth, async (req, res) => {
+  const game = String(req.body.game || "").trim().toLowerCase();
+  const score = Number(req.body.score);
+
+  if (!GAME_META[game]) {
+    return res.status(400).json({ ok: false, error: "Jogo inválido." });
+  }
+  if (!Number.isFinite(score) || score < 0) {
+    return res.status(400).json({ ok: false, error: "Pontuação inválida." });
+  }
+
+  const safeScore = Math.max(0, Math.min(999999, Math.floor(score)));
+
+  await db.run(
+    "INSERT INTO game_scores (user_id, game, score) VALUES (?, ?, ?)",
+    [req.session.userId, game, safeScore]
+  );
+
+  const [ranking, myBest] = await Promise.all([
+    getGameRanking(game, 10),
+    getMyBestScore(req.session.userId, game)
+  ]);
+
+  res.json({ ok: true, ranking, myBest, savedScore: safeScore });
 });
 
 // ===== HOME =====

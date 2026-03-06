@@ -1,13 +1,31 @@
 <%- include("layout", { title: "Quiz Nostalgia", body: `
-<div class="card game-wrap">
-  <div class="h" style="font-size:1.8rem;font-weight:900;color:var(--accent);">📺 Quiz Nostalgia</div>
-  <div class="game-stage quiz-box">
-    <div class="game-toolbar"><span class="pill">Acertos: <b id="quizScore">0</b></span><a class="button secondary" href="/games">Voltar</a></div>
-    <div id="quizQuestion" style="font-size:1.15rem;font-weight:700"></div>
-    <div id="quizOptions" class="quiz-options"></div>
-    <div id="quizStatus"></div>
-    <button class="button secondary" id="quizRestart" type="button" style="display:none;">Jogar de novo</button>
+<div class="game-page-grid">
+  <div class="card game-wrap">
+    <div class="h" style="font-size:1.8rem;font-weight:900;color:var(--accent);">📺 Quiz Nostalgia</div>
+    <div class="game-stage quiz-box">
+      <div class="game-toolbar"><span class="pill">Acertos: <b id="quizScore">0</b></span><a class="button secondary" href="/games">Voltar</a></div>
+      <div id="quizQuestion" style="font-size:1.15rem;font-weight:700"></div>
+      <div id="quizOptions" class="quiz-options"></div>
+      <div id="quizStatus"></div>
+      <button class="button secondary" id="quizRestart" type="button" style="display:none;">Jogar de novo</button>
+    </div>
+  </div>
+  <div class="card ranking-card">
+    <div class="overview-title">🏆 Ranking do jogo</div>
+    <div class="game-toolbar"><span class="pill">Seu melhor: <b id="gameMyBest">${myBest ? myBest.score : "—"}</b></span></div>
+    <div id="gameRankingList" class="ranking-list">
+      ${ranking.length ? ranking.map((row, idx) => `
+        <div class="ranking-row">
+          <span class="ranking-pos">${idx + 1}º</span>
+          <span class="ranking-name">${row.username}</span>
+          <span class="ranking-score">${row.score}</span>
+        </div>
+      `).join("") : `<div class="small">Ainda não há pontuações salvas para este jogo.</div>`}
+    </div>
+    <div id="gameSaveStatus" class="small" style="margin-top:10px;"></div>
   </div>
 </div>
+<script>window.__GAME_KEY__ = "quiz"; window.__MY_BEST__ = ${myBest ? myBest.score : 'null'};</script>
+<script src="/games/common.js"></script>
 <script src="/games/quiz.js"></script>
 ` }) %>

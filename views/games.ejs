@@ -3,11 +3,29 @@
     <div class="h" style="font-size:2rem;font-weight:900;color:var(--accent);">🎮 Jogos Retrô</div>
     <p style="line-height:1.7;color:var(--muted);font-size:1.04rem;">Um cantinho leve da Klein Dream para brincar sem pressa, no estilo da internet antiga.</p>
     <div class="games-grid">
-      <div class="game-card"><h3>🧠 Jogo da Memória</h3><p>Encontre os pares de ícones clássicos da informática.</p><a class="button" href="/games/memory">Abrir</a></div>
-      <div class="game-card"><h3>🐍 Snake</h3><p>O clássico da cobrinha, com pontuação e reinício rápido.</p><a class="button" href="/games/snake">Abrir</a></div>
-      <div class="game-card"><h3>✊ Pedra, Papel e Tesoura</h3><p>Uma disputa rápida contra o próprio site.</p><a class="button" href="/games/rps">Abrir</a></div>
-      <div class="game-card"><h3>❌ Jogo da Velha</h3><p>Grade 3x3 contra a Klein Dream.</p><a class="button" href="/games/velha">Abrir</a></div>
+      <div class="game-card"><h3>🧠 Jogo da Memória</h3><p>Encontre os pares de ícones clássicos da informática e marque o melhor placar.</p><a class="button" href="/games/memory">Abrir</a></div>
+      <div class="game-card"><h3>🐍 Snake</h3><p>O clássico da cobrinha, com pontuação e ranking para tentar superar os amigos.</p><a class="button" href="/games/snake">Abrir</a></div>
+      <div class="game-card"><h3>✊ Pedra, Papel e Tesoura</h3><p>Uma disputa rápida contra o próprio site, agora com placar salvo.</p><a class="button" href="/games/rps">Abrir</a></div>
+      <div class="game-card"><h3>❌ Jogo da Velha</h3><p>Grade 3x3 contra a Klein Dream, valendo lugar no ranking.</p><a class="button" href="/games/velha">Abrir</a></div>
       <div class="game-card"><h3>📺 Quiz Nostalgia</h3><p>Perguntas sobre a internet e os mensageiros dos anos 2000.</p><a class="button" href="/games/quiz">Abrir</a></div>
     </div>
+  </div>
+  <div class="games-overview-grid">
+    ${overview.map(item => `
+      <div class="card overview-card">
+        <div class="overview-title">${item.meta.icon} ${item.meta.label}</div>
+        <div class="small" style="margin-bottom:8px;">Top 5 do jogo</div>
+        <div class="ranking-list compact-ranking">
+          ${item.ranking.length ? item.ranking.map((row, idx) => `
+            <div class="ranking-row">
+              <span class="ranking-pos">${idx + 1}º</span>
+              <span class="ranking-name">${row.username}</span>
+              <span class="ranking-score">${row.score}</span>
+            </div>
+          `).join("") : `<div class="small">Ainda ninguém marcou pontos aqui.</div>`}
+        </div>
+        <div style="margin-top:12px;"><a class="button secondary" href="/games/${item.game}">Ver jogo</a></div>
+      </div>
+    `).join("")}
   </div>
 ` }) %>

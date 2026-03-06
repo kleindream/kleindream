@@ -1,11 +1,29 @@
 <%- include("layout", { title: "Jogo da Memória", body: `
-<div class="card game-wrap">
-  <div class="h" style="font-size:1.8rem;font-weight:900;color:var(--accent);">🧠 Jogo da Memória</div>
-  <div class="game-stage">
-    <div class="game-toolbar"><span class="pill">Jogadas: <b id="memoryMoves">0</b></span><button class="button secondary" id="memoryRestart" type="button">Recomeçar</button><a class="button secondary" href="/games">Voltar</a></div>
-    <div id="memoryGrid" class="memory-grid"></div>
-    <div id="memoryStatus" class="small"></div>
+<div class="game-page-grid">
+  <div class="card game-wrap">
+    <div class="h" style="font-size:1.8rem;font-weight:900;color:var(--accent);">🧠 Jogo da Memória</div>
+    <div class="game-stage">
+      <div class="game-toolbar"><span class="pill">Jogadas: <b id="memoryMoves">0</b></span><span class="pill">Placar: <b id="memoryScore">0</b></span><button class="button secondary" id="memoryRestart" type="button">Recomeçar</button><a class="button secondary" href="/games">Voltar</a></div>
+      <div id="memoryGrid" class="memory-grid"></div>
+      <div id="memoryStatus" class="small"></div>
+    </div>
+  </div>
+  <div class="card ranking-card">
+    <div class="overview-title">🏆 Ranking do jogo</div>
+    <div class="game-toolbar"><span class="pill">Seu melhor: <b id="gameMyBest">${myBest ? myBest.score : "—"}</b></span></div>
+    <div id="gameRankingList" class="ranking-list">
+      ${ranking.length ? ranking.map((row, idx) => `
+        <div class="ranking-row">
+          <span class="ranking-pos">${idx + 1}º</span>
+          <span class="ranking-name">${row.username}</span>
+          <span class="ranking-score">${row.score}</span>
+        </div>
+      `).join("") : `<div class="small">Ainda não há pontuações salvas para este jogo.</div>`}
+    </div>
+    <div id="gameSaveStatus" class="small" style="margin-top:10px;"></div>
   </div>
 </div>
+<script>window.__GAME_KEY__ = "memory"; window.__MY_BEST__ = ${myBest ? myBest.score : 'null'};</script>
+<script src="/games/common.js"></script>
 <script src="/games/memory.js"></script>
 ` }) %>
