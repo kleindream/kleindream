@@ -1,7 +1,10 @@
 CREATE TABLE IF NOT EXISTS fans (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER NOT NULL,
-  fan_user_id INTEGER NOT NULL,
-  created_at TEXT DEFAULT (datetime('now')),
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  fan_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE(user_id, fan_user_id)
 );
+
+CREATE INDEX IF NOT EXISTS idx_fans_user_id ON fans(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_fans_fan_user_id ON fans(fan_user_id, created_at DESC);
