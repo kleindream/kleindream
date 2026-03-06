@@ -1,0 +1,16 @@
+<%- include("layout", { title: "Jogo da Velha", body: `
+  <div class="card game-shell">
+    <div>
+      <div class="h" style="font-size:1.9rem;font-weight:900;color:var(--accent);">❌ Jogo da Velha</div>
+      <p style="line-height:1.7;color:var(--muted);">Você joga com X. A Klein Dream responde com O.</p>
+    </div>
+    <div class="game-toolbar">
+      <span class="game-badge">Resultado atual: <b id="velhaResult">Em andamento</b></span>
+      <button class="btn secondary" id="velhaReset" type="button">Nova partida</button>
+      <a class="button secondary" href="/games">Voltar aos jogos</a>
+    </div>
+    <div id="velhaBoard" class="velha-board"></div>
+    <div id="velhaStatus" class="game-note">Escolha uma casa.</div>
+  </div>
+  <script src="/games/velha.js"></script>
+` }) %>

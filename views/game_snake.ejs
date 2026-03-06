@@ -1,0 +1,20 @@
+<%- include("layout", { title: "Snake", body: `
+  <div class="card game-shell">
+    <div>
+      <div class="h" style="font-size:1.9rem;font-weight:900;color:var(--accent);">🐍 Snake</div>
+      <p style="line-height:1.7;color:var(--muted);">Use as setas do teclado para mover a cobrinha e pegar os discos.</p>
+    </div>
+    <div class="game-toolbar">
+      <span class="game-badge">Pontuação: <b id="snakeScore">0</b></span>
+      <span class="game-badge">Recorde local: <b id="snakeBest">0</b></span>
+      <button class="btn secondary" id="snakeStart" type="button">Jogar</button>
+      <button class="btn ghost" id="snakeRestart" type="button">Reiniciar</button>
+      <a class="button secondary" href="/games">Voltar aos jogos</a>
+    </div>
+    <div class="snake-wrap">
+      <canvas id="snakeCanvas" width="360" height="360" aria-label="Snake"></canvas>
+      <div id="snakeStatus" class="game-note">Aperte Jogar para começar.</div>
+    </div>
+  </div>
+  <script src="/games/snake.js"></script>
+` }) %>

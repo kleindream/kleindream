@@ -1,0 +1,17 @@
+<%- include("layout", { title: "Jogo da Memória", body: `
+  <div class="card game-shell">
+    <div>
+      <div class="h" style="font-size:1.9rem;font-weight:900;color:var(--accent);">🧠 Jogo da Memória</div>
+      <p style="line-height:1.7;color:var(--muted);">Vire as cartas e encontre todos os pares retrô.</p>
+    </div>
+    <div class="game-toolbar">
+      <span class="game-badge">Movimentos: <b id="memoryMoves">0</b></span>
+      <span class="game-badge">Pares: <b id="memoryPairs">0/6</b></span>
+      <button class="btn secondary" id="memoryReset" type="button">Recomeçar</button>
+      <a class="button secondary" href="/games">Voltar aos jogos</a>
+    </div>
+    <div id="memoryBoard" class="memory-board"></div>
+    <div id="memoryStatus" class="game-note">Abra duas cartas por vez.</div>
+  </div>
+  <script src="/games/memory.js"></script>
+` }) %>

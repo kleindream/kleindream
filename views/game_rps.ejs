@@ -1,0 +1,21 @@
+<%- include("layout", { title: "Pedra, Papel e Tesoura", body: `
+  <div class="card game-shell">
+    <div>
+      <div class="h" style="font-size:1.9rem;font-weight:900;color:var(--accent);">✊ Pedra, Papel e Tesoura</div>
+      <p style="line-height:1.7;color:var(--muted);">Escolha sua jogada e veja se consegue vencer a Klein Dream.</p>
+    </div>
+    <div class="game-toolbar">
+      <span class="game-badge">Vitórias: <b id="rpsWins">0</b></span>
+      <span class="game-badge">Empates: <b id="rpsDraws">0</b></span>
+      <span class="game-badge">Derrotas: <b id="rpsLosses">0</b></span>
+      <a class="button secondary" href="/games">Voltar aos jogos</a>
+    </div>
+    <div class="rps-options">
+      <button class="rps-btn" data-choice="pedra" type="button">✊ Pedra</button>
+      <button class="rps-btn" data-choice="papel" type="button">✋ Papel</button>
+      <button class="rps-btn" data-choice="tesoura" type="button">✌️ Tesoura</button>
+    </div>
+    <div id="rpsStatus" class="game-note">Faça sua jogada.</div>
+  </div>
+  <script src="/games/rps.js"></script>
+` }) %>

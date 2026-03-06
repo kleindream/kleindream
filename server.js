@@ -292,6 +292,14 @@ app.post("/logout", async (req, res) => {
 });
 
 // ===== HOME =====
+app.get("/games", requireAuth, async (req, res) => {
+  res.render("games");
+});
+
+app.get("/games/memory", requireAuth, async (req, res) => {
+  res.render("game_memory");
+});
+
 app.get("/home", requireAuth, async (req, res) => {
   const meId = req.session.userId;
 

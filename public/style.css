@@ -905,3 +905,30 @@ input:focus, textarea:focus{
 .profile-birthday-banner{margin-top:12px;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg, rgba(125,179,255,.18), rgba(255,255,255,.04));}
 .kd-mini-muted{color:var(--muted);font-size:.92rem;line-height:1.5;}
 @media (max-width:700px){.mascot-chip{align-items:flex-start;}.mascot-chip img{width:64px;height:64px;}}
+
+
+/* ===== Jogos retrô ===== */
+.games-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:14px}
+.game-card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:var(--shadow)}
+.game-card h3{margin:0 0 8px 0;color:var(--accent)}
+.game-card p{margin:0 0 12px 0;line-height:1.55;color:var(--muted)}
+.game-shell{display:flex;flex-direction:column;gap:16px}
+.game-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.game-badge{display:inline-block;padding:6px 10px;border-radius:999px;background:var(--chip);border:1px solid var(--line);font-size:.92rem}
+.memory-board{display:grid;grid-template-columns:repeat(4,minmax(68px,1fr));gap:10px;max-width:420px;margin:0 auto}
+.memory-card{aspect-ratio:1/1;border:none;border-radius:16px;background:linear-gradient(180deg,#5d79ff,#6a8cff);color:#fff;font-size:2rem;font-weight:800;cursor:pointer;box-shadow:var(--shadow)}
+.memory-card.is-open,.memory-card.is-matched{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+.memory-card.is-matched{outline:2px solid var(--ok)}
+.snake-wrap{display:flex;flex-direction:column;align-items:center;gap:12px}
+#snakeCanvas{background:#0f172a;border-radius:18px;max-width:100%;box-shadow:var(--shadow);border:1px solid rgba(255,255,255,.09)}
+.rps-options,.velha-board{display:grid;gap:10px}
+.rps-options{grid-template-columns:repeat(3,minmax(110px,1fr))}
+.rps-btn,.quiz-option,.velha-cell{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:14px 12px;cursor:pointer;font:inherit;color:var(--text);box-shadow:var(--shadow)}
+.rps-btn:hover,.quiz-option:hover,.velha-cell:hover{transform:translateY(-1px)}
+.velha-board{grid-template-columns:repeat(3,90px);justify-content:center}
+.velha-cell{height:90px;font-size:2rem;font-weight:900;display:flex;align-items:center;justify-content:center}
+.quiz-options{display:grid;gap:10px;margin-top:14px}
+.quiz-option.correct{outline:2px solid var(--ok)}
+.quiz-option.wrong{outline:2px solid var(--danger)}
+.game-note{color:var(--faint);font-size:.94rem;line-height:1.5}
+@media (max-width: 640px){.memory-board{grid-template-columns:repeat(4,minmax(58px,1fr))}.velha-board{grid-template-columns:repeat(3,76px)}.velha-cell{height:76px}}
