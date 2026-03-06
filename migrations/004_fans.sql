@@ -6,5 +6,5 @@ CREATE TABLE IF NOT EXISTS fans (
   UNIQUE(user_id, fan_user_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_fans_user_id ON fans(user_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_fans_fan_user_id ON fans(fan_user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_fans_user_created ON fans(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_fans_fan_user ON fans(fan_user_id, created_at DESC);

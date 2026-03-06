@@ -1,6 +1,30 @@
-<h2>⭐ Fãs de <%= profile.username %></h2>
-<ul>
-<% fans.forEach(f=>{ %>
-<li><a href="/u/<%= f.username %>"><%= f.username %></a></li>
-<% }) %>
-</ul>
+<%- include("layout", { title: `Fãs de ${user.username}`, body: `
+  <div class="grid">
+    <div class="card">
+      <div class="h">⭐ Fãs de ${user.username}</div>
+      <div class="small" style="margin-bottom:12px;">${fans.length} pessoa${fans.length === 1 ? '' : 's'} acompanha${fans.length === 1 ? '' : 'm'} este perfil.</div>
+
+      ${fans.length ? `
+        <div class="thumb-grid">
+          ${fans.map(f => `
+            <a class="thumb-card" href="/u/${f.username}">
+              ${f.profile_photo
+                ? `<img class="thumb-avatar kd-zoom" src="${(f.profile_photo || '').startsWith('http') ? f.profile_photo : `/uploads/${f.profile_photo}`}" alt="${escapeHtml(f.username)}" />`
+                : `<div class="thumb-avatar ph">?</div>`}
+              <div class="thumb-name">${escapeHtml(f.username)}</div>
+              <div class="small">${f.created_at}</div>
+            </a>
+          `).join("")}
+        </div>
+      ` : `
+        <div class="small">Este perfil ainda não tem fãs cadastrados.</div>
+      `}
+
+      <div style="margin-top:14px;">
+        <a class="btn secondary" href="/u/${user.username}">Voltar ao perfil</a>
+      </div>
+    </div>
+  </div>
+` }) %>
+
+<% function escapeHtml(str){ return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); } %>

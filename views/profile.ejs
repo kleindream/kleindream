@@ -41,6 +41,7 @@
 
             <div class="profile-stats">
               <div class="stat"><div class="k">Amigos</div><div class="v">${friendsCount}</div></div>
+              <div class="stat"><div class="k">Fãs</div><div class="v">${fansCount}</div></div>
               <div class="stat"><div class="k">Visitas</div><div class="v">${totalVisits}</div></div>
               ${user.mood ? `<div class="stat"><div class="k">Humor</div><div class="v">${escapeHtml(user.mood)}</div></div>` : ``}
             </div>
@@ -69,6 +70,29 @@
           <div class="profile-about">
             <div class="small">Sobre</div>
             <div>${escapeHtml(user.bio || "—")}</div>
+          </div>
+
+          <div class="profile-highlight">
+            <div class="h">⭐ Fãs</div>
+            <div class="small" style="margin-bottom:8px;">${fansCount} pessoa${fansCount === 1 ? '' : 's'} ${fansCount === 1 ? 'é fã' : 'são fãs'} deste perfil.</div>
+            ${!isMe ? `
+              <form method="post" action="/fan/${user.username}" class="inline" style="margin-bottom:10px;">
+                <button class="btn" type="submit">${isFan ? 'Deixar de ser fã' : 'Virar fã'}</button>
+              </form>
+            ` : ``}
+            ${recentFans.length ? `
+              <div class="thumb-grid">
+                ${recentFans.map(f => `
+                  <a class="thumb-card" href="/u/${f.username}" title="${escapeHtml(f.username)}">
+                    ${f.profile_photo
+                      ? `<img class="thumb-avatar kd-zoom" src="${(f.profile_photo || '').startsWith('http') ? f.profile_photo : `/uploads/${f.profile_photo}`}" alt="${escapeHtml(f.username)}" />`
+                      : `<div class="thumb-avatar ph">?</div>`}
+                    <div class="thumb-name">${escapeHtml(f.username)}</div>
+                  </a>
+                `).join('')}
+              </div>
+            ` : `<div class="small">Ainda não há fãs por aqui.</div>`}
+            <div style="margin-top:10px;"><a class="btn secondary" href="/fans/${user.username}">Ver todos os fãs</a></div>
           </div>
 
           ${(user.hobbies || user.favorite_music || user.favorite_movie || user.favorite_game || user.personality) ? `

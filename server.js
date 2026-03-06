@@ -379,6 +379,45 @@ app.post("/nosso-tempo/remember", limiterWrite, requireAuth, async (req, res) =>
 });
 
 
+// ===== FÃS =====
+app.post("/fan/:username", limiterActions, requireAuth, async (req, res) => {
+  const meId = req.session.userId;
+  const user = await db.get("SELECT id, username FROM users WHERE username=?", [req.params.username]);
+  if (!user) return res.status(404).send("Usuário não encontrado.");
+  if (user.id === meId) return res.redirect(`/u/${user.username}`);
+
+  const existing = await db.get("SELECT id FROM fans WHERE user_id=? AND fan_user_id=?", [user.id, meId]);
+
+  if (existing) {
+    await db.run("DELETE FROM fans WHERE user_id=? AND fan_user_id=?", [user.id, meId]);
+    req.flash("info", `Você deixou de ser fã de ${user.username}.`);
+  } else {
+    await db.run("INSERT INTO fans (user_id, fan_user_id) VALUES (?,?) ON CONFLICT DO NOTHING", [user.id, meId]);
+    const me = await getUserById(meId);
+    await addNotif(user.id, "fan", `${me.username} virou seu fã.`, `/fans/${user.username}`);
+    req.flash("success", `Agora você é fã de ${user.username}!`);
+  }
+
+  res.redirect(`/u/${user.username}`);
+});
+
+app.get("/fans/:username", requireAuth, async (req, res) => {
+  const user = await db.get("SELECT id, username, full_name FROM users WHERE username=?", [req.params.username]);
+  if (!user) return res.status(404).send("Usuário não encontrado.");
+
+  const fans = await db.all(`
+    SELECT u.id, u.username, u.full_name, u.profile_photo, f.created_at
+    FROM fans f
+    JOIN users u ON u.id = f.fan_user_id
+    WHERE f.user_id=?
+    ORDER BY f.created_at DESC, u.username ASC
+  `, [user.id]);
+
+  for (const f of fans) f.created_at = formatDateBR(f.created_at);
+
+  res.render("fans", { user, fans });
+});
+
 // ===== PERFIL =====
 app.get("/u/:username", requireAuth, async (req, res) => {
   const meId = req.session.userId;
@@ -446,6 +485,16 @@ app.get("/u/:username", requireAuth, async (req, res) => {
   for (const t of testimonials) t.created_at = formatDateBR(t.created_at);
 
   const friendsCount = Number((await db.get("SELECT COUNT(*)::int AS c FROM friendships WHERE user_id=?", [user.id]))?.c || 0);
+  const fansCount = Number((await db.get("SELECT COUNT(*)::int AS c FROM fans WHERE user_id=?", [user.id]))?.c || 0);
+  const isFan = !isMe && !!(await db.get("SELECT 1 FROM fans WHERE user_id=? AND fan_user_id=?", [user.id, meId]));
+  const recentFans = await db.all(`
+    SELECT u.username, u.full_name, u.profile_photo
+    FROM fans f
+    JOIN users u ON u.id = f.fan_user_id
+    WHERE f.user_id=?
+    ORDER BY f.created_at DESC, u.username ASC
+    LIMIT 6
+  `, [user.id]);
 
   // Visitas (contador + últimos visitantes)
   const totalVisits = (await db.get("SELECT COUNT(*)::int AS c FROM profile_visits WHERE visited_id=?", [user.id]))?.c || 0;
@@ -467,7 +516,7 @@ app.get("/u/:username", requireAuth, async (req, res) => {
   res.render("profile", {
     user, isMe,
     friend: !!friend, reqOut, reqIn,
-    scraps, testimonials, friendsCount,
+    scraps, testimonials, friendsCount, fansCount, isFan, recentFans,
     totalVisits, visitors, canSeeVisitors
   });
 });

@@ -798,3 +798,45 @@ input:focus, textarea:focus{
   line-height:1.2;
 }
 .topbar .nav{ gap:8px; }
+
+
+.thumb-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(110px,1fr));
+  gap:10px;
+}
+.thumb-card{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+  text-align:center;
+  padding:10px 8px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.04);
+  text-decoration:none;
+  color:inherit;
+}
+.thumb-card:hover{
+  background:rgba(255,255,255,.07);
+  transform:translateY(-1px);
+}
+.thumb-avatar{
+  width:64px;
+  height:64px;
+  border-radius:16px;
+  object-fit:cover;
+  border:1px solid rgba(255,255,255,.12);
+}
+.thumb-avatar.ph{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(255,255,255,.08);
+  font-weight:900;
+}
+.thumb-name{
+  font-weight:700;
+  word-break:break-word;
+}
