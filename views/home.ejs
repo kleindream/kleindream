@@ -1,3 +1,4 @@
+<% function escapeHtml(str){ return String(str ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); } %>
 <%- include("layout", { title: "Início", body: `
   <div class="dashboard-shell">
     <section class="card dashboard-hero">
@@ -164,4 +165,3 @@
   </div>
 ` }) %>
 
-<% function escapeHtml(str){ return String(str ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); } %>
