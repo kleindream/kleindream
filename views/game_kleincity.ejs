@@ -1,0 +1,46 @@
+<%- include("layout", { title: "Klein City", body: `
+<div class="game-page-grid">
+  <div class="card game-wrap">
+    <div class="h" style="font-size:1.8rem;font-weight:900;color:var(--accent);">🏙️ Klein City</div>
+    <p class="small" style="margin-top:6px;line-height:1.6;">Clique nos terrenos para evoluir sua cidade: vazio → casa → prédio → fábrica → parque → vazio.</p>
+    <div class="game-stage">
+      <div class="game-toolbar">
+        <span class="pill">População: <b id="kcPopulation">0</b></span>
+        <span class="pill">Caixa: <b id="kcMoney">100</b></span>
+        <span class="pill">Desenvolvimento: <b id="kcScore">0</b></span>
+        <button class="button secondary" id="kcRestart" type="button">Nova cidade</button>
+        <a class="button secondary" href="/games">Voltar</a>
+      </div>
+      <div id="kcGrid" class="kc-grid"></div>
+      <div id="kcStatus" class="small"></div>
+    </div>
+  </div>
+  <div class="card ranking-card">
+    <div class="overview-title">🏆 Ranking do jogo</div>
+    <div class="game-toolbar"><span class="pill">Seu melhor: <b id="gameMyBest">${myBest ? myBest.score : "—"}</b></span></div>
+    <div id="gameRankingList" class="ranking-list">
+      ${ranking.length ? ranking.map((row, idx) => `
+        <div class="ranking-row">
+          <span class="ranking-pos">${idx + 1}º</span>
+          <span class="ranking-name">${row.username}</span>
+          <span class="ranking-score">${row.score}</span>
+        </div>
+      `).join("") : `<div class="small">Ainda não há pontuações salvas para este jogo.</div>`}
+    </div>
+    <div id="gameSaveStatus" class="small" style="margin-top:10px;"></div>
+    <div class="small" style="margin-top:12px;line-height:1.6;">
+      Casas aumentam a população, prédios valem mais pontos, fábricas geram caixa e parques ajudam a equilibrar a cidade.
+    </div>
+  </div>
+</div>
+<style>
+.kc-grid{display:grid;grid-template-columns:repeat(6,minmax(52px,1fr));gap:8px;margin-top:14px}
+.kc-tile{min-height:64px;border:1px solid var(--line);border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;flex-direction:column;cursor:pointer;font-size:1.4rem;user-select:none;transition:transform .08s ease, box-shadow .12s ease}
+.kc-tile:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(0,0,0,.06)}
+.kc-tile small{font-size:.72rem;color:var(--muted);margin-top:3px}
+@media (max-width:700px){.kc-grid{grid-template-columns:repeat(4,minmax(52px,1fr));}}
+</style>
+<script>window.__GAME_KEY__ = "kleincity"; window.__MY_BEST__ = ${myBest ? myBest.score : 'null'};</script>
+<script src="/games/common.js"></script>
+<script src="/games/kleincity.js"></script>
+` }) %>

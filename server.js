@@ -254,7 +254,8 @@ const GAME_META = {
   snake: { label: "Snake", icon: "🐍" },
   rps: { label: "Pedra, Papel e Tesoura", icon: "✊" },
   velha: { label: "Jogo da Velha", icon: "❌" },
-  quiz: { label: "Quiz Nostalgia", icon: "📺" }
+  quiz: { label: "Quiz Nostalgia", icon: "📺" },
+  kleincity: { label: "Klein City", icon: "🏙️" }
 };
 
 function getGameMeta(game) {
@@ -382,6 +383,10 @@ app.get("/games/velha", requireAuth, async (req, res) => {
 
 app.get("/games/quiz", requireAuth, async (req, res) => {
   await renderGamePage(req, res, "game_quiz", "quiz");
+});
+
+app.get("/games/kleincity", requireAuth, async (req, res) => {
+  await renderGamePage(req, res, "game_kleincity", "kleincity");
 });
 
 app.post("/api/games/score", requireAuth, async (req, res) => {
