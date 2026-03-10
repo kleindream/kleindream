@@ -414,46 +414,116 @@ app.post("/api/games/score", requireAuth, async (req, res) => {
 app.get("/home", requireAuth, async (req, res) => {
   const meId = req.session.userId;
 
-  const incomingRequests = await db.all(`
-    SELECT fr.id, u.id AS user_id, u.username, u.full_name
-    FROM friend_requests fr
-    JOIN users u ON u.id = fr.from_user_id
-    WHERE fr.to_user_id=? AND fr.status='pending'
-    ORDER BY fr.created_at DESC
-  `, [meId]);
+  const [
+    incomingRequests,
+    pendingTestimonials,
+    unreadMessages,
+    latestScraps,
+    birthdaysRaw,
+    totalMembersRow,
+    recentMembersRow,
+    totalScrapsRow,
+    totalPhotosRow,
+    totalGroupsRow,
+    newUsers,
+    featuredGroups,
+    gameLeaders,
+    activeMembers,
+    recentMuralPosts
+  ] = await Promise.all([
+    db.all(`
+      SELECT fr.id, u.id AS user_id, u.username, u.full_name
+      FROM friend_requests fr
+      JOIN users u ON u.id = fr.from_user_id
+      WHERE fr.to_user_id=? AND fr.status='pending'
+      ORDER BY fr.created_at DESC
+    `, [meId]),
 
-  const pendingTestimonials = await db.all(`
-    SELECT t.id, u.id AS user_id, u.username, u.full_name, t.created_at
-    FROM testimonials t
-    JOIN users u ON u.id = t.from_user_id
-    WHERE t.to_user_id=? AND t.status='pending'
-    ORDER BY t.created_at DESC
-  `, [meId]);
+    db.all(`
+      SELECT t.id, u.id AS user_id, u.username, u.full_name, t.created_at
+      FROM testimonials t
+      JOIN users u ON u.id = t.from_user_id
+      WHERE t.to_user_id=? AND t.status='pending'
+      ORDER BY t.created_at DESC
+    `, [meId]),
 
-  const unreadMessages = await db.all(`
-    SELECT m.id, u.username AS from_username, m.subject, m.created_at
-    FROM messages m
-    JOIN users u ON u.id = m.from_user_id
-    WHERE m.to_user_id=? AND m.is_read=0
-    ORDER BY m.created_at DESC
-    LIMIT 10
-  `, [meId]);
+    db.all(`
+      SELECT m.id, u.username AS from_username, m.subject, m.created_at
+      FROM messages m
+      JOIN users u ON u.id = m.from_user_id
+      WHERE m.to_user_id=? AND m.is_read=0
+      ORDER BY m.created_at DESC
+      LIMIT 10
+    `, [meId]),
 
-  const latestScraps = await db.all(`
-    SELECT s.id, s.content, s.created_at, u.username AS from_username, u.id AS from_id
-    FROM scraps s
-    JOIN users u ON u.id = s.from_user_id
-    WHERE s.to_user_id=?
-    ORDER BY s.created_at DESC
-    LIMIT 10
-  `, [meId]);
+    db.all(`
+      SELECT s.id, s.content, s.created_at, u.username AS from_username, u.id AS from_id
+      FROM scraps s
+      JOIN users u ON u.id = s.from_user_id
+      WHERE s.to_user_id=?
+      ORDER BY s.created_at DESC
+      LIMIT 10
+    `, [meId]),
 
-  const birthdaysRaw = await db.all(`
-    SELECT id, username, full_name, profile_photo, birth_date
-    FROM users
-    WHERE birth_date IS NOT NULL AND TRIM(birth_date) <> ''
-    ORDER BY username ASC
-  `);
+    db.all(`
+      SELECT id, username, full_name, profile_photo, birth_date
+      FROM users
+      WHERE birth_date IS NOT NULL AND TRIM(birth_date) <> ''
+      ORDER BY username ASC
+    `),
+
+    db.get(`SELECT COUNT(*)::int AS total FROM users`),
+    db.get(`SELECT COUNT(*)::int AS total FROM users WHERE created_at >= NOW() - INTERVAL '7 days'`),
+    db.get(`SELECT COUNT(*)::int AS total FROM scraps`),
+    db.get(`SELECT COUNT(*)::int AS total FROM photos`),
+    db.get(`SELECT COUNT(*)::int AS total FROM groups`),
+
+    db.all(`
+      SELECT id, username, full_name, profile_photo, created_at
+      FROM users
+      ORDER BY created_at DESC
+      LIMIT 8
+    `),
+
+    db.all(`
+      SELECT g.id, g.name, g.category, g.description, COUNT(gm.user_id)::int AS members_count
+      FROM groups g
+      LEFT JOIN group_members gm ON gm.group_id = g.id
+      GROUP BY g.id, g.name, g.category, g.description, g.created_at
+      ORDER BY members_count DESC, g.created_at DESC
+      LIMIT 8
+    `),
+
+    db.all(`
+      SELECT u.username, MAX(gs.score)::int AS points, gs.game
+      FROM game_scores gs
+      JOIN users u ON u.id = gs.user_id
+      GROUP BY u.username, gs.game
+      ORDER BY points DESC, u.username ASC
+      LIMIT 8
+    `),
+
+    db.all(`
+      SELECT u.id, u.username, u.full_name, u.profile_photo,
+             (
+               COALESCE((SELECT COUNT(*) FROM scraps s WHERE s.from_user_id = u.id AND s.created_at >= NOW() - INTERVAL '7 days'), 0) +
+               COALESCE((SELECT COUNT(*) FROM posts p WHERE p.user_id = u.id AND p.created_at >= NOW() - INTERVAL '7 days'), 0) +
+               COALESCE((SELECT COUNT(*) FROM photos ph WHERE ph.user_id = u.id AND ph.created_at >= NOW() - INTERVAL '7 days'), 0)
+             )::int AS activity_score
+      FROM users u
+      ORDER BY activity_score DESC, u.created_at DESC
+      LIMIT 6
+    `),
+
+    db.all(`
+      SELECT p.id, p.content, p.created_at, u.username, u.full_name, u.profile_photo
+      FROM posts p
+      JOIN users u ON u.id = p.user_id
+      ORDER BY p.created_at DESC
+      LIMIT 5
+    `)
+  ]);
+
   const todayMD = currentMonthDaySP();
   const upcomingWindow = getUpcomingMonthDays(7);
   const orderMap = new Map(upcomingWindow.map((md, idx) => [md, idx]));
@@ -465,7 +535,28 @@ app.get("/home", requireAuth, async (req, res) => {
     .map(u => ({ ...u, birth_label: monthDayLabel(u.birth_date) }))
     .sort((a, b) => (orderMap.get(monthDayInSP(a.birth_date)) ?? 999) - (orderMap.get(monthDayInSP(b.birth_date)) ?? 999));
 
-  res.render("home", { incomingRequests, pendingTestimonials, unreadMessages, latestScraps, todayBirthdays, upcomingBirthdays });
+  const networkStats = {
+    totalMembers: totalMembersRow?.total || 0,
+    newMembersWeek: recentMembersRow?.total || 0,
+    totalScraps: totalScrapsRow?.total || 0,
+    totalPhotos: totalPhotosRow?.total || 0,
+    totalGroups: totalGroupsRow?.total || 0
+  };
+
+  res.render("home", {
+    incomingRequests,
+    pendingTestimonials,
+    unreadMessages,
+    latestScraps,
+    todayBirthdays,
+    upcomingBirthdays,
+    networkStats,
+    newUsers,
+    featuredGroups,
+    gameLeaders,
+    activeMembers: activeMembers.filter(u => Number(u.activity_score || 0) > 0),
+    recentMuralPosts
+  });
 });
 
 

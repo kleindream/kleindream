@@ -1,6 +1,6 @@
 <%- include("layout", { title: user.username, body: `
   <div class="profile-page orkut-profile-layout">
-    <aside class="profile-sidebar">
+    <aside class="profile-sidebar profile-sidebar-left">
       <div class="card profile-side-card">
         <div class="profile-side-user">
           <div class="profile-side-photo">
@@ -21,38 +21,8 @@
           <a href="/fans/${user.username}">⭐ Fãs</a>
           ${isMe ? `<a href="/me/visitors">👁 Visitantes</a>` : ``}
           ${isMe ? `<a href="/profile/edit">⚙️ Editar perfil</a>` : ``}
+          <a href="javascript:history.back()">⬅ Voltar</a>
         </div>
-      </div>
-
-      <div class="card profile-side-card">
-        <div class="h">Amigos (${friendsCount})</div>
-        ${profileFriends.length ? `
-          <div class="orkut-thumb-grid friends-grid">
-            ${profileFriends.map(f => `
-              <a class="orkut-thumb-card" href="/u/${f.username}" title="${escapeHtml(f.username)}">
-                ${f.profile_photo ? `<img class="orkut-thumb-avatar kd-zoom" src="${photoSrc(f.profile_photo)}" alt="${escapeHtml(f.username)}" />` : `<div class="orkut-thumb-avatar ph">?</div>`}
-                <div class="orkut-thumb-name">${escapeHtml(f.username)}</div>
-              </a>
-            `).join('')}
-          </div>
-        ` : `<div class="small">Nenhum amigo para mostrar ainda.</div>`}
-        <div style="margin-top:10px;"><a class="btn secondary" href="/friends">Ver amigos</a></div>
-      </div>
-
-      <div class="card profile-side-card">
-        <div class="h">Grupos (${groupsCount})</div>
-        ${profileGroups.length ? `
-          <div class="orkut-thumb-grid groups-grid">
-            ${profileGroups.map(g => `
-              <a class="orkut-thumb-card group" href="/groups/${g.id}" title="${escapeHtml(g.name)}">
-                <div class="orkut-group-icon">👥</div>
-                <div class="orkut-thumb-name">${escapeHtml(g.name)}</div>
-                <div class="orkut-thumb-meta">${escapeHtml(g.category || 'Sem categoria')}</div>
-              </a>
-            `).join('')}
-          </div>
-        ` : `<div class="small">Este perfil ainda não entrou em grupos.</div>`}
-        <div style="margin-top:10px;"><a class="btn secondary" href="/groups">Ver grupos</a></div>
       </div>
     </aside>
 
@@ -189,6 +159,7 @@
         </div>
       ` : ``}
 
+
       <div class="card profile-activity">
         <div class="section">
           <div class="h">Recados (últimos)</div>
@@ -215,6 +186,39 @@
         </div>
       </div>
     </div>
+
+    <aside class="profile-sidebar profile-sidebar-right">
+      <div class="card profile-side-card right-side-card">
+        <div class="h">Amigos (${friendsCount})</div>
+        ${profileFriends.length ? `
+          <div class="orkut-thumb-grid friends-grid">
+            ${profileFriends.map(f => `
+              <a class="orkut-thumb-card" href="/u/${f.username}" title="${escapeHtml(f.username)}">
+                ${f.profile_photo ? `<img class="orkut-thumb-avatar kd-zoom" src="${photoSrc(f.profile_photo)}" alt="${escapeHtml(f.username)}" />` : `<div class="orkut-thumb-avatar ph">?</div>`}
+                <div class="orkut-thumb-name">${escapeHtml(f.username)}</div>
+              </a>
+            `).join('')}
+          </div>
+        ` : `<div class="small">Nenhum amigo para mostrar ainda.</div>`}
+        <div style="margin-top:10px;"><a class="btn secondary" href="/friends">Ver amigos</a></div>
+      </div>
+
+      <div class="card profile-side-card right-side-card">
+        <div class="h">Grupos (${groupsCount})</div>
+        ${profileGroups.length ? `
+          <div class="orkut-thumb-grid groups-grid">
+            ${profileGroups.map(g => `
+              <a class="orkut-thumb-card group" href="/groups/${g.id}" title="${escapeHtml(g.name)}">
+                <div class="orkut-group-icon">👥</div>
+                <div class="orkut-thumb-name">${escapeHtml(g.name)}</div>
+                <div class="orkut-thumb-meta">${escapeHtml(g.category || 'Sem categoria')}</div>
+              </a>
+            `).join('')}
+          </div>
+        ` : `<div class="small">Este perfil ainda não entrou em grupos.</div>`}
+        <div style="margin-top:10px;"><a class="btn secondary" href="/groups">Ver grupos</a></div>
+      </div>
+    </aside>
   </div>
 ` }) %>
 

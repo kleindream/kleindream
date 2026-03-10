@@ -700,6 +700,10 @@ input:focus, textarea:focus{
   align-items:center;
   margin-top: 10px;
 }
+.profile-actions .btn,
+.profile-actions .badge,
+.profile-actions .inline{margin:0;}
+.profile-actions .inline{display:inline-flex;}
 .inline{ display:inline-block; margin:0; }
 .profile-stats{
   display:flex;
@@ -940,7 +944,7 @@ input:focus, textarea:focus{
 
 .orkut-profile-layout{
   display:grid;
-  grid-template-columns:280px minmax(0,1fr);
+  grid-template-columns:240px minmax(0,1fr) 280px;
   gap:14px;
   align-items:start;
 }
@@ -958,6 +962,12 @@ input:focus, textarea:focus{
 }
 .profile-sidebar .profile-side-card + .profile-side-card{
   position:static;
+}
+.profile-sidebar-right .profile-side-card{
+  position:static;
+}
+.profile-sidebar-left .profile-side-card{
+  position:sticky;
 }
 .profile-side-user{
   display:flex;
@@ -989,6 +999,12 @@ input:focus, textarea:focus{
   display:flex;
   flex-direction:column;
   gap:6px;
+}
+.page-utility-bar{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin:14px 0;
 }
 .profile-side-links a{
   display:block;
@@ -1068,11 +1084,146 @@ input:focus, textarea:focus{
 .profile-hero-photo{
   display:none;
 }
+@media (max-width: 1120px){
+  .orkut-profile-layout{
+    grid-template-columns:220px minmax(0,1fr);
+  }
+  .profile-sidebar-right{
+    grid-column:1 / -1;
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+  }
+}
 @media (max-width: 940px){
   .orkut-profile-layout{
     grid-template-columns:1fr;
   }
+  .profile-sidebar-right{
+    grid-template-columns:1fr;
+  }
   .profile-side-card{
     position:static;
+  }
+}
+
+/* ===== HOME EXPANDIDO ===== */
+.home-orbit{
+  grid-template-columns:minmax(0,1.7fr) minmax(290px,.95fr);
+}
+.home-hero-card,
+.home-network-card,
+.home-block-card,
+.home-side-card,
+.home-mini-card{
+  border-radius:18px;
+}
+.home-section-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+.home-stat-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin-top:10px;
+}
+.home-stat-box{
+  border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.04);
+  border-radius:14px;
+  padding:12px;
+}
+.home-stat-box .k{
+  font-size:12px;
+  font-weight:800;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:.35px;
+}
+.home-stat-box .v{
+  font-size:1.8rem;
+  font-weight:900;
+  color:var(--text);
+  line-height:1.05;
+  margin:6px 0 4px 0;
+}
+.home-thumb-grid,
+.home-group-grid{
+  grid-template-columns:repeat(4,minmax(0,1fr));
+}
+.home-side-links,
+.home-game-links{
+  display:grid;
+  gap:8px;
+}
+.home-side-links a,
+.home-game-link{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.04);
+  color:var(--text);
+  text-decoration:none;
+  font-weight:700;
+}
+.home-side-links a:hover,
+.home-game-link:hover{
+  background:rgba(255,255,255,.08);
+  text-decoration:none;
+}
+.home-side-links a span{
+  display:inline-flex;
+  min-width:24px;
+  height:24px;
+  border-radius:999px;
+  align-items:center;
+  justify-content:center;
+  padding:0 7px;
+  background:rgba(74,163,255,.16);
+  border:1px solid rgba(74,163,255,.24);
+  color:var(--accent);
+  font-size:12px;
+  font-weight:900;
+}
+.home-ranking-list{
+  margin:0;
+  padding-left:20px;
+}
+.home-ranking-list li{
+  margin-bottom:10px;
+}
+.home-mural-list{
+  display:grid;
+  gap:10px;
+}
+.home-mural-item{
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.03);
+}
+@media (max-width: 1100px){
+  .home-orbit{ grid-template-columns:1fr; }
+}
+@media (max-width: 760px){
+  .home-thumb-grid,
+  .home-group-grid,
+  .home-stat-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+@media (max-width: 480px){
+  .home-thumb-grid,
+  .home-group-grid,
+  .home-stat-grid{
+    grid-template-columns:1fr;
   }
 }

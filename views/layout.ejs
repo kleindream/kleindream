@@ -52,6 +52,12 @@
   </div>
 
   <div class="container">
+    <% if (me) { %>
+      <div class="page-utility-bar">
+        <a class="btn secondary" href="/home">🏠 Home</a>
+        <a class="btn secondary" href="#" onclick="history.back(); return false;">⬅ Voltar</a>
+      </div>
+    <% } %>
     <%- body %>
     <div class="small" style="margin:20px 0 10px 0; opacity:.8;">
       KleinDream — estilo 2004 • sem timeline
