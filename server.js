@@ -383,6 +383,9 @@ app.get("/games/velha", requireAuth, async (req, res) => {
 app.get("/games/quiz", requireAuth, async (req, res) => {
   await renderGamePage(req, res, "game_quiz", "quiz");
 });
+app.get("/games/kleincity", requireAuth, async (req, res) => {
+  await renderGamePage(req, res, "game_kleincity", "kleincity");
+});
 
 app.post("/api/games/score", requireAuth, async (req, res) => {
   const game = String(req.body.game || "").trim().toLowerCase();
