@@ -695,8 +695,9 @@ input:focus, textarea:focus{
 }
 .profile-actions{
   display:flex;
+  flex-direction:row;
   flex-wrap:wrap;
-  gap:8px;
+  gap:6px;
   align-items:center;
   margin-top: 10px;
 }
@@ -704,6 +705,18 @@ input:focus, textarea:focus{
 .profile-actions .badge,
 .profile-actions .inline{margin:0;}
 .profile-actions .inline{display:inline-flex;}
+.profile-actions .btn{
+  padding:5px 9px;
+  font-size:12px;
+  line-height:1.2;
+  white-space:nowrap;
+}
+.profile-actions .badge{
+  padding:4px 8px;
+  font-size:11px;
+  line-height:1.2;
+  white-space:nowrap;
+}
 .inline{ display:inline-block; margin:0; }
 .profile-stats{
   display:flex;
