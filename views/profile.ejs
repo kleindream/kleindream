@@ -40,10 +40,6 @@
             </div>
 
             <div class="profile-actions">
-              <a class="btn secondary" href="/scraps/${user.username}">Recados</a>
-              <a class="btn secondary" href="/testimonials/${user.username}">Depoimentos</a>
-              <a class="btn secondary" href="/photos/${user.username}">Fotos</a>
-
               ${isMe ? `
                 <a class="btn" href="/profile/edit">Editar perfil</a>
               ` : `
@@ -61,9 +57,6 @@
             </div>
 
             <div class="profile-stats">
-              <div class="stat"><div class="k">Amigos</div><div class="v">${friendsCount}</div></div>
-              <div class="stat"><div class="k">Grupos</div><div class="v">${groupsCount}</div></div>
-              <div class="stat"><div class="k">Fãs</div><div class="v">${fansCount}</div></div>
               <div class="stat"><div class="k">Visitas</div><div class="v">${totalVisits}</div></div>
               ${user.mood ? `<div class="stat"><div class="k">Humor</div><div class="v">${escapeHtml(user.mood)}</div></div>` : ``}
             </div>
