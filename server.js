@@ -254,8 +254,7 @@ const GAME_META = {
   snake: { label: "Snake", icon: "🐍" },
   rps: { label: "Pedra, Papel e Tesoura", icon: "✊" },
   velha: { label: "Jogo da Velha", icon: "❌" },
-  quiz: { label: "Quiz Nostalgia", icon: "📺" },
-  kleincity: { label: "Klein City", icon: "🏙️" }
+  quiz: { label: "Quiz Nostalgia", icon: "📺" }
 };
 
 function getGameMeta(game) {
@@ -383,10 +382,6 @@ app.get("/games/velha", requireAuth, async (req, res) => {
 
 app.get("/games/quiz", requireAuth, async (req, res) => {
   await renderGamePage(req, res, "game_quiz", "quiz");
-});
-
-app.get("/games/kleincity", requireAuth, async (req, res) => {
-  await renderGamePage(req, res, "game_kleincity", "kleincity");
 });
 
 app.post("/api/games/score", requireAuth, async (req, res) => {
@@ -717,6 +712,32 @@ app.get("/u/:username", requireAuth, async (req, res) => {
     LIMIT 6
   `, [user.id]);
 
+  const profileFriends = await db.all(`
+    SELECT u.username, u.full_name, u.profile_photo
+    FROM friendships f
+    JOIN users u ON u.id = f.friend_id
+    WHERE f.user_id=?
+    ORDER BY u.username ASC
+    LIMIT 9
+  `, [user.id]);
+
+  const groupsCount = Number((await db.get(`
+    SELECT COUNT(DISTINCT gm.group_id)::int AS c
+    FROM group_members gm
+    WHERE gm.user_id=?
+  `, [user.id]))?.c || 0);
+
+  const profileGroups = await db.all(`
+    SELECT g.id, g.name,
+           COALESCE(g.category, 'Sem categoria') AS category,
+           (SELECT COUNT(*)::int FROM group_members gm2 WHERE gm2.group_id=g.id) AS members
+    FROM group_members gm
+    JOIN groups g ON g.id = gm.group_id
+    WHERE gm.user_id=?
+    ORDER BY g.name ASC
+    LIMIT 9
+  `, [user.id]);
+
   // Visitas (contador + últimos visitantes)
   const totalVisits = (await db.get("SELECT COUNT(*)::int AS c FROM profile_visits WHERE visited_id=?", [user.id]))?.c || 0;
 
@@ -738,6 +759,7 @@ app.get("/u/:username", requireAuth, async (req, res) => {
     user, isMe,
     friend: !!friend, reqOut, reqIn,
     scraps, testimonials, friendsCount, fansCount, isFan, recentFans,
+    profileFriends, profileGroups, groupsCount,
     totalVisits, visitors, canSeeVisitors,
     isBirthdayToday: isBirthdayToday(user.birth_date), memberSince
   });

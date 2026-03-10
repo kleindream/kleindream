@@ -1,10 +1,65 @@
 <%- include("layout", { title: user.username, body: `
-  <div class="profile-page">
-    <div class="profile-center">
+  <div class="profile-page orkut-profile-layout">
+    <aside class="profile-sidebar">
+      <div class="card profile-side-card">
+        <div class="profile-side-user">
+          <div class="profile-side-photo">
+            ${ user.profile_photo ? `<img src="${photoSrc(user.profile_photo)}" alt="Foto de perfil" class="kd-zoom" />` : `<div class="profile-photo-ph">Sem foto</div>` }
+          </div>
+          <div>
+            <div class="profile-side-name">${user.username}${isBirthdayToday ? ' 🎂' : ''}</div>
+            <div class="small">${user.full_name || ""}</div>
+          </div>
+        </div>
 
+        <div class="profile-side-links-title">Menu do perfil</div>
+        <div class="profile-side-links">
+          <a href="/u/${user.username}">👤 Perfil</a>
+          <a href="/scraps/${user.username}">📝 Recados</a>
+          <a href="/testimonials/${user.username}">💬 Depoimentos</a>
+          <a href="/photos/${user.username}">📷 Fotos</a>
+          <a href="/fans/${user.username}">⭐ Fãs</a>
+          ${isMe ? `<a href="/me/visitors">👁 Visitantes</a>` : ``}
+          ${isMe ? `<a href="/profile/edit">⚙️ Editar perfil</a>` : ``}
+        </div>
+      </div>
+
+      <div class="card profile-side-card">
+        <div class="h">Amigos (${friendsCount})</div>
+        ${profileFriends.length ? `
+          <div class="orkut-thumb-grid friends-grid">
+            ${profileFriends.map(f => `
+              <a class="orkut-thumb-card" href="/u/${f.username}" title="${escapeHtml(f.username)}">
+                ${f.profile_photo ? `<img class="orkut-thumb-avatar kd-zoom" src="${photoSrc(f.profile_photo)}" alt="${escapeHtml(f.username)}" />` : `<div class="orkut-thumb-avatar ph">?</div>`}
+                <div class="orkut-thumb-name">${escapeHtml(f.username)}</div>
+              </a>
+            `).join('')}
+          </div>
+        ` : `<div class="small">Nenhum amigo para mostrar ainda.</div>`}
+        <div style="margin-top:10px;"><a class="btn secondary" href="/friends">Ver amigos</a></div>
+      </div>
+
+      <div class="card profile-side-card">
+        <div class="h">Grupos (${groupsCount})</div>
+        ${profileGroups.length ? `
+          <div class="orkut-thumb-grid groups-grid">
+            ${profileGroups.map(g => `
+              <a class="orkut-thumb-card group" href="/groups/${g.id}" title="${escapeHtml(g.name)}">
+                <div class="orkut-group-icon">👥</div>
+                <div class="orkut-thumb-name">${escapeHtml(g.name)}</div>
+                <div class="orkut-thumb-meta">${escapeHtml(g.category || 'Sem categoria')}</div>
+              </a>
+            `).join('')}
+          </div>
+        ` : `<div class="small">Este perfil ainda não entrou em grupos.</div>`}
+        <div style="margin-top:10px;"><a class="btn secondary" href="/groups">Ver grupos</a></div>
+      </div>
+    </aside>
+
+    <div class="profile-main-column">
       <div class="card profile-hero">
         <div class="profile-hero-top">
-          <div class="profile-photo">
+          <div class="profile-photo profile-hero-photo">
             ${ user.profile_photo ? `<img src="${photoSrc(user.profile_photo)}" alt="Foto de perfil" class="kd-zoom" />` : `<div class="profile-photo-ph">Sem foto</div>` }
           </div>
 
@@ -37,6 +92,7 @@
 
             <div class="profile-stats">
               <div class="stat"><div class="k">Amigos</div><div class="v">${friendsCount}</div></div>
+              <div class="stat"><div class="k">Grupos</div><div class="v">${groupsCount}</div></div>
               <div class="stat"><div class="k">Fãs</div><div class="v">${fansCount}</div></div>
               <div class="stat"><div class="k">Visitas</div><div class="v">${totalVisits}</div></div>
               ${user.mood ? `<div class="stat"><div class="k">Humor</div><div class="v">${escapeHtml(user.mood)}</div></div>` : ``}
@@ -158,7 +214,6 @@
           <div style="margin-top:10px;"><a class="btn secondary" href="/testimonials/${user.username}">Ver</a></div>
         </div>
       </div>
-
     </div>
   </div>
 ` }) %>

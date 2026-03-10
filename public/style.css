@@ -932,3 +932,147 @@ input:focus, textarea:focus{
 .overview-title{font-size:1.08rem;font-weight:900;color:var(--accent);margin-bottom:8px}
 .compact-ranking .ranking-row{padding:8px 10px}
 @media (max-width: 960px){.game-page-grid{grid-template-columns:1fr}.ranking-card{position:static}}
+
+/* ===== Perfil estilo Orkut ===== */
+.topbar .nav a{
+  font-weight:700;
+}
+
+.orkut-profile-layout{
+  display:grid;
+  grid-template-columns:280px minmax(0,1fr);
+  gap:14px;
+  align-items:start;
+}
+.profile-sidebar{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.profile-main-column{
+  min-width:0;
+}
+.profile-side-card{
+  position:sticky;
+  top:12px;
+}
+.profile-sidebar .profile-side-card + .profile-side-card{
+  position:static;
+}
+.profile-side-user{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  margin-bottom:12px;
+}
+.profile-side-photo img,
+.profile-side-photo .profile-photo-ph{
+  width:72px;
+  height:72px;
+  border-radius:16px;
+  object-fit:cover;
+}
+.profile-side-name{
+  font-size:1.08rem;
+  font-weight:900;
+  color:var(--text);
+}
+.profile-side-links-title{
+  font-size:12px;
+  font-weight:800;
+  color:var(--muted);
+  margin-bottom:8px;
+  text-transform:uppercase;
+  letter-spacing:.3px;
+}
+.profile-side-links{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.profile-side-links a{
+  display:block;
+  padding:8px 10px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.03);
+  color:var(--text);
+  font-weight:700;
+  text-decoration:none;
+}
+.profile-side-links a:hover{
+  background:rgba(255,255,255,.07);
+  text-decoration:none;
+}
+.orkut-thumb-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+}
+.orkut-thumb-card{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  gap:6px;
+  min-height:126px;
+  padding:10px 6px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.04);
+  color:inherit;
+  text-decoration:none;
+  text-align:center;
+}
+.orkut-thumb-card:hover{
+  background:rgba(255,255,255,.08);
+  text-decoration:none;
+}
+.orkut-thumb-avatar,
+.orkut-thumb-avatar.ph{
+  width:58px;
+  height:58px;
+  border-radius:14px;
+  object-fit:cover;
+  border:1px solid rgba(255,255,255,.12);
+}
+.orkut-thumb-avatar.ph{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(255,255,255,.08);
+  font-weight:900;
+}
+.orkut-thumb-name{
+  font-size:12px;
+  font-weight:700;
+  line-height:1.25;
+  word-break:break-word;
+}
+.orkut-thumb-meta{
+  font-size:11px;
+  color:var(--muted);
+  line-height:1.25;
+}
+.orkut-group-icon{
+  width:58px;
+  height:58px;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(180deg, rgba(74,163,255,.24), rgba(74,163,255,.10));
+  border:1px solid rgba(74,163,255,.24);
+  font-size:1.4rem;
+}
+.profile-hero-photo{
+  display:none;
+}
+@media (max-width: 940px){
+  .orkut-profile-layout{
+    grid-template-columns:1fr;
+  }
+  .profile-side-card{
+    position:static;
+  }
+}
