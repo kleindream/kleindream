@@ -10,11 +10,16 @@ const bcrypt = require("bcryptjs");
 const multer = require("multer");
 const rateLimit = require("express-rate-limit");
 const { createClient } = require("@supabase/supabase-js");
+const OpenAI = require("openai");
 
 const { db, init, migrate, pool } = require("./db");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+const openaiApiKey = process.env.OPENAI_API_KEY;
+const openai = openaiApiKey ? new OpenAI({ apiKey: openaiApiKey }) : null;
+
 
 const BUILTIN_AVATARS = [
   { path: '/avatars/avatar-retro-boy.svg', label: 'Retro Boy' },
@@ -244,6 +249,55 @@ const upload = multer({
   fileFilter: (req, file, cb) => {
     if (!file.mimetype || !file.mimetype.startsWith("image/")) return cb(new Error("Apenas imagens."));
     cb(null, true);
+  }
+});
+
+// ===== SR. DISQUETE IA =====
+app.post("/api/sr-disquete", limiterWrite, async (req, res) => {
+  const pergunta = (req.body?.pergunta || "").trim();
+  const pagina = (req.body?.pagina || "").trim();
+
+  if (!pergunta) {
+    return res.status(400).json({ resposta: "Digite uma pergunta para o Sr. Disquete. 💾" });
+  }
+
+  if (!openai) {
+    return res.json({
+      resposta: "A IA do Sr. Disquete ainda não foi ativada. Defina OPENAI_API_KEY no servidor para colocá-la no ar. 💾"
+    });
+  }
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      temperature: 0.7,
+      max_tokens: 220,
+      messages: [
+        {
+          role: "system",
+          content:
+            "Você é o Sr. Disquete, mascote oficial da rede social Klein Dream. " +
+            "Fale em português do Brasil, com respostas curtas, claras e leves. " +
+            "Seu estilo é de professor de informática amigável, com um toque nostálgico da internet dos anos 2000. " +
+            "Ajude usuários a entender a Klein Dream, criar perfil, escrever scraps, mensagens, descrições de comunidades e usar os recursos do site. " +
+            "Quando útil, ofereça exemplos prontos. Não invente funções que não existam no site. Se a pergunta envolver uso do site e houver pouca informação, diga isso com honestidade. " +
+            "Assine de forma discreta quando fizer sentido com '— Sr. Disquete 💾'."
+        },
+        {
+          role: "system",
+          content:
+            "A Klein Dream é uma rede social estilo internet de 2004, sem timeline. Ela possui recursos como perfil, amigos, fãs, scraps, mensagens, mural, grupos, jogos, bate-papo, visitantes, notificações, fotos e o jogo Klein City."
+        },
+        ...(pagina ? [{ role: "system", content: `Página atual do usuário: ${pagina}` }] : []),
+        { role: "user", content: pergunta }
+      ]
+    });
+
+    const resposta = completion.choices?.[0]?.message?.content?.trim() || "Não consegui responder agora. Tente novamente em instantes. 💾";
+    return res.json({ resposta });
+  } catch (err) {
+    console.error("Erro no Sr. Disquete IA:", err);
+    return res.status(500).json({ resposta: "O Sr. Disquete encontrou um ruído no drive. Tente novamente daqui a pouco. 💾" });
   }
 });
 
