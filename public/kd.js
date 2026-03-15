@@ -9,7 +9,6 @@
 
   // Fade-in
   document.addEventListener('DOMContentLoaded', () => {
-    initSrDisquete();
     document.body.classList.add('kd-ready');
 
     // Apply saved theme
@@ -121,85 +120,6 @@
       el.classList.remove('show');
       setTimeout(() => el.remove(), 220);
     }, 2600);
-  }
-
-
-
-  function initSrDisquete() {
-    const fab = document.getElementById('srDisqueteWidget');
-    const panel = document.getElementById('srDisquetePanel');
-    const close = document.getElementById('srDisqueteClose');
-    const form = document.getElementById('srDisqueteForm');
-    const input = document.getElementById('srDisqueteInput');
-    const reply = document.getElementById('srDisqueteReply');
-    const promptBtn = document.getElementById('srDisquetePrompt');
-    if (!fab || !panel || !form || !input || !reply) return;
-
-    const promptSugestoes = [
-      'Escreva um scrap curto chamando um amigo para entrar na Klein Dream.',
-      'Crie uma descrição nostálgica para uma comunidade sobre internet dos anos 2000.',
-      'Me ajude a escrever uma bio criativa para meu perfil na Klein Dream.'
-    ];
-
-    function openPanel() {
-      panel.hidden = false;
-      panel.classList.add('open');
-      fab.setAttribute('aria-expanded', 'true');
-      setTimeout(() => input.focus(), 60);
-    }
-
-    function closePanel() {
-      panel.classList.remove('open');
-      panel.hidden = true;
-      fab.setAttribute('aria-expanded', 'false');
-    }
-
-    fab.addEventListener('click', () => {
-      if (panel.hidden) openPanel();
-      else closePanel();
-    });
-
-    if (close) close.addEventListener('click', closePanel);
-
-    promptBtn && promptBtn.addEventListener('click', () => {
-      input.value = promptSugestoes[Math.floor(Math.random() * promptSugestoes.length)];
-      input.focus();
-    });
-
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !panel.hidden) closePanel();
-    });
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const pergunta = input.value.trim();
-      if (!pergunta) {
-        toast('Digite uma pergunta para o Sr. Disquete.', 'info');
-        input.focus();
-        return;
-      }
-
-      reply.textContent = 'Pensando...';
-      reply.classList.add('loading');
-
-      try {
-        const res = await fetch('/api/sr-disquete', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            pergunta,
-            pagina: document.body.getAttribute('data-kd-page') || document.title || ''
-          })
-        });
-
-        const data = await res.json();
-        reply.textContent = data.resposta || 'Não consegui responder agora.';
-        reply.classList.remove('loading');
-      } catch (err) {
-        reply.textContent = 'O Sr. Disquete encontrou um ruído no drive. Tente novamente em instantes. 💾';
-        reply.classList.remove('loading');
-      }
-    });
   }
 
   // Expose for inline scripts if needed

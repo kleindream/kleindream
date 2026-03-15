@@ -3,11 +3,17 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#6d4aff" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="KleinDream" />
   <title><%= title || "KleinDream" %></title>
   <link rel="icon" type="image/png" href="/img/favicon.png" />
   <link rel="stylesheet" href="/style.css" />
 </head>
-<body data-kd-page="<%= title || 'KleinDream' %>">
+<body>
   <div id="kdLoader" class="kd-loader" aria-hidden="true">
     <div class="kd-loader-inner">
       <div class="kd-spinner" aria-hidden="true"></div>
@@ -64,40 +70,6 @@
     </div>
   </div>
 
-
-  <% if (me) { %>
-    <button id="srDisqueteWidget" class="sr-disquete-fab" type="button" aria-controls="srDisquetePanel" aria-expanded="false">
-      <img src="/img/sr-disquete.png" alt="Sr. Disquete" />
-      <span>Perguntar ao Sr. Disquete</span>
-    </button>
-
-    <section id="srDisquetePanel" class="sr-disquete-panel" hidden aria-label="Assistente Sr. Disquete">
-      <div class="sr-disquete-head">
-        <div class="sr-disquete-title-wrap">
-          <img src="/img/sr-disquete.png" alt="Sr. Disquete" />
-          <div>
-            <strong>Sr. Disquete</strong>
-            <div class="small">Guardião da memória da Klein Dream 💾</div>
-          </div>
-        </div>
-        <button id="srDisqueteClose" class="btn ghost" type="button" aria-label="Fechar Sr. Disquete">×</button>
-      </div>
-
-      <div class="sr-disquete-body">
-        <p class="sr-disquete-welcome">Olá! Posso ajudar com a Klein Dream, dar ideias de perfil, scraps, comunidades e mensagens.</p>
-        <div id="srDisqueteReply" class="sr-disquete-reply" aria-live="polite"></div>
-
-        <form id="srDisqueteForm" class="sr-disquete-form" data-no-loader>
-          <textarea id="srDisqueteInput" rows="3" maxlength="600" placeholder="Ex.: escreva um scrap nostálgico para convidar um amigo para a Klein Dream"></textarea>
-          <div class="sr-disquete-actions">
-            <button class="btn" type="submit">Enviar</button>
-            <button id="srDisquetePrompt" class="btn secondary" type="button">Ideia rápida</button>
-          </div>
-        </form>
-      </div>
-    </section>
-  <% } %>
-
   <div id="kdModal" class="kd-modal" aria-hidden="true">
     <div class="inner">
       <button class="close" type="button" aria-label="Fechar">×</button>
@@ -127,5 +99,15 @@
     })();
   </script>
 <script src="/kd.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker.register("/service-worker.js").catch(function (error) {
+          console.log("Erro ao registrar o Service Worker:", error);
+        });
+      });
+    }
+  </script>
+
 </body>
 </html>
