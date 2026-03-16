@@ -20,3 +20,6 @@ Como funciona:
 - usuário considerado online por 5 minutos
 - chat privado usa fetch/polling leve para celular
 - botão flutuante em todas as páginas logadas
+
+
+Atualizado: migrations 006/007 corrigidas para PostgreSQL e para bases antigas que ficaram com colunas legacy.
