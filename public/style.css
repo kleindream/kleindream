@@ -1274,3 +1274,6 @@ input:focus, textarea:focus{
 .online-card-link{text-decoration:none;color:inherit;display:block;}
 .btn.mini{padding:6px 10px;font-size:.82rem;}
 @media (max-width: 760px){.kd-chat-panel{right:10px;left:10px;bottom:80px;width:auto;height:76vh;grid-template-columns:1fr;}.kd-chat-sidebar{border-right:none;border-bottom:1px solid var(--line);}.kd-chat-list{max-height:124px;}.kd-chat-fab{right:12px;bottom:12px;}}
+
+
+.preserve-lines{white-space:pre-wrap;word-break:break-word;}

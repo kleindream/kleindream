@@ -6,7 +6,7 @@
         <div style="font-size:18px;font-weight:bold;">${escapeHtml(group.name)}</div>
         <div class="small">${escapeHtml(group.category || "")}</div>
         <hr/>
-        <div>${escapeHtml(group.description || "—")}</div>
+        <div class="preserve-lines">${escapeHtml(group.description || "—")}</div>
 
         <hr/>
         ${membership ? `
