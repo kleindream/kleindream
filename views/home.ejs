@@ -44,6 +44,31 @@
         </div>
       </div>
 
+
+
+      <div class="card home-block-card">
+        <div class="home-section-head">
+          <div class="h" style="font-size:1.35rem;font-weight:900;color:var(--accent);">🟢 Online agora</div>
+          <span class="small">quem está circulando pela rede</span>
+        </div>
+        ${((onlineMembers||[]).length === 0)
+          ? `<div class="kd-mini-muted">No momento a rede está quietinha. Quando alguém mexer por aqui, aparece nesta lista.</div>`
+          : `
+            <div class="orkut-thumb-grid home-thumb-grid online-thumb-grid">
+              ${(onlineMembers||[]).map(user => `
+                <div class="orkut-thumb-card online-card-wrap" title="${escapeHtml(user.username)}">
+                  <a href="/u/${user.username}" class="online-card-link">
+                    ${user.profile_photo ? `<img class="orkut-thumb-avatar kd-zoom" src="${photoSrc(user.profile_photo)}" alt="${escapeHtml(user.username)}" />` : `<div class="orkut-thumb-avatar ph">?</div>`}
+                    <div class="orkut-thumb-name">${escapeHtml(user.full_name || user.username)}</div>
+                    <div class="orkut-thumb-meta">@${escapeHtml(user.username)}</div>
+                  </a>
+                  ${user.username !== me.username ? `<button class="btn secondary mini js-open-private-chat" type="button" data-chat-user="${escapeHtml(user.username)}">💬 Conversar</button>` : `<span class="badge">Você</span>`}
+                </div>
+              `).join("")}
+            </div>
+          `}
+      </div>
+
       <div class="card home-block-card">
         <div class="home-section-head">
           <div class="h" style="font-size:1.35rem;font-weight:900;color:var(--accent);">Novos membros</div>

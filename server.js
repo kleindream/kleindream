@@ -211,6 +211,29 @@ async function addNotif(userId, type, text, link = null) {
   await db.run("INSERT INTO notifications (user_id, type, text, link) VALUES (?,?,?,?)", [userId, type, text, link]);
 }
 
+
+async function touchPresence(userId) {
+  if (!userId) return;
+  await db.run(`
+    INSERT INTO presence (user_id, last_active)
+    VALUES (?, NOW())
+    ON CONFLICT (user_id)
+    DO UPDATE SET last_active = EXCLUDED.last_active
+  `, [userId]);
+}
+
+async function getOnlineUsers(limit = 12) {
+  return db.all(`
+    SELECT u.id, u.username, u.full_name, u.profile_photo, p.last_active
+    FROM presence p
+    JOIN users u ON u.id = p.user_id
+    WHERE p.last_active >= NOW() - INTERVAL '5 minutes'
+    ORDER BY p.last_active DESC, u.username ASC
+    LIMIT ?
+  `, [limit]);
+}
+
+
 app.use((req, res, next) => {
   req.requestId = Math.random().toString(36).slice(2, 10) + '-' + Date.now().toString(36);
   res.locals.requestId = req.requestId;
@@ -228,6 +251,7 @@ app.use(async (req, res, next) => {
   res.locals.photoSrc = photoSrc;
   res.locals.builtinAvatars = BUILTIN_AVATARS;
   if (req.session.userId) {
+    await touchPresence(req.session.userId);
     const notifs = await db.all("SELECT * FROM notifications WHERE user_id=? AND is_read=0 ORDER BY created_at DESC LIMIT 20", [req.session.userId]);
     res.locals.notifCount = notifs.length;
   } else {
@@ -429,7 +453,8 @@ app.get("/home", requireAuth, async (req, res) => {
     featuredGroups,
     gameLeaders,
     activeMembers,
-    recentMuralPosts
+    recentMuralPosts,
+    onlineMembers
   ] = await Promise.all([
     db.all(`
       SELECT fr.id, u.id AS user_id, u.username, u.full_name
@@ -521,7 +546,9 @@ app.get("/home", requireAuth, async (req, res) => {
       JOIN users u ON u.id = p.user_id
       ORDER BY p.created_at DESC
       LIMIT 5
-    `)
+    `),
+
+    getOnlineUsers(12)
   ]);
 
   const todayMD = currentMonthDaySP();
@@ -555,7 +582,8 @@ app.get("/home", requireAuth, async (req, res) => {
     featuredGroups,
     gameLeaders,
     activeMembers: activeMembers.filter(u => Number(u.activity_score || 0) > 0),
-    recentMuralPosts
+    recentMuralPosts,
+    onlineMembers
   });
 });
 
@@ -733,7 +761,12 @@ app.get("/u/:username", requireAuth, async (req, res) => {
       profile_photo, birth_date, marital_status, favorite_team,
       profession, hobbies, favorite_music, favorite_movie, favorite_game,
       time_of, personality, looking_for, mood, daily_phrase,
-      invisible_visits, notify_profile_visits, created_at
+      invisible_visits, notify_profile_visits, created_at,
+      CASE WHEN EXISTS (
+        SELECT 1 FROM presence p
+        WHERE p.user_id = users.id
+          AND p.last_active >= NOW() - INTERVAL '5 minutes'
+      ) THEN 1 ELSE 0 END AS is_online
     FROM users
     WHERE username=?
   `, [req.params.username]);
@@ -1598,6 +1631,139 @@ app.get("/search", requireAuth, async (req, res) => {
 
   res.render("search", { q, type, people, groups });
 });
+
+
+// ===== PRESENÇA + CHAT PRIVADO =====
+app.post("/api/presence/ping", requireAuth, async (req, res) => {
+  await touchPresence(req.session.userId);
+  res.json({ ok: true });
+});
+
+app.get("/api/presence/online", requireAuth, async (req, res) => {
+  const rows = await getOnlineUsers(30);
+  res.json({
+    ok: true,
+    users: rows.map((u) => ({
+      id: u.id,
+      username: u.username,
+      full_name: u.full_name,
+      profile_photo: photoSrc(u.profile_photo)
+    }))
+  });
+});
+
+app.get("/api/private-chat/conversations", requireAuth, async (req, res) => {
+  const meId = req.session.userId;
+  const rows = await db.all(`
+    WITH convo AS (
+      SELECT
+        CASE WHEN pm.from_user_id = ? THEN pm.to_user_id ELSE pm.from_user_id END AS other_id,
+        MAX(pm.created_at) AS last_created_at,
+        COUNT(*) FILTER (WHERE pm.to_user_id = ? AND COALESCE(pm.is_read, 0) = 0) AS unread_count
+      FROM private_messages pm
+      WHERE pm.from_user_id = ? OR pm.to_user_id = ?
+      GROUP BY CASE WHEN pm.from_user_id = ? THEN pm.to_user_id ELSE pm.from_user_id END
+    )
+    SELECT c.other_id, c.last_created_at, c.unread_count,
+           u.username, u.full_name, u.profile_photo,
+           pm.body AS last_body,
+           CASE WHEN p.last_active >= NOW() - INTERVAL '5 minutes' THEN 1 ELSE 0 END AS is_online
+    FROM convo c
+    JOIN users u ON u.id = c.other_id
+    LEFT JOIN presence p ON p.user_id = u.id
+    LEFT JOIN private_messages pm
+      ON ((pm.from_user_id = ? AND pm.to_user_id = c.other_id) OR (pm.from_user_id = c.other_id AND pm.to_user_id = ?))
+     AND pm.created_at = c.last_created_at
+    ORDER BY c.last_created_at DESC, u.username ASC
+    LIMIT 30
+  `, [meId, meId, meId, meId, meId, meId, meId]);
+
+  res.json({
+    ok: true,
+    conversations: rows.map((r) => ({
+      username: r.username,
+      full_name: r.full_name,
+      profile_photo: photoSrc(r.profile_photo),
+      last_body: r.last_body,
+      last_created_at: r.last_created_at,
+      unread_count: Number(r.unread_count || 0),
+      is_online: Number(r.is_online || 0) === 1
+    }))
+  });
+});
+
+app.get("/api/private-chat/messages/:username", requireAuth, async (req, res) => {
+  const meId = req.session.userId;
+  const user = await db.get("SELECT id, username, full_name, profile_photo FROM users WHERE username=?", [req.params.username]);
+  if (!user) return res.status(404).json({ ok: false, error: "Usuário não encontrado." });
+
+  const rows = await db.all(`
+    SELECT pm.id, pm.body, pm.created_at, pm.from_user_id, pm.to_user_id,
+           uf.username AS from_username
+    FROM private_messages pm
+    JOIN users uf ON uf.id = pm.from_user_id
+    WHERE (pm.from_user_id = ? AND pm.to_user_id = ?)
+       OR (pm.from_user_id = ? AND pm.to_user_id = ?)
+    ORDER BY pm.created_at DESC, pm.id DESC
+    LIMIT 40
+  `, [meId, user.id, user.id, meId]);
+
+  await db.run(
+    "UPDATE private_messages SET is_read=1 WHERE from_user_id=? AND to_user_id=? AND COALESCE(is_read,0)=0",
+    [user.id, meId]
+  );
+
+  const onlineRow = await db.get("SELECT CASE WHEN last_active >= NOW() - INTERVAL '5 minutes' THEN 1 ELSE 0 END AS is_online FROM presence WHERE user_id=?", [user.id]);
+
+  res.json({
+    ok: true,
+    user: {
+      username: user.username,
+      full_name: user.full_name,
+      profile_photo: photoSrc(user.profile_photo),
+      is_online: Number(onlineRow?.is_online || 0) === 1
+    },
+    messages: rows.reverse().map((m) => ({
+      id: m.id,
+      body: m.body,
+      created_at: m.created_at,
+      mine: Number(m.from_user_id) === Number(meId),
+      from_username: m.from_username
+    }))
+  });
+});
+
+app.post("/api/private-chat/messages/:username", limiterWrite, requireAuth, async (req, res) => {
+  const meId = req.session.userId;
+  const body = String(req.body.body || "").trim();
+  if (!body) return res.status(400).json({ ok: false, error: "Mensagem vazia." });
+  if (body.length > 800) return res.status(400).json({ ok: false, error: "Mensagem longa demais." });
+
+  const user = await db.get("SELECT id, username FROM users WHERE username=?", [req.params.username]);
+  if (!user) return res.status(404).json({ ok: false, error: "Usuário não encontrado." });
+  if (Number(user.id) === Number(meId)) return res.status(400).json({ ok: false, error: "Não dá para conversar consigo mesmo." });
+
+  const result = await db.run(
+    "INSERT INTO private_messages (from_user_id, to_user_id, body) VALUES (?,?,?) RETURNING id, body, created_at",
+    [meId, user.id, body.slice(0, 800)]
+  );
+
+  const me = await getUserById(meId);
+  await touchPresence(meId);
+  await addNotif(user.id, "private_chat", `${me.username} enviou uma mensagem no chat.`, `/u/${me.username}`);
+
+  res.json({
+    ok: true,
+    message: {
+      id: result.rows[0].id,
+      body: result.rows[0].body,
+      created_at: result.rows[0].created_at,
+      mine: true,
+      from_username: me.username
+    }
+  });
+});
+
 
 // ===== NOTIFICAÇÕES =====
 app.get("/notifications", requireAuth, async (req, res) => {

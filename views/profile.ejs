@@ -36,6 +36,7 @@
           <div class="profile-meta">
             <div class="profile-name">
               <div class="profile-username">${user.username}${isBirthdayToday ? ' 🎂' : ''}</div>
+              <div class="small"><span class="kd-live-dot ${Number(user.is_online||0) === 1 ? 'on' : 'off'}"></span> ${Number(user.is_online||0) === 1 ? 'Online agora' : 'Offline'}</div>
               <div class="small">${user.full_name || ""}</div>
             </div>
 
@@ -53,6 +54,7 @@
 
                 ${reqOut ? `<span class="badge">Pedido enviado</span>` : ``}
                 ${reqIn ? `<span class="badge">Você tem um pedido dele(a)</span>` : ``}
+                <button class="btn secondary js-open-private-chat" type="button" data-chat-user="${escapeHtml(user.username)}">💬 Chat rápido</button>
               `}
             </div>
 
