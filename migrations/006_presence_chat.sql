@@ -1,6 +1,6 @@
 
 CREATE TABLE IF NOT EXISTS presence (
-  user_id INTEGER PRIMARY KEY,
+  user_id SERIAL PRIMARY KEY,
   last_active INTEGER
 );
 
