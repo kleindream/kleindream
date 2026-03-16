@@ -1,0 +1,11 @@
+
+#onlineBox{
+ position:fixed;
+ right:10px;
+ bottom:10px;
+ width:180px;
+ background:#fff;
+ border:1px solid #ccc;
+ padding:8px;
+ font-size:12px;
+}
