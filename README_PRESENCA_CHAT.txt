@@ -4,7 +4,7 @@ O que foi integrado:
 - Quem está online na home
 - Status online/offline no perfil
 - Chat privado flutuante estilo MSN
-- Migration PostgreSQL correta (sem AUTOINCREMENT)
+- Migration PostgreSQL correta (sem SERIAL/IDENTITY)
 
 Arquivos principais:
 - migrations/006_presence_private_chat.sql
