@@ -5,8 +5,8 @@ CREATE TABLE IF NOT EXISTS presence (
 
 CREATE TABLE IF NOT EXISTS private_messages (
   id SERIAL PRIMARY KEY,
-  from_user INTEGER,
-  to_user INTEGER,
-  message TEXT,
-  created_at BIGINT
+  from_user_id INTEGER,
+  to_user_id INTEGER,
+  body TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
