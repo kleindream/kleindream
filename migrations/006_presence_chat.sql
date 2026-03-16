@@ -1,3 +1,1 @@
--- Legacy file kept only to preserve migration ordering/history.
--- Presence + private chat schema is defined in 006_presence_private_chat.sql
--- and repaired idempotently in 007_fix_presence_private_chat.sql.
+-- superseded by 006_presence_private_chat.sql
