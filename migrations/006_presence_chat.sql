@@ -10,3 +10,9 @@ CREATE TABLE IF NOT EXISTS private_messages (
   body TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+CREATE INDEX IF NOT EXISTS idx_private_messages_pair
+ON private_messages (from_user_id, to_user_id);
+
+CREATE INDEX IF NOT EXISTS idx_private_messages_created_at
+ON private_messages (created_at);
