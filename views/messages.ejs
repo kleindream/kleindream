@@ -1,18 +1,19 @@
 <%- include("layout", { title: "Mensagens", body: `
   <div class="card">
-    <div class="h">Enviar mensagem</div>
+    <div class="h">✉️ Mensagens</div>
+    <div class="small" style="margin-bottom:10px;">Um cantinho discreto pra conversar sem complicação.</div>
     ${error ? `<div class="card" style="border-color:#6b2033;background:#2a0a12;">${error}</div>` : ""}
     ${ok ? `<div class="card" style="border-color:#1e5f2b;background:#0b2411;">${ok}</div>` : ""}
 
     <form method="post" action="/messages/send">
       <label class="small">Para (usuário)</label>
-      <input name="to" />
+      <input name="to" value="${escapeHtml(prefillTo || "")}" placeholder="nome do usuário" />
       <br/><br/>
       <label class="small">Assunto</label>
-      <input name="subject" />
+      <input name="subject" value="${escapeHtml(prefillSubject || "")}" placeholder="assunto" />
       <br/><br/>
       <label class="small">Mensagem</label>
-      <textarea name="body"></textarea>
+      <textarea name="body" placeholder="escreva sua mensagem..."></textarea>
       <br/>
       <button class="btn" type="submit">Enviar</button>
     </form>

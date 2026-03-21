@@ -1827,6 +1827,8 @@ app.post("/groups/:groupId/topic/:topicId/reply", limiterWrite, requireAuth, asy
 // ===== MENSAGENS =====
 app.get("/messages", requireAuth, async (req, res) => {
   const meId = req.session.userId;
+  const prefillTo = String(req.query.to || "").trim();
+  const prefillSubject = String(req.query.subject || "").trim();
 
   const inbox = await db.all(`
     SELECT m.*, u.username AS from_username
@@ -1846,7 +1848,7 @@ app.get("/messages", requireAuth, async (req, res) => {
     LIMIT 100
   `, [meId]);
 
-  res.render("messages", { inbox, outbox, error: null, ok: null });
+  res.render("messages", { inbox, outbox, error: null, ok: null, prefillTo, prefillSubject });
 });
 
 app.post("/messages/send", limiterWrite, requireAuth, async (req, res) => {
@@ -1857,10 +1859,10 @@ app.post("/messages/send", limiterWrite, requireAuth, async (req, res) => {
 
   const to = await db.get("SELECT id FROM users WHERE username=?", [toUsername]);
   if (!to) {
-    return res.render("messages", { inbox: [], outbox: [], error: "Usuário destino não encontrado.", ok: null });
+    return res.render("messages", { inbox: [], outbox: [], error: "Usuário destino não encontrado.", ok: null, prefillTo: toUsername, prefillSubject: subject });
   }
   if (!subject || !body) {
-    return res.render("messages", { inbox: [], outbox: [], error: "Assunto e mensagem são obrigatórios.", ok: null });
+    return res.render("messages", { inbox: [], outbox: [], error: "Assunto e mensagem são obrigatórios.", ok: null, prefillTo: toUsername, prefillSubject: subject });
   }
 
   await db.run("INSERT INTO messages (from_user_id, to_user_id, subject, body) VALUES (?,?,?,?)", [meId, to.id, subject, body]);

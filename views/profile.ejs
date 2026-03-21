@@ -54,6 +54,7 @@
 
                 ${reqOut ? `<span class="badge">Pedido enviado</span>` : ``}
                 ${reqIn ? `<span class="badge">Você tem um pedido dele(a)</span>` : ``}
+                <a class="btn secondary" href="/messages?to=${encodeURIComponent(user.username)}">✉️ Mensagem</a>
                 <button class="btn secondary js-open-private-chat" type="button" data-chat-user="${escapeHtml(user.username)}">💬 Chat rápido</button>
               `}
             </div>
