@@ -1,123 +1,116 @@
-<div class="card radio-page">
-  <div class="radio-hero">
-    <div>
-      <div class="section-title">🎧 Rádio Klein Dream</div>
-      <div class="small">Aperta o play, comenta e curte a vibe. Bem simples, bem nosso tempo.</div>
+<%- include("layout", { title: "Rádio Klein Dream", body: `
+  <div class="card radio-page-shell">
+    <div class="radio-hero">
+      <div>
+        <div class="h" style="font-size:1.6rem;margin-bottom:4px;">🎧 Rádio Klein Dream</div>
+        <div class="small muted">Escolha um estilo, aperte o play e fique por aqui. Ao sair da página, a música para.</div>
+      </div>
+      <a class="btn secondary" href="/home">⬅ Voltar para a rede</a>
     </div>
-    <div class="radio-hero-note">
-      <strong>Importante:</strong> a música toca só aqui nesta página. Se sair dela, para.
-    </div>
-  </div>
 
-  <div class="radio-grid">
-    <section class="card radio-player-card">
-      <div class="radio-stations">
-        <% stations.forEach(function(st){ %>
-          <a class="radio-station <%= selected.key === st.key ? 'active' : '' %>" href="/radio?station=<%= st.key %>">
-            <span class="radio-station-name"><%= st.name %></span>
-            <span class="radio-station-sub"><%= st.subtitle %></span>
-          </a>
-        <% }) %>
-      </div>
+    <div class="radio-grid">
+      <div>
+        <div class="card radio-player-card">
+          <div class="small muted">Agora na vitrola</div>
+          <div class="radio-station-title">${station.emoji} ${escapeHtml(station.name)}</div>
+          <div class="radio-station-subtitle">${escapeHtml(station.subtitle)}</div>
 
-      <div class="radio-now">
-        <div class="radio-now-label">Agora tocando</div>
-        <div class="radio-now-track"><%= selected.artist %> — <%= selected.track %></div>
-        <div class="radio-now-vibe"><%= selected.vibe %></div>
-      </div>
-
-      <div class="radio-controls">
-        <button class="btn" type="button" id="radioPlayBtn">▶️ Tocar</button>
-        <button class="btn secondary" type="button" id="radioPauseBtn">⏸ Pausar</button>
-      </div>
-
-      <div class="radio-screen">
-        <iframe
-          id="radioFrame"
-          class="radio-frame"
-          src="https://www.youtube-nocookie.com/embed/<%= selected.youtubeId %>?enablejsapi=1&rel=0&modestbranding=1"
-          title="Rádio Klein Dream"
-          loading="lazy"
-          referrerpolicy="strict-origin-when-cross-origin"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowfullscreen
-        ></iframe>
-      </div>
-
-      <div class="radio-helper">
-        Dica: escolha um estilo, aperte o play e deixa tocar. Sem complicar.
-      </div>
-    </section>
-
-    <section class="card radio-comments-card">
-      <div class="section-title">💬 Comentários da rádio</div>
-      <form method="post" action="/radio/comment" class="radio-comment-form">
-        <input type="hidden" name="station_key" value="<%= selected.key %>" />
-        <textarea name="content" rows="4" maxlength="280" placeholder="Essa te levou pra qual época? vc pode comentar aqui..."></textarea>
-        <div class="radio-comment-actions">
-          <span class="small">até 280 caracteres</span>
-          <button class="btn" type="submit">Enviar</button>
-        </div>
-      </form>
-
-      <div class="radio-comment-list">
-        <% if (!comments.length) { %>
-          <div class="small">Ainda não tem recados. Seja o primeiro a comentar 💙</div>
-        <% } %>
-
-        <% comments.forEach(function(comment){ const station = stations.find(s => s.key === comment.station_key); %>
-          <div class="radio-comment-item">
-            <div class="radio-comment-head">
-              <div class="radio-comment-user">
-                <img src="<%= photoSrc(comment.profile_photo) %>" alt="<%= comment.username %>" class="avatar sm" />
-                <div>
-                  <div><strong><a href="/u/<%= comment.username %>"><%= comment.full_name || comment.username %></a></strong></div>
-                  <div class="small">@<%= comment.username %> • <%= comment.created_at %></div>
-                </div>
-              </div>
-              <span class="radio-comment-station"><%= station ? station.name : comment.station_key %></span>
-            </div>
-            <div class="radio-comment-body preserve-lines"><%= comment.content %></div>
+          <div class="radio-station-list">
+            ${stations.map(s => `
+              <a class="radio-station-chip ${s.key === station.key ? 'active' : ''}" href="/radio?station=${encodeURIComponent(s.key)}">
+                <span>${s.emoji}</span>
+                <span>${escapeHtml(s.name)}</span>
+              </a>
+            `).join('')}
           </div>
-        <% }) %>
+
+          <div class="radio-controls">
+            <button class="btn" type="button" id="radioPlayBtn">▶ Tocar</button>
+            <button class="btn secondary" type="button" id="radioPauseBtn">⏸ Pausar</button>
+          </div>
+
+          <div class="radio-note-box">
+            <div><b>Clima:</b> rádio simples, sem vídeo aparecendo, sem bagunça.</div>
+            <div class="small muted" style="margin-top:4px;">Se trocar de página, o som para. É um cantinho da Klein Dream, não um player grudado no site inteiro.</div>
+          </div>
+
+          <div class="radio-mini-tips">
+            <span>💙 comenta o que essa vibe te lembra</span>
+            <span>✨ ideal pra navegar com calma</span>
+            <span>🕹 no estilo internet boa</span>
+          </div>
+
+          <div id="radioFrameWrap" aria-hidden="true" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;"></div>
+        </div>
       </div>
-    </section>
+
+      <div>
+        <div class="card radio-comments-card">
+          <div class="h" style="font-size:1.2rem;">💬 Comentários da rádio</div>
+          <div class="small muted" style="margin-top:4px;">Vale memória, opinião, nostalgia e indicação. Mantendo respeito, tá valendo.</div>
+
+          <form method="post" action="/radio/comment" class="radio-comment-form">
+            <input type="hidden" name="station" value="${escapeHtml(station.key)}" />
+            <textarea name="content" rows="4" maxlength="280" placeholder="Essa seleção me lembra..." required></textarea>
+            <div class="radio-comment-actions">
+              <span class="small muted">Até 280 caracteres.</span>
+              <button class="btn" type="submit">Enviar comentário</button>
+            </div>
+          </form>
+
+          ${comments && comments.length ? `
+            <div class="radio-comment-list">
+              ${comments.map(c => `
+                <div class="radio-comment-item">
+                  <div class="radio-comment-head">
+                    <a href="/u/${c.username}" class="radio-comment-user">
+                      <img src="${photoSrc(c.profile_photo)}" alt="${escapeHtml(c.username)}" class="radio-comment-avatar" />
+                      <span>${escapeHtml(c.full_name || c.username)}</span>
+                    </a>
+                    <span class="small muted">${escapeHtml(c.created_at)}</span>
+                  </div>
+                  <div class="radio-comment-text">${escapeHtml(c.content)}</div>
+                </div>
+              `).join('')}
+            </div>
+          ` : `
+            <div class="radio-empty-state">Ainda não comentaram nesta estação. Seja o primeiro a deixar uma lembrança 💙</div>
+          `}
+        </div>
+      </div>
+    </div>
   </div>
-</div>
 
-<script src="https://www.youtube.com/iframe_api"></script>
-<script>
-  (function(){
-    let player = null;
-    let wantsPlay = false;
-    const playBtn = document.getElementById('radioPlayBtn');
-    const pauseBtn = document.getElementById('radioPauseBtn');
-    const frame = document.getElementById('radioFrame');
+  <script>
+    (function(){
+      const wrap = document.getElementById('radioFrameWrap');
+      const playBtn = document.getElementById('radioPlayBtn');
+      const pauseBtn = document.getElementById('radioPauseBtn');
+      const videoId = ${JSON.stringify(station.youtubeId)};
+      let playing = false;
 
-    function safePlay(){
-      wantsPlay = true;
-      if (player && player.playVideo) player.playVideo();
-    }
+      function stopRadio() {
+        wrap.innerHTML = '';
+        playing = false;
+      }
 
-    function safePause(){
-      wantsPlay = false;
-      if (player && player.pauseVideo) player.pauseVideo();
-    }
+      function startRadio() {
+        wrap.innerHTML = '<iframe width="1" height="1" src="https://www.youtube.com/embed/' + videoId + '?autoplay=1&controls=0&loop=1&playlist=' + videoId + '" title="Rádio Klein Dream" frameborder="0" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>';
+        playing = true;
+      }
 
-    playBtn.addEventListener('click', safePlay);
-    pauseBtn.addEventListener('click', safePause);
-
-    window.onYouTubeIframeAPIReady = function(){
-      player = new YT.Player('radioFrame', {
-        events: {
-          onReady: function(){ if (wantsPlay) safePlay(); }
-        }
+      playBtn.addEventListener('click', function(){
+        if (playing) return;
+        startRadio();
       });
-    };
 
-    window.addEventListener('beforeunload', safePause);
-    document.addEventListener('visibilitychange', function(){
-      if (document.hidden) safePause();
-    });
-  })();
-</script>
+      pauseBtn.addEventListener('click', function(){
+        stopRadio();
+      });
+
+      window.addEventListener('beforeunload', stopRadio);
+    })();
+  </script>
+`}) %>
+
+<% function escapeHtml(s){ return String(s||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"); } %>

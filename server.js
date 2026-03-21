@@ -637,6 +637,42 @@ function promptOfDay() {
   return NOSSO_TEMPO_PROMPTS[idx];
 }
 
+
+const RADIO_STATIONS = [
+  {
+    key: "disco",
+    name: "Disco Classics",
+    emoji: "🪩",
+    subtitle: "clássicos leves pra navegar sem pressa",
+    youtubeId: "bHfrdQ8h2Pw"
+  },
+  {
+    key: "dance90",
+    name: "Dance 90s",
+    emoji: "⚡",
+    subtitle: "batidas conhecidas que lembram pista e CD gravado",
+    youtubeId: "6M6samPEMpM"
+  },
+  {
+    key: "chill",
+    name: "Electronic Chill",
+    emoji: "🌌",
+    subtitle: "eletrônica suave pra ficar de boa no site",
+    youtubeId: "5qap5aO4i9A"
+  },
+  {
+    key: "flash2000",
+    name: "Flashback 2000",
+    emoji: "✨",
+    subtitle: "dance/pop eletrônico do comecinho dos anos 2000",
+    youtubeId: "Vx8dQh7I0dQ"
+  }
+];
+
+function getRadioStation(key) {
+  return RADIO_STATIONS.find(s => s.key === key) || RADIO_STATIONS[0];
+}
+
 async function safeOnlineCount() {
   try {
     const r = await pool.query("SELECT COUNT(*)::int AS c FROM session WHERE expire > NOW()");
@@ -645,84 +681,6 @@ async function safeOnlineCount() {
     return 0;
   }
 }
-
-const RADIO_STATIONS = [
-  {
-    key: "disco",
-    name: "Disco Classics",
-    subtitle: "Brilho de pista, clima leve e elegante.",
-    artist: "Bee Gees",
-    track: "Stayin' Alive",
-    youtubeId: "I_izvAbhExY",
-    vibe: "Pra quem gosta de acender a nostalgia logo no primeiro play."
-  },
-  {
-    key: "dance90",
-    name: "Dance 90s",
-    subtitle: "Eurodance e energia boa dos anos 90.",
-    artist: "Haddaway",
-    track: "What Is Love",
-    youtubeId: "HEXWRTEbj1I",
-    vibe: "Daquelas que fazem a cabeça viajar sem esforço."
-  },
-  {
-    key: "chill",
-    name: "Electronic Chill",
-    subtitle: "Eletrônica suave pra navegar com calma.",
-    artist: "Moby",
-    track: "Porcelain",
-    youtubeId: "IJWlBfo5Oj0",
-    vibe: "Boa pra ler, pensar e ficar um tempo por aqui."
-  },
-  {
-    key: "flash2000",
-    name: "Flashback 2000",
-    subtitle: "Dance/pop eletrônico do começo dos anos 2000.",
-    artist: "Lasgo",
-    track: "Something",
-    youtubeId: "BF5bV6oWXJg",
-    vibe: "Aquele clima de começo de milênio que bate gostoso."
-  }
-];
-
-function getRadioStation(key) {
-  return RADIO_STATIONS.find((s) => s.key === key) || RADIO_STATIONS[0];
-}
-
-app.get("/radio", requireAuth, async (req, res) => {
-  const selected = getRadioStation(String(req.query.station || "").trim());
-  const comments = await db.all(`
-    SELECT rc.id, rc.station_key, rc.content, rc.created_at, u.username, u.full_name, u.profile_photo
-    FROM radio_comments rc
-    JOIN users u ON u.id = rc.user_id
-    ORDER BY rc.created_at DESC
-    LIMIT 40
-  `);
-
-  for (const c of comments) c.created_at = formatDateBR(c.created_at);
-
-  res.render("radio", {
-    title: "Rádio Klein Dream",
-    stations: RADIO_STATIONS,
-    selected,
-    comments
-  });
-});
-
-app.post("/radio/comment", limiterWrite, requireAuth, async (req, res) => {
-  const selected = getRadioStation(String(req.body.station_key || "").trim());
-  const content = String(req.body.content || "").trim().replace(/\s+/g, " ");
-
-  if (!content) return res.redirect(`/radio?station=${selected.key}`);
-
-  await db.run(
-    "INSERT INTO radio_comments (user_id, station_key, content) VALUES (?,?,?)",
-    [req.session.userId, selected.key, content.slice(0, 280)]
-  );
-
-  req.flash("success", "Seu recado ficou na rádio 💙");
-  res.redirect(`/radio?station=${selected.key}`);
-});
 
 app.get("/nosso-tempo", requireAuth, async (req, res) => {
   const prompt = promptOfDay();
@@ -790,6 +748,41 @@ app.post("/nosso-tempo/remember", limiterWrite, requireAuth, async (req, res) =>
   res.redirect("/nosso-tempo");
 });
 
+
+
+app.get("/radio", requireAuth, async (req, res) => {
+  const station = getRadioStation(String(req.query.station || "").trim());
+  const comments = await db.all(`
+    SELECT rc.id, rc.station_key, rc.content, rc.created_at, u.username, u.full_name, u.profile_photo
+    FROM radio_comments rc
+    JOIN users u ON u.id = rc.user_id
+    WHERE rc.station_key = ?
+    ORDER BY rc.created_at DESC
+    LIMIT 40
+  `, [station.key]);
+
+  for (const c of comments) c.created_at = formatDateBR(c.created_at);
+
+  res.render("radio", {
+    stations: RADIO_STATIONS,
+    station,
+    comments
+  });
+});
+
+app.post("/radio/comment", limiterWrite, requireAuth, async (req, res) => {
+  const station = getRadioStation(String(req.body.station || "").trim());
+  const content = String(req.body.content || "").trim();
+  if (!content) return res.redirect(`/radio?station=${encodeURIComponent(station.key)}`);
+
+  await db.run(
+    "INSERT INTO radio_comments (user_id, station_key, content) VALUES (?,?,?)",
+    [req.session.userId, station.key, content.slice(0, 280)]
+  );
+
+  req.flash("success", "Comentário enviado na rádio.");
+  res.redirect(`/radio?station=${encodeURIComponent(station.key)}`);
+});
 
 // ===== FÃS =====
 app.post("/fan/:username", limiterActions, requireAuth, async (req, res) => {
