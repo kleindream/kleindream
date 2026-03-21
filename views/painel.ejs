@@ -1,0 +1,137 @@
+<%- include("layout", { title: "Painel", body: `
+  <div class="card">
+    <div class="h">🛠 Painel da rede</div>
+    <div class="small muted">Centro de controle simples da Klein Dream.</div>
+
+    ${canActivateRoot ? `
+      <form method="post" action="/painel/ativar-root" style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <button class="btn" type="submit">👑 Ativar root neste usuário</button>
+        <span class="small muted">Disponível apenas enquanto nenhum root existir.</span>
+      </form>
+    ` : ``}
+
+    <div class="grid" style="margin-top:14px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;">
+      <div class="card"><div class="small muted">Usuários</div><div class="h" style="font-size:1.4rem;">${stats.users}</div></div>
+      <div class="card"><div class="small muted">Amizades</div><div class="h" style="font-size:1.4rem;">${stats.friendships}</div></div>
+      <div class="card"><div class="small muted">Pedidos pendentes</div><div class="h" style="font-size:1.4rem;">${stats.pendingRequests}</div></div>
+      <div class="card"><div class="small muted">Contas suspensas</div><div class="h" style="font-size:1.4rem;">${stats.suspended}</div></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px;">
+    <div class="h">Buscar usuário</div>
+    <form method="get" action="/painel" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <input type="text" name="q" value="${escapeHtml(q)}" placeholder="usuário, nome ou e-mail" style="flex:1;min-width:220px;" />
+      ${selectedUser ? `<input type="hidden" name="userId" value="${selectedUser.id}" />` : ``}
+      <button class="btn" type="submit">Buscar</button>
+      ${q ? `<a class="btn secondary" href="/painel">Limpar</a>` : ``}
+    </form>
+  </div>
+
+  <div class="card" style="margin-top:14px;">
+    <div class="h">Usuários encontrados</div>
+    ${users.length ? `
+      <table class="table">
+        <thead><tr><th>Usuário</th><th>Nome</th><th>E-mail</th><th>Cargo</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          ${users.map(u => `
+            <tr>
+              <td><a href="/u/${escapeHtml(u.username)}">${escapeHtml(u.username)}</a></td>
+              <td>${escapeHtml(u.full_name || '')}</td>
+              <td>${escapeHtml(u.email || '')}</td>
+              <td><span class="badge">${escapeHtml(u.role || 'member')}</span></td>
+              <td>${u.is_suspended ? '<span class="badge" style="background:#5b1f2f;color:#ffd9e0;">Suspensa</span>' : '<span class="badge">Ativa</span>'}</td>
+              <td><a class="btn secondary" href="/painel?${q ? `q=${encodeURIComponent(q)}&` : ``}userId=${u.id}">Abrir</a></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    ` : `<div class="small">Nenhum usuário encontrado.</div>`}
+  </div>
+
+  ${selectedUser ? `
+    <div class="card" style="margin-top:14px;">
+      <div class="h">Gerenciando: ${escapeHtml(selectedUser.full_name || selectedUser.username)}</div>
+      <div class="small muted">@${escapeHtml(selectedUser.username)} • ${escapeHtml(selectedUser.email || '')}</div>
+
+      <div class="grid" style="margin-top:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;align-items:start;">
+        <div class="card">
+          <div class="h" style="font-size:1.05rem;">Conta</div>
+          <div class="small muted">Criada em ${escapeHtml(selectedUser.created_at)}</div>
+          <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <form method="post" action="/painel/user/${selectedUser.id}/role" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+              <select name="role">
+                <option value="member" ${selectedUser.role === 'member' ? 'selected' : ''}>member</option>
+                <option value="admin" ${selectedUser.role === 'admin' ? 'selected' : ''}>admin</option>
+                ${meIsRoot ? `<option value="root" ${selectedUser.role === 'root' ? 'selected' : ''}>root</option>` : ``}
+              </select>
+              <button class="btn" type="submit">Salvar cargo</button>
+            </form>
+          </div>
+          <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+            <form method="post" action="/painel/user/${selectedUser.id}/suspend">
+              <button class="btn secondary" type="submit">${selectedUser.is_suspended ? 'Reativar conta' : 'Suspender conta'}</button>
+            </form>
+            <form method="post" action="/painel/user/${selectedUser.id}/delete" onsubmit="return confirm('Apagar esta conta?');">
+              <button class="btn danger" type="submit">Apagar conta</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="h" style="font-size:1.05rem;">Amigos (${selectedFriends.length})</div>
+          ${selectedFriends.length ? `
+            <div style="display:grid;gap:8px;">
+              ${selectedFriends.map(f => `
+                <div class="row" style="justify-content:space-between;gap:10px;align-items:center;">
+                  <div>
+                    <a href="/u/${escapeHtml(f.username)}">${escapeHtml(f.username)}</a>
+                    <div class="small muted">${escapeHtml(f.full_name || f.email || '')}</div>
+                  </div>
+                  <form method="post" action="/painel/friendships/remove" onsubmit="return confirm('Remover esta amizade?');">
+                    <input type="hidden" name="userId" value="${selectedUser.id}" />
+                    <input type="hidden" name="friendId" value="${f.id}" />
+                    <button class="btn danger" type="submit">Desfazer</button>
+                  </form>
+                </div>
+              `).join('')}
+            </div>
+          ` : `<div class="small">Sem amizades cadastradas.</div>`}
+        </div>
+      </div>
+    </div>
+
+    <div class="grid" style="margin-top:14px;grid-template-columns:1fr 1fr;gap:14px;">
+      <div class="card">
+        <div class="h">Pedidos recebidos (${selectedIncoming.length})</div>
+        ${selectedIncoming.length ? selectedIncoming.map(r => `
+          <div class="row" style="justify-content:space-between;gap:10px;align-items:center;">
+            <div>
+              <a href="/u/${escapeHtml(r.username)}">${escapeHtml(r.username)}</a>
+              <div class="small muted">${escapeHtml(r.full_name || r.email || '')}</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <form method="post" action="/painel/friend-requests/${r.id}/approve"><button class="btn" type="submit">Aprovar</button></form>
+              <form method="post" action="/painel/friend-requests/${r.id}/reject"><button class="btn danger" type="submit">Recusar</button></form>
+            </div>
+          </div><hr/>
+        `).join('') : `<div class="small">Nada pendente.</div>`}
+      </div>
+
+      <div class="card">
+        <div class="h">Pedidos enviados (${selectedOutgoing.length})</div>
+        ${selectedOutgoing.length ? selectedOutgoing.map(r => `
+          <div class="row" style="justify-content:space-between;gap:10px;align-items:center;">
+            <div>
+              <a href="/u/${escapeHtml(r.username)}">${escapeHtml(r.username)}</a>
+              <div class="small muted">${escapeHtml(r.full_name || r.email || '')}</div>
+            </div>
+            <span class="badge">${escapeHtml(r.status || 'pendente')}</span>
+          </div><hr/>
+        `).join('') : `<div class="small">Nada enviado.</div>`}
+      </div>
+    </div>
+  ` : ``}
+` }) %>
+
+<% function escapeHtml(s){ return String(s||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"); } %>

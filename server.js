@@ -127,7 +127,7 @@ async function getUserById(id) {
       profile_photo, birth_date, marital_status, favorite_team,
       profession, hobbies, favorite_music, favorite_movie, favorite_game,
       time_of, personality, looking_for, mood, daily_phrase,
-      invisible_visits, notify_profile_visits, created_at
+      invisible_visits, notify_profile_visits, role, is_suspended, created_at
     FROM users
     WHERE id=?
   `, [id]);
@@ -205,6 +205,33 @@ function formatMemberSince(value) {
 function requireAuth(req, res, next) {
   if (!req.session.userId) return res.redirect("/login");
   next();
+}
+
+function isAdminRole(role) {
+  return role === "admin" || role === "root";
+}
+
+function isRootRole(role) {
+  return role === "root";
+}
+
+async function getCurrentUserWithRole(req) {
+  if (!req.session.userId) return null;
+  return db.get("SELECT id, username, full_name, role, is_suspended FROM users WHERE id=?", [req.session.userId]);
+}
+
+async function requireAdmin(req, res, next) {
+  try {
+    const me = await getCurrentUserWithRole(req);
+    if (!me || !isAdminRole(me.role)) {
+      req.flash("error", "Acesso restrito ao painel.");
+      return res.redirect("/home");
+    }
+    req.adminUser = me;
+    next();
+  } catch (err) {
+    next(err);
+  }
 }
 
 async function addNotif(userId, type, text, link = null) {
@@ -355,6 +382,7 @@ app.post("/login", limiterAuth, async (req, res) => {
   const { usernameOrEmail, password } = req.body;
   const user = await db.get("SELECT * FROM users WHERE email=? OR username=?", [usernameOrEmail, usernameOrEmail]);
   if (!user) return res.render("login", { error: "Usuário não encontrado." });
+  if (user.is_suspended) return res.render("login", { error: "Esta conta está suspensa no momento." });
 
   const ok = bcrypt.compareSync(password || "", user.password_hash);
   if (!ok) return res.render("login", { error: "Senha incorreta." });
@@ -832,7 +860,7 @@ app.get("/u/:username", requireAuth, async (req, res) => {
       profile_photo, birth_date, marital_status, favorite_team,
       profession, hobbies, favorite_music, favorite_movie, favorite_game,
       time_of, personality, looking_for, mood, daily_phrase,
-      invisible_visits, notify_profile_visits, created_at,
+      invisible_visits, notify_profile_visits, role, is_suspended, created_at,
       CASE WHEN EXISTS (
         SELECT 1 FROM presence p
         WHERE p.user_id = users.id
@@ -1224,6 +1252,196 @@ app.post("/friends/remove/:userId", limiterActions, requireAuth, async (req, res
   await db.run("DELETE FROM friendships WHERE (user_id=? AND friend_id=?) OR (user_id=? AND friend_id=?)", [meId, otherId, otherId, meId]);
   req.flash("info", "Amigo removido.");
   res.redirect("/friends");
+});
+
+app.post("/painel/ativar-root", limiterActions, requireAuth, async (req, res, next) => {
+  try {
+    const rootExists = await db.get("SELECT id FROM users WHERE role='root' LIMIT 1");
+    if (rootExists) {
+      req.flash("error", "Já existe um usuário root cadastrado.");
+      return res.redirect("/painel");
+    }
+    await db.run("UPDATE users SET role='root' WHERE id=?", [req.session.userId]);
+    req.flash("success", "Root ativado com sucesso.");
+    res.redirect("/painel");
+  } catch (err) { next(err); }
+});
+
+app.get("/painel", requireAuth, async (req, res, next) => {
+  try {
+    const me = await getCurrentUserWithRole(req);
+    const rootExists = await db.get("SELECT id FROM users WHERE role='root' LIMIT 1");
+    if (!me || (!isAdminRole(me.role) && rootExists)) {
+      req.flash("error", "Acesso restrito ao painel.");
+      return res.redirect("/home");
+    }
+
+    const stats = {
+      users: Number((await db.get("SELECT COUNT(*)::int AS c FROM users", []) || {}).c || 0),
+      friendships: Number((await db.get("SELECT COUNT(*)::int AS c FROM friendships", []) || {}).c || 0),
+      pendingRequests: Number((await db.get("SELECT COUNT(*)::int AS c FROM friend_requests WHERE status='pending'", []) || {}).c || 0),
+      suspended: Number((await db.get("SELECT COUNT(*)::int AS c FROM users WHERE is_suspended=TRUE", []) || {}).c || 0)
+    };
+
+    const q = String(req.query.q || '').trim();
+    const users = await db.all(`
+      SELECT id, username, full_name, email, role, is_suspended, created_at
+      FROM users
+      WHERE ? = '' OR username ILIKE ? OR COALESCE(full_name,'') ILIKE ? OR email ILIKE ?
+      ORDER BY created_at DESC
+      LIMIT 50
+    `, [q, `%${q}%`, `%${q}%`, `%${q}%`]);
+
+    const selectedUserId = Number(req.query.userId || 0) || null;
+    let selectedUser = null, selectedFriends = [], selectedIncoming = [], selectedOutgoing = [];
+    if (selectedUserId) {
+      selectedUser = await db.get(`SELECT id, username, full_name, email, role, is_suspended, created_at FROM users WHERE id=?`, [selectedUserId]);
+      if (selectedUser) {
+        selectedFriends = await db.all(`
+          SELECT u.id, u.username, u.full_name, u.email, f.created_at
+          FROM friendships f
+          JOIN users u ON u.id = f.friend_id
+          WHERE f.user_id=?
+          ORDER BY u.username ASC
+        `, [selectedUserId]);
+        selectedIncoming = await db.all(`
+          SELECT fr.id, fr.created_at, u.id AS user_id, u.username, u.full_name, u.email
+          FROM friend_requests fr
+          JOIN users u ON u.id = fr.from_user_id
+          WHERE fr.to_user_id=? AND fr.status='pending'
+          ORDER BY fr.created_at DESC
+        `, [selectedUserId]);
+        selectedOutgoing = await db.all(`
+          SELECT fr.id, fr.created_at, fr.status, u.id AS user_id, u.username, u.full_name, u.email
+          FROM friend_requests fr
+          JOIN users u ON u.id = fr.to_user_id
+          WHERE fr.from_user_id=?
+          ORDER BY fr.created_at DESC
+        `, [selectedUserId]);
+      }
+    }
+
+    res.render("painel", {
+      stats, q, users, selectedUser, selectedFriends, selectedIncoming, selectedOutgoing,
+      canActivateRoot: !rootExists, meIsRoot: isRootRole(me.role)
+    });
+  } catch (err) { next(err); }
+});
+
+app.post("/painel/user/:userId/role", limiterActions, requireAdmin, async (req, res, next) => {
+  try {
+    const targetId = Number(req.params.userId);
+    const nextRole = String(req.body.role || 'member').trim();
+    const allowed = ['member','admin','root'];
+    if (!allowed.includes(nextRole)) {
+      req.flash('error', 'Cargo inválido.');
+      return res.redirect('/painel');
+    }
+    const target = await db.get("SELECT id, role, username FROM users WHERE id=?", [targetId]);
+    if (!target) {
+      req.flash('error', 'Usuário não encontrado.');
+      return res.redirect('/painel');
+    }
+    if (target.role === 'root' && !isRootRole(req.adminUser.role)) {
+      req.flash('error', 'Somente o root pode alterar outro root.');
+      return res.redirect('/painel?userId=' + targetId);
+    }
+    if (nextRole === 'root' && !isRootRole(req.adminUser.role)) {
+      req.flash('error', 'Somente o root pode promover outro root.');
+      return res.redirect('/painel?userId=' + targetId);
+    }
+    if (targetId === req.adminUser.id && target.role === 'root' && nextRole !== 'root') {
+      req.flash('error', 'O root atual não pode remover o próprio cargo por aqui.');
+      return res.redirect('/painel?userId=' + targetId);
+    }
+    await db.run("UPDATE users SET role=? WHERE id=?", [nextRole, targetId]);
+    req.flash('success', 'Cargo atualizado.');
+    res.redirect('/painel?userId=' + targetId);
+  } catch (err) { next(err); }
+});
+
+app.post("/painel/user/:userId/suspend", limiterActions, requireAdmin, async (req, res, next) => {
+  try {
+    const targetId = Number(req.params.userId);
+    const target = await db.get("SELECT id, role FROM users WHERE id=?", [targetId]);
+    if (!target) {
+      req.flash('error', 'Usuário não encontrado.');
+      return res.redirect('/painel');
+    }
+    if (target.role === 'root' && !isRootRole(req.adminUser.role)) {
+      req.flash('error', 'Somente o root pode suspender outro root.');
+      return res.redirect('/painel?userId=' + targetId);
+    }
+    await db.run("UPDATE users SET is_suspended = NOT COALESCE(is_suspended, FALSE) WHERE id=?", [targetId]);
+    req.flash('success', 'Status da conta atualizado.');
+    res.redirect('/painel?userId=' + targetId);
+  } catch (err) { next(err); }
+});
+
+app.post("/painel/user/:userId/delete", limiterActions, requireAdmin, async (req, res, next) => {
+  try {
+    const targetId = Number(req.params.userId);
+    const target = await db.get("SELECT id, role FROM users WHERE id=?", [targetId]);
+    if (!target) {
+      req.flash('error', 'Usuário não encontrado.');
+      return res.redirect('/painel');
+    }
+    if (targetId === req.adminUser.id) {
+      req.flash('error', 'Você não pode apagar a sua própria conta pelo painel.');
+      return res.redirect('/painel?userId=' + targetId);
+    }
+    if (target.role === 'root' && !isRootRole(req.adminUser.role)) {
+      req.flash('error', 'Somente o root pode apagar outro root.');
+      return res.redirect('/painel?userId=' + targetId);
+    }
+    await db.run("DELETE FROM users WHERE id=?", [targetId]);
+    req.flash('success', 'Conta removida.');
+    res.redirect('/painel');
+  } catch (err) { next(err); }
+});
+
+app.post("/painel/friendships/remove", limiterActions, requireAdmin, async (req, res, next) => {
+  try {
+    const userId = Number(req.body.userId);
+    const friendId = Number(req.body.friendId);
+    if (!userId || !friendId) {
+      req.flash('error', 'Amizade inválida.');
+      return res.redirect('/painel');
+    }
+    await db.run("DELETE FROM friendships WHERE (user_id=? AND friend_id=?) OR (user_id=? AND friend_id=?)", [userId, friendId, friendId, userId]);
+    req.flash('info', 'Amizade removida.');
+    res.redirect('/painel?userId=' + userId);
+  } catch (err) { next(err); }
+});
+
+app.post("/painel/friend-requests/:requestId/approve", limiterActions, requireAdmin, async (req, res, next) => {
+  try {
+    const requestId = Number(req.params.requestId);
+    const fr = await db.get("SELECT * FROM friend_requests WHERE id=?", [requestId]);
+    if (!fr) {
+      req.flash('error', 'Pedido não encontrado.');
+      return res.redirect('/painel');
+    }
+    await db.run("UPDATE friend_requests SET status='accepted' WHERE id=?", [requestId]);
+    await db.run("INSERT INTO friendships (user_id, friend_id) VALUES (?,?) ON CONFLICT DO NOTHING", [fr.from_user_id, fr.to_user_id]);
+    await db.run("INSERT INTO friendships (user_id, friend_id) VALUES (?,?) ON CONFLICT DO NOTHING", [fr.to_user_id, fr.from_user_id]);
+    req.flash('success', 'Pedido de amizade aprovado.');
+    res.redirect('/painel?userId=' + fr.to_user_id);
+  } catch (err) { next(err); }
+});
+
+app.post("/painel/friend-requests/:requestId/reject", limiterActions, requireAdmin, async (req, res, next) => {
+  try {
+    const requestId = Number(req.params.requestId);
+    const fr = await db.get("SELECT * FROM friend_requests WHERE id=?", [requestId]);
+    if (!fr) {
+      req.flash('error', 'Pedido não encontrado.');
+      return res.redirect('/painel');
+    }
+    await db.run("UPDATE friend_requests SET status='rejected' WHERE id=?", [requestId]);
+    req.flash('info', 'Pedido recusado.');
+    res.redirect('/painel?userId=' + fr.to_user_id);
+  } catch (err) { next(err); }
 });
 
 // ===== RECADOS =====
