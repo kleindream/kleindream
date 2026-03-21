@@ -4,6 +4,7 @@
 
   const state = {
     open: false,
+    minimized: true,
     selected: null,
     pollListTimer: null,
     pollChatTimer: null,
@@ -25,32 +26,50 @@
     try { return new Date(v).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}); } catch(e){ return ''; }
   }
 
+  function bindHeadButtons(){
+    const minBtn = document.querySelector('.kd-chat-minimize');
+    const closeBtn = document.querySelector('.kd-chat-close');
+    if (minBtn) minBtn.onclick = minimizePanel;
+    if (closeBtn) closeBtn.onclick = closePanel;
+  }
+
+  function renderIdleHead(){
+    const head = document.getElementById('kdChatMainHead');
+    if (!head) return;
+    head.innerHTML = `<div><strong>Chat</strong><div class="small">leve e rápido</div></div>
+      <div class="kd-chat-head-actions">
+        <button type="button" class="kd-chat-minimize" aria-label="Minimizar">—</button>
+        <button type="button" class="kd-chat-close" aria-label="Fechar">×</button>
+      </div>`;
+    bindHeadButtons();
+  }
+
   function createUI(){
     state.root = document.getElementById('kdPresenceChatRoot');
     state.fab = document.getElementById('kdChatFab');
     if (!state.root || !state.fab) return;
 
     state.root.innerHTML = `
-      <div class="kd-chat-panel" id="kdChatPanel" hidden>
-        <div class="kd-chat-sidebar">
-          <div class="kd-chat-head">
-            <div>
-              <strong>Chat Klein Dream</strong>
-              <div class="small">leve e rápido</div>
-            </div>
-            <button type="button" class="kd-chat-close" aria-label="Fechar">×</button>
-          </div>
-          <div class="kd-chat-block">
-            <div class="kd-chat-block-title">Conversas</div>
-            <div class="kd-chat-list" id="kdChatConversations"></div>
-          </div>
-          <div class="kd-chat-block">
-            <div class="kd-chat-block-title">Online agora</div>
-            <div class="kd-chat-list" id="kdOnlineUsers"></div>
-          </div>
-        </div>
+      <div class="kd-chat-panel kd-chat-minimized" id="kdChatPanel" hidden>
         <div class="kd-chat-main">
-          <div class="kd-chat-main-head" id="kdChatMainHead">Escolha alguém para conversar</div>
+          <div class="kd-chat-main-head kd-chat-compact-head" id="kdChatMainHead">
+            <div><strong>Chat</strong><div class="small">leve e rápido</div></div>
+            <div class="kd-chat-head-actions">
+              <button type="button" class="kd-chat-minimize" aria-label="Minimizar">—</button>
+              <button type="button" class="kd-chat-close" aria-label="Fechar">×</button>
+            </div>
+          </div>
+          <div class="kd-chat-mini-prompt" id="kdChatMiniPrompt">Escolha alguém para conversar.</div>
+          <div class="kd-chat-sidebar">
+            <div class="kd-chat-block">
+              <div class="kd-chat-block-title">Conversas</div>
+              <div class="kd-chat-list" id="kdChatConversations"></div>
+            </div>
+            <div class="kd-chat-block">
+              <div class="kd-chat-block-title">Online agora</div>
+              <div class="kd-chat-list" id="kdOnlineUsers"></div>
+            </div>
+          </div>
           <div class="kd-chat-messages" id="kdChatMessages">
             <div class="kd-chat-empty">Abra uma conversa pelo perfil de alguém ou por esta lista.</div>
           </div>
@@ -60,10 +79,10 @@
           </form>
         </div>
       </div>
-    `;
+      `;
     state.panel = document.getElementById('kdChatPanel');
     state.fab.addEventListener('click', togglePanel);
-    state.panel.querySelector('.kd-chat-close').addEventListener('click', closePanel);
+    bindHeadButtons();
     state.panel.querySelector('#kdChatCompose').addEventListener('submit', sendMessage);
 
     document.addEventListener('click', function(e){
@@ -157,7 +176,13 @@
     const head = document.getElementById('kdChatMainHead');
     const box = document.getElementById('kdChatMessages');
     if (!head || !box) return;
-    head.innerHTML = `<div><strong>${esc(user.full_name || user.username)}</strong><div class="small"><span class="kd-live-dot ${user.is_online ? 'on' : 'off'}"></span> @${esc(user.username)}</div></div><a class="btn secondary mini" href="/u/${encodeURIComponent(user.username)}">Ver perfil</a>`;
+    head.innerHTML = `<div><strong>${esc(user.full_name || user.username)}</strong><div class="small"><span class="kd-live-dot ${user.is_online ? 'on' : 'off'}"></span> @${esc(user.username)}</div></div>
+      <div class="kd-chat-head-actions">
+        <a class="btn secondary mini" href="/u/${encodeURIComponent(user.username)}">Ver perfil</a>
+        <button type="button" class="kd-chat-minimize" aria-label="Minimizar">—</button>
+        <button type="button" class="kd-chat-close" aria-label="Fechar">×</button>
+      </div>`;
+    bindHeadButtons();
     if (!state.messages.length) {
       box.innerHTML = '<div class="kd-chat-empty">Ainda não há mensagens. Escreva a primeira. 💙</div>';
       return;
@@ -178,7 +203,9 @@
 
   function openPanel(){
     state.open = true;
+    state.minimized = false;
     state.panel.hidden = false;
+    state.panel.classList.remove('kd-chat-minimized');
     state.fab.classList.add('open');
     loadConversations();
     loadOnline();
@@ -186,15 +213,27 @@
     restartPolling();
   }
 
-  function closePanel(){
+  function minimizePanel(){
     state.open = false;
+    state.minimized = true;
+    state.panel.classList.add('kd-chat-minimized');
     state.panel.hidden = true;
     state.fab.classList.remove('open');
     stopChatPolling();
   }
 
+  function closePanel(){
+    state.selected = null;
+    minimizePanel();
+    const box = document.getElementById('kdChatMessages');
+    const head = document.getElementById('kdChatMainHead');
+    if (head) head.innerHTML = `<div><strong>Chat</strong><div class="small">leve e rápido</div></div><div class="kd-chat-head-actions"><button type="button" class="kd-chat-minimize" aria-label="Minimizar">—</button><button type="button" class="kd-chat-close" aria-label="Fechar">×</button></div>`;
+    if (box) box.innerHTML = '<div class="kd-chat-empty">Abra uma conversa pelo perfil de alguém ou por esta lista.</div>';
+    bindHeadButtons();
+  }
+
   function togglePanel(){
-    state.open ? closePanel() : openPanel();
+    (state.open && !state.minimized) ? minimizePanel() : openPanel();
   }
 
   function stopChatPolling(){
@@ -221,7 +260,10 @@
 
   async function sendMessage(e){
     e.preventDefault();
-    if (!state.selected) return;
+    if (!state.selected) {
+      alert('Escolha alguém primeiro. 💙');
+      return;
+    }
     const input = document.getElementById('kdChatInput');
     const body = (input.value || '').trim();
     if (!body) return;
