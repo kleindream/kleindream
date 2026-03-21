@@ -1,0 +1,123 @@
+<div class="card radio-page">
+  <div class="radio-hero">
+    <div>
+      <div class="section-title">🎧 Rádio Klein Dream</div>
+      <div class="small">Aperta o play, comenta e curte a vibe. Bem simples, bem nosso tempo.</div>
+    </div>
+    <div class="radio-hero-note">
+      <strong>Importante:</strong> a música toca só aqui nesta página. Se sair dela, para.
+    </div>
+  </div>
+
+  <div class="radio-grid">
+    <section class="card radio-player-card">
+      <div class="radio-stations">
+        <% stations.forEach(function(st){ %>
+          <a class="radio-station <%= selected.key === st.key ? 'active' : '' %>" href="/radio?station=<%= st.key %>">
+            <span class="radio-station-name"><%= st.name %></span>
+            <span class="radio-station-sub"><%= st.subtitle %></span>
+          </a>
+        <% }) %>
+      </div>
+
+      <div class="radio-now">
+        <div class="radio-now-label">Agora tocando</div>
+        <div class="radio-now-track"><%= selected.artist %> — <%= selected.track %></div>
+        <div class="radio-now-vibe"><%= selected.vibe %></div>
+      </div>
+
+      <div class="radio-controls">
+        <button class="btn" type="button" id="radioPlayBtn">▶️ Tocar</button>
+        <button class="btn secondary" type="button" id="radioPauseBtn">⏸ Pausar</button>
+      </div>
+
+      <div class="radio-screen">
+        <iframe
+          id="radioFrame"
+          class="radio-frame"
+          src="https://www.youtube-nocookie.com/embed/<%= selected.youtubeId %>?enablejsapi=1&rel=0&modestbranding=1"
+          title="Rádio Klein Dream"
+          loading="lazy"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen
+        ></iframe>
+      </div>
+
+      <div class="radio-helper">
+        Dica: escolha um estilo, aperte o play e deixa tocar. Sem complicar.
+      </div>
+    </section>
+
+    <section class="card radio-comments-card">
+      <div class="section-title">💬 Comentários da rádio</div>
+      <form method="post" action="/radio/comment" class="radio-comment-form">
+        <input type="hidden" name="station_key" value="<%= selected.key %>" />
+        <textarea name="content" rows="4" maxlength="280" placeholder="Essa te levou pra qual época? vc pode comentar aqui..."></textarea>
+        <div class="radio-comment-actions">
+          <span class="small">até 280 caracteres</span>
+          <button class="btn" type="submit">Enviar</button>
+        </div>
+      </form>
+
+      <div class="radio-comment-list">
+        <% if (!comments.length) { %>
+          <div class="small">Ainda não tem recados. Seja o primeiro a comentar 💙</div>
+        <% } %>
+
+        <% comments.forEach(function(comment){ const station = stations.find(s => s.key === comment.station_key); %>
+          <div class="radio-comment-item">
+            <div class="radio-comment-head">
+              <div class="radio-comment-user">
+                <img src="<%= photoSrc(comment.profile_photo) %>" alt="<%= comment.username %>" class="avatar sm" />
+                <div>
+                  <div><strong><a href="/u/<%= comment.username %>"><%= comment.full_name || comment.username %></a></strong></div>
+                  <div class="small">@<%= comment.username %> • <%= comment.created_at %></div>
+                </div>
+              </div>
+              <span class="radio-comment-station"><%= station ? station.name : comment.station_key %></span>
+            </div>
+            <div class="radio-comment-body preserve-lines"><%= comment.content %></div>
+          </div>
+        <% }) %>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+  (function(){
+    let player = null;
+    let wantsPlay = false;
+    const playBtn = document.getElementById('radioPlayBtn');
+    const pauseBtn = document.getElementById('radioPauseBtn');
+    const frame = document.getElementById('radioFrame');
+
+    function safePlay(){
+      wantsPlay = true;
+      if (player && player.playVideo) player.playVideo();
+    }
+
+    function safePause(){
+      wantsPlay = false;
+      if (player && player.pauseVideo) player.pauseVideo();
+    }
+
+    playBtn.addEventListener('click', safePlay);
+    pauseBtn.addEventListener('click', safePause);
+
+    window.onYouTubeIframeAPIReady = function(){
+      player = new YT.Player('radioFrame', {
+        events: {
+          onReady: function(){ if (wantsPlay) safePlay(); }
+        }
+      });
+    };
+
+    window.addEventListener('beforeunload', safePause);
+    document.addEventListener('visibilitychange', function(){
+      if (document.hidden) safePause();
+    });
+  })();
+</script>

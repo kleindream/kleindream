@@ -1277,3 +1277,35 @@ input:focus, textarea:focus{
 
 
 .preserve-lines{white-space:pre-wrap;word-break:break-word;}
+
+
+/* Rádio Klein Dream */
+.radio-page{padding:18px;}
+.radio-hero{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;}
+.radio-hero-note{max-width:320px;padding:10px 12px;border-radius:12px;background:rgba(91,121,255,.08);border:1px solid rgba(91,121,255,.18);font-size:.95rem;line-height:1.45;}
+.radio-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:16px;}
+.radio-player-card,.radio-comments-card{padding:16px;}
+.radio-stations{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:16px;}
+.radio-station{display:block;padding:12px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.04);text-decoration:none;color:var(--text);}
+.radio-station:hover{text-decoration:none;background:rgba(255,255,255,.07);}
+.radio-station.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(91,121,255,.10);background:rgba(91,121,255,.08);}
+.radio-station-name{display:block;font-weight:800;margin-bottom:4px;}
+.radio-station-sub{display:block;font-size:.9rem;color:var(--muted);line-height:1.35;}
+.radio-now{padding:14px;border-radius:14px;border:1px dashed rgba(91,121,255,.28);background:rgba(255,255,255,.04);}
+.radio-now-label{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px;font-weight:800;}
+.radio-now-track{font-size:1.1rem;font-weight:900;margin-bottom:6px;}
+.radio-now-vibe{color:var(--muted);line-height:1.45;}
+.radio-controls{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0;}
+.radio-screen{position:relative;height:74px;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:linear-gradient(180deg, rgba(10,16,35,.95), rgba(20,30,58,.95));}
+.radio-frame{position:absolute;left:0;top:-74px;width:100%;height:220px;border:0;opacity:.12;pointer-events:none;}
+.radio-helper{font-size:.92rem;color:var(--muted);margin-top:12px;}
+.radio-comment-form textarea{width:100%;resize:vertical;min-height:96px;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:#fff;color:#1f2440;font:inherit;}
+.radio-comment-actions{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap;}
+.radio-comment-list{display:grid;gap:12px;margin-top:16px;}
+.radio-comment-item{padding:12px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.04);}
+.radio-comment-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:10px;}
+.radio-comment-user{display:flex;gap:10px;align-items:center;}
+.radio-comment-station{display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;background:rgba(91,121,255,.1);border:1px solid rgba(91,121,255,.18);font-size:.82rem;font-weight:800;color:var(--accent);}
+.radio-comment-body{line-height:1.55;}
+@media (max-width: 900px){.radio-grid{grid-template-columns:1fr;}}
+@media (max-width: 640px){.radio-stations{grid-template-columns:1fr;}.radio-page{padding:14px;}}
