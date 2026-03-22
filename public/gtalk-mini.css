@@ -1,0 +1,23 @@
+.kd-gtalk-fab{position:fixed;right:16px;bottom:14px;z-index:90;border:1px solid #7aa4e8;background:linear-gradient(#f9fbff,#dfeeff);color:#214a8b;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;box-shadow:0 4px 18px rgba(40,70,120,.22);cursor:pointer}
+.kd-gtalk-fab:hover{filter:brightness(1.02)}
+.kd-gtalk-dock{position:fixed;right:16px;bottom:48px;z-index:91;display:flex;gap:8px;align-items:flex-end}
+.kd-gtalk-roster,.kd-gtalk-window{width:220px;background:#fff;border:1px solid #9db8e6;border-radius:8px 8px 0 0;box-shadow:0 8px 26px rgba(31,53,94,.25);overflow:hidden}
+.kd-gtalk-head{background:linear-gradient(#edf5ff,#d8e9ff);border-bottom:1px solid #b7cff2;padding:6px 8px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;font-weight:700;color:#234a88}
+.kd-gtalk-head button{border:0;background:transparent;font-weight:700;font-size:14px;cursor:pointer;color:#234a88;padding:0 4px}
+.kd-gtalk-roster-body{max-height:260px;overflow:auto;background:#fdfefe}
+.kd-gtalk-list-btn{width:100%;display:flex;align-items:center;gap:8px;border:0;background:transparent;padding:7px 8px;border-bottom:1px solid #eef3fb;cursor:pointer;text-align:left}
+.kd-gtalk-list-btn:hover{background:#f2f7ff}
+.kd-gtalk-dot{width:8px;height:8px;border-radius:50%;background:#67c23a;display:inline-block;flex:0 0 auto;box-shadow:0 0 0 2px rgba(103,194,58,.15)}
+.kd-gtalk-empty{padding:12px 10px;color:#64748b;font-size:12px}
+.kd-gtalk-window{display:flex;flex-direction:column;height:280px}
+.kd-gtalk-log{flex:1;overflow:auto;padding:8px;background:#fbfdff}
+.kd-gtalk-msg{margin:0 0 8px 0;font-size:12px;line-height:1.35}
+.kd-gtalk-msg.mine{text-align:right}
+.kd-gtalk-bubble{display:inline-block;max-width:85%;padding:6px 8px;border-radius:9px;background:#eef5ff;border:1px solid #d4e3fb;color:#1e293b;white-space:pre-wrap;word-break:break-word}
+.kd-gtalk-msg.mine .kd-gtalk-bubble{background:#dff3df;border-color:#c8e8c8}
+.kd-gtalk-meta{font-size:10px;color:#6b7280;margin:0 0 2px 0}
+.kd-gtalk-form{display:flex;gap:6px;padding:7px;border-top:1px solid #dbe8fb;background:#f5f9ff}
+.kd-gtalk-form input{flex:1;min-width:0;border:1px solid #bdd2f4;border-radius:6px;padding:6px 8px;font-size:12px;background:#fff}
+.kd-gtalk-form button{border:1px solid #8eb1ec;background:linear-gradient(#fff,#e1eeff);color:#234a88;border-radius:6px;padding:6px 9px;font-size:12px;font-weight:700;cursor:pointer}
+.kd-gtalk-note{padding:5px 8px;border-top:1px solid #e7eefb;background:#fffef2;color:#7c5a00;font-size:11px}
+@media (max-width:700px){.kd-gtalk-dock{right:8px;bottom:44px}.kd-gtalk-roster,.kd-gtalk-window{width:min(220px,calc(100vw - 16px))}}

@@ -2121,6 +2121,9 @@ async function main() {
   // userId -> { username, sockets }
   const online = new Map();
 
+  // Gtalk leve: sockets por usuário (sem histórico em banco)
+  const userSockets = new Map();
+
   // Quem está digitando
   // userId -> username
   const typing = new Map();
@@ -2174,7 +2177,15 @@ async function main() {
 
     const userId = sess.userId;
     const username = (sess.username || "membro");
+    const fullName = (sess.full_name || username);
     const chatAdmin = isChatAdmin(sess, username);
+
+    // registra socket para gtalk leve
+    {
+      const set = userSockets.get(username) || new Set();
+      set.add(socket.id);
+      userSockets.set(username, set);
+    }
 
     // informa ao cliente
     socket.emit("chat:me", { username, isAdmin: chatAdmin });
@@ -2183,11 +2194,21 @@ async function main() {
     const prev = online.get(userId);
     if (prev) {
       prev.sockets += 1;
+      prev.full_name = fullName;
     } else {
-      online.set(userId, { username, sockets: 1 });
+      online.set(userId, { username, full_name: fullName, sockets: 1 });
       emitSystem(`${username} entrou no bate-papo.`);
     }
     emitPresence();
+
+    function emitGtalkPresence() {
+      const users = Array.from(online.entries())
+        .filter(([_, v]) => v && v.sockets > 0)
+        .map(([id, v]) => ({ id, username: v.username, full_name: v.full_name || v.username }))
+        .sort((a, b) => String(a.username).localeCompare(String(b.username)));
+      io.emit("gtalk:presence", { users });
+    }
+    emitGtalkPresence();
 
     // Anti-spam simples
     let lastMsgAt = 0;
@@ -2245,11 +2266,45 @@ async function main() {
       }
     });
 
+    socket.on("gtalk:dm", (payload) => {
+      try {
+        const to = String(payload && payload.to ? payload.to : "").trim();
+        const text = String(payload && payload.text ? payload.text : "").trim();
+        if (!to || !text) return;
+        if (to === username) {
+          socket.emit("gtalk:error", { error: "Não dá para conversar consigo mesmo." });
+          return;
+        }
+        if (text.length > 400) {
+          socket.emit("gtalk:error", { error: "Mensagem longa demais." });
+          return;
+        }
+        const target = userSockets.get(to);
+        if (!target || target.size === 0) {
+          socket.emit("gtalk:error", { error: "Essa pessoa está offline agora." });
+          return;
+        }
+        const msg = {
+          from: { username, full_name: fullName },
+          text,
+          at: new Date().toLocaleTimeString("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit" })
+        };
+        for (const sid of target) io.to(sid).emit("gtalk:dm", msg);
+      } catch (e) {
+        socket.emit("gtalk:error", { error: "Não foi possível enviar agora." });
+      }
+    });
+
     socket.on("disconnect", () => {
       // remove de digitando
       if (typing.has(userId)) {
         typing.delete(userId);
         io.emit("chat:typing", { users: Array.from(new Set(typing.values())).sort((a,b)=>String(a).localeCompare(String(b))) });
+      }
+      const set = userSockets.get(username);
+      if (set) {
+        set.delete(socket.id);
+        if (set.size === 0) userSockets.delete(username);
       }
       const cur = online.get(userId);
       if (!cur) return;
@@ -2259,6 +2314,11 @@ async function main() {
         emitSystem(`${username} saiu do bate-papo.`);
       }
       emitPresence();
+      const users = Array.from(online.entries())
+        .filter(([_, v]) => v && v.sockets > 0)
+        .map(([id, v]) => ({ id, username: v.username, full_name: v.full_name || v.username }))
+        .sort((a, b) => String(a.username).localeCompare(String(b.username)));
+      io.emit("gtalk:presence", { users });
     });
   });
 

@@ -6,7 +6,7 @@
   <title><%= title || "KleinDream" %></title>
   <link rel="icon" type="image/png" href="/img/favicon.png" />
   <link rel="stylesheet" href="/style.css" />
-  <link rel="stylesheet" href="/presence-chat.css" />
+  <link rel="stylesheet" href="/gtalk-mini.css" />
 </head>
 <body>
   <div id="kdLoader" class="kd-loader" aria-hidden="true">
@@ -96,11 +96,10 @@
     })();
   </script>
 <% if (me) { %>
-  <button id="kdChatFab" class="kd-chat-fab" type="button" aria-label="Abrir chat">💬</button>
-  <div id="kdPresenceChatRoot"></div>
   <script>window.KD_ME = <%- JSON.stringify(me ? { username: me.username, full_name: me.full_name, profile_photo: photoSrc(me.profile_photo) } : null) %>;</script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/gtalk-mini.js"></script>
 <% } %>
-<script src="/presence-chat.js"></script>
 <script src="/kd.js"></script>
 </body>
 </html>
