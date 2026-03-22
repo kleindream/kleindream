@@ -293,6 +293,11 @@ async function init() {
     CREATE INDEX IF NOT EXISTS idx_profile_visits_visited ON profile_visits(visited_id, created_at);
     CREATE INDEX IF NOT EXISTS idx_profile_visits_pair_time ON profile_visits(visitor_id, visited_id, created_at);
 
+    -- Compatibilidade com versões antigas do banco
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS time_of TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'member';
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS is_suspended BOOLEAN NOT NULL DEFAULT FALSE;
+
     -- User privacy/settings
     ALTER TABLE users ADD COLUMN IF NOT EXISTS invisible_visits INTEGER NOT NULL DEFAULT 0;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS notify_profile_visits INTEGER NOT NULL DEFAULT 1;
