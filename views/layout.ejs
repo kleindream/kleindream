@@ -100,6 +100,7 @@
   <div id="kdPresenceChatRoot"></div>
   <script>window.KD_ME = <%- JSON.stringify(me ? { username: me.username, full_name: me.full_name, profile_photo: photoSrc(me.profile_photo) } : null) %>;</script>
 <% } %>
+<script src="/presence-chat.js"></script>
 <script src="/kd.js"></script>
 </body>
 </html>
