@@ -445,6 +445,16 @@ async function getCadernoMyAnswers(userId, limit = 12) {
 
 app.get("/", async (req, res) => res.render("index"));
 
+
+app.get("/termos", (req, res) => {
+  res.sendFile(path.join(__dirname, "views", "termos.html"));
+});
+
+app.get("/logo1.png", (req, res) => {
+  res.sendFile(path.join(__dirname, "views", "logo1.png"));
+});
+
+
 // Sobre (texto fictício para o Digão editar)
 app.get("/about", async (req, res) => {
   res.render("about");

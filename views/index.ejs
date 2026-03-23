@@ -125,6 +125,20 @@
     margin-top: 10px;
   }
 
+  .kd-terms{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    color: var(--kd-link);
+    font-size: 12px;
+  }
+  .kd-terms a{
+    color: var(--kd-link);
+    text-decoration:none;
+  }
+  .kd-terms a:hover{ text-decoration:underline; }
+  .kd-terms input{ accent-color: var(--kd-accent); }
+
   .kd-side{
     display:flex;
     flex-direction:column;
@@ -290,12 +304,11 @@
           Aqui você não compete por atenção. Você constrói presença, história e conexão.
         </p>
 		<p>
-          <img border="0" src="https://raw.githubusercontent.com/kleindream/kleindream/main/public/imagens/logo.png" width="400" height="300" alt=""></p>
+          <img border="0" src="/img/logo1.png" width="400" height="300" alt=""></p>
        <div class="kd-cta">
           <a class="kd-btn" href="/register">Criar minha conta</a>
 			<a class="kd-btn secondary" href="/login">Entrar</a>
-        	<input type="checkbox" name="C2" value="ON" checked><font color="#00FFFF" size="1"><a href="https://raw.githubusercontent.com/kleindream/kleindream/main/public/imagens/logo.png">(Termos 
-			de uso)</a></font><font size="1"></font></div>
+        	<label class="kd-terms"><input type="checkbox" checked disabled> <a href="/termos">(Termos de uso)</a></label></div>
         <div class="kd-badges">
           <div class="kd-badge"><span class="kd-dot"></span> Sem algoritmo sufocando</div>
           <div class="kd-badge"><span class="kd-dot"></span> Perfil completo e humano</div>
@@ -350,6 +363,10 @@
         <div class="kd-feature">
           <h4>Perfis completos</h4>
           <p>Nome, bio, cidade/estado, gostos e identidade. Aqui o perfil importa.</p>
+        </div>
+        <div class="kd-feature">
+          <h4>Humor e frase do dia</h4>
+          <p>Mostre como você está e deixe uma frase pessoal para o perfil ficar mais vivo.</p>
         </div>
         <div class="kd-feature">
           <h4>Foto de perfil</h4>
