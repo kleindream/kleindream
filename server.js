@@ -12,7 +12,7 @@ const rateLimit = require("express-rate-limit");
 const { createClient } = require("@supabase/supabase-js");
 
 const { db, init, migrate, pool } = require("./db");
-const { getVibeFromBirthDate } = require(".horoscopo.js");
+const { getSign, getFrase } = require("./utils/horoscopo");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -310,20 +310,6 @@ const GAME_META = {
   caderno: { label: "Caderno de Perguntas", icon: "📓" }
 };
 
-
-const DUEL_CATEGORY_META = {
-  friendly: { label: "Mais simpático", icon: "😄" },
-  stylish: { label: "Mais estiloso", icon: "😎" },
-  smart: { label: "Mais inteligente", icon: "🧠" },
-  beautiful: { label: "Mais bonito", icon: "🔥" },
-  funny: { label: "Mais engraçado", icon: "😂" },
-  kind: { label: "Mais gente boa", icon: "💙" }
-};
-
-function getDuelCategoryMeta(category) {
-  return DUEL_CATEGORY_META[category] || DUEL_CATEGORY_META.friendly;
-}
-
 function getGameMeta(game) {
   return GAME_META[game] || { label: game, icon: "🎮" };
 }
@@ -366,48 +352,6 @@ async function getGamesOverview(limit = 5) {
     }))
   );
   return entries;
-}
-
-
-async function getDuelPair(currentUserId) {
-  const users = await db.all(`
-    SELECT id, username, full_name, profile_photo
-    FROM users
-    WHERE id <> ?
-      AND COALESCE(is_suspended, FALSE) = FALSE
-    ORDER BY RANDOM()
-    LIMIT 2
-  `, [currentUserId]);
-  return users;
-}
-
-async function getDuelRanking(category, limit = 10) {
-  return db.all(`
-    SELECT
-      u.id,
-      u.username,
-      u.full_name,
-      u.profile_photo,
-      COUNT(*)::int AS wins,
-      COUNT(DISTINCT dv.voter_user_id)::int AS unique_voters
-    FROM duel_votes dv
-    JOIN users u ON u.id = dv.winner_user_id
-    WHERE dv.category = ?
-    GROUP BY u.id, u.username, u.full_name, u.profile_photo
-    ORDER BY wins DESC, unique_voters DESC, u.username ASC
-    LIMIT ?
-  `, [category, limit]);
-}
-
-async function getDuelCategoryStats(category) {
-  return db.get(`
-    SELECT
-      COUNT(*)::int AS total_votes,
-      COUNT(DISTINCT voter_user_id)::int AS total_voters,
-      COUNT(DISTINCT winner_user_id)::int AS total_profiles
-    FROM duel_votes
-    WHERE category = ?
-  `, [category]);
 }
 
 
@@ -501,6 +445,16 @@ async function getCadernoMyAnswers(userId, limit = 12) {
 }
 
 app.get("/", async (req, res) => res.render("index"));
+
+
+app.get("/termos", (req, res) => {
+  res.sendFile(path.join(__dirname, "views", "termos.html"));
+});
+
+app.get("/logo1.png", (req, res) => {
+  res.sendFile(path.join(__dirname, "views", "logo1.png"));
+});
+
 
 // Sobre (texto fictício para o Digão editar)
 app.get("/about", async (req, res) => {
@@ -635,69 +589,6 @@ app.get("/games/caderno", requireAuth, async (req, res) => {
       totalPlayers: Number(playerCountRow?.total || 0)
     }
   });
-});
-
-
-app.get("/duelo", requireAuth, async (req, res) => {
-  const requestedCategory = String(req.query.category || "friendly").trim();
-  const category = DUEL_CATEGORY_META[requestedCategory] ? requestedCategory : "friendly";
-
-  const [pair, ranking, stats] = await Promise.all([
-    getDuelPair(req.session.userId),
-    getDuelRanking(category, 10),
-    getDuelCategoryStats(category)
-  ]);
-
-  res.render("duelo", {
-    category,
-    categoryMeta: getDuelCategoryMeta(category),
-    categories: DUEL_CATEGORY_META,
-    pair,
-    ranking,
-    duelStats: {
-      totalVotes: Number(stats?.total_votes || 0),
-      totalVoters: Number(stats?.total_voters || 0),
-      totalProfiles: Number(stats?.total_profiles || 0)
-    }
-  });
-});
-
-app.post("/duelo/votar", requireAuth, limiterActions, async (req, res) => {
-  const voterUserId = req.session.userId;
-  const winnerUserId = Number(req.body.winner_user_id || 0);
-  const loserUserId = Number(req.body.loser_user_id || 0);
-  const requestedCategory = String(req.body.category || "friendly").trim();
-  const category = DUEL_CATEGORY_META[requestedCategory] ? requestedCategory : "friendly";
-
-  if (!winnerUserId || !loserUserId || winnerUserId === loserUserId) {
-    req.flash("error", "Não deu para registrar esse voto.");
-    return res.redirect(`/duelo?category=${encodeURIComponent(category)}`);
-  }
-
-  if (winnerUserId === voterUserId || loserUserId === voterUserId) {
-    req.flash("error", "Você não pode participar do próprio duelo.");
-    return res.redirect(`/duelo?category=${encodeURIComponent(category)}`);
-  }
-
-  const candidates = await db.all(`
-    SELECT id
-    FROM users
-    WHERE id = ANY($1::int[])
-      AND COALESCE(is_suspended, FALSE) = FALSE
-  `, [[winnerUserId, loserUserId]]);
-
-  if (candidates.length !== 2) {
-    req.flash("error", "Um dos perfis desse duelo não está mais disponível.");
-    return res.redirect(`/duelo?category=${encodeURIComponent(category)}`);
-  }
-
-  await db.run(`
-    INSERT INTO duel_votes (voter_user_id, winner_user_id, loser_user_id, category)
-    VALUES (?, ?, ?, ?)
-  `, [voterUserId, winnerUserId, loserUserId, category]);
-
-  req.flash("success", `Voto contado em ${getDuelCategoryMeta(category).label.toLowerCase()}!`);
-  return res.redirect(`/duelo?category=${encodeURIComponent(category)}`);
 });
 
 app.post("/games/caderno/answer", requireAuth, limiterWrite, async (req, res) => {
@@ -1263,26 +1154,6 @@ app.get("/u/:username", requireAuth, async (req, res) => {
     LIMIT 9
   `, [user.id]);
 
-  const ratings = await db.get(`
-    SELECT
-      COALESCE(ROUND(AVG(beauty) * 20), 0) AS beauty,
-      COALESCE(ROUND(AVG(friendly) * 20), 0) AS friendly,
-      COALESCE(ROUND(AVG(happy) * 20), 0) AS happy,
-      COALESCE(ROUND(AVG(smart) * 20), 0) AS smart,
-      COUNT(*)::int AS votes_count
-    FROM user_ratings
-    WHERE to_user_id=?
-  `, [user.id]);
-
-  const myRating = !isMe && meId ? await db.get(`
-    SELECT beauty, friendly, happy, smart
-    FROM user_ratings
-    WHERE from_user_id=? AND to_user_id=?
-  `, [meId, user.id]) : null;
-
-  const canRateUser = !isMe && !!friend;
-  const vibe = getVibeFromBirthDate(user.birth_date);
-
   // Visitas (contador + últimos visitantes)
   const totalVisits = (await db.get("SELECT COUNT(*)::int AS c FROM profile_visits WHERE visited_id=?", [user.id]))?.c || 0;
 
@@ -1300,56 +1171,29 @@ app.get("/u/:username", requireAuth, async (req, res) => {
 
   for (const v of visitors) v.created_at = formatDateBR(v.created_at);
 
+  let sign = null;
+  let vibeFrase = null;
+  if (user.birth_date) {
+    const m = String(user.birth_date).match(/(\d{4})-(\d{2})-(\d{2})/);
+    if (m) {
+      const month = Number(m[2]);
+      const day = Number(m[3]);
+      if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+        sign = getSign(day, month);
+        vibeFrase = getFrase(sign);
+      }
+    }
+  }
+
   res.render("profile", {
     user, isMe,
     friend: !!friend, reqOut, reqIn,
     scraps, testimonials, friendsCount, fansCount, isFan, recentFans,
     profileFriends, profileGroups, groupsCount,
     totalVisits, visitors, canSeeVisitors,
-    ratings, myRating, canRateUser, vibe,
-    isBirthdayToday: isBirthdayToday(user.birth_date), memberSince
+    isBirthdayToday: isBirthdayToday(user.birth_date), memberSince,
+    sign, vibeFrase
   });
-});
-
-app.post("/rate-user", requireAuth, async (req, res) => {
-  const fromUserId = req.session.userId;
-  const toUserId = Number(req.body.user_id || 0);
-  if (!fromUserId || !toUserId) return res.redirect("/home");
-  if (fromUserId === toUserId) return res.redirect("/home");
-
-  const target = await db.get("SELECT id, username FROM users WHERE id=?", [toUserId]);
-  if (!target) return res.redirect("/home");
-
-  const friendship = await db.get(
-    "SELECT 1 FROM friendships WHERE user_id=? AND friend_id=?",
-    [fromUserId, toUserId]
-  );
-  if (!friendship) return res.redirect(`/u/${target.username}`);
-
-  const clamp = (value) => {
-    const n = Number(value);
-    if (!Number.isFinite(n)) return 3;
-    return Math.max(1, Math.min(5, Math.round(n)));
-  };
-
-  const beauty = clamp(req.body.beauty);
-  const friendly = clamp(req.body.friendly);
-  const happy = clamp(req.body.happy);
-  const smart = clamp(req.body.smart);
-
-  await db.run(`
-    INSERT INTO user_ratings (from_user_id, to_user_id, beauty, friendly, happy, smart, updated_at)
-    VALUES (?,?,?,?,?,?, NOW())
-    ON CONFLICT (from_user_id, to_user_id)
-    DO UPDATE SET
-      beauty = EXCLUDED.beauty,
-      friendly = EXCLUDED.friendly,
-      happy = EXCLUDED.happy,
-      smart = EXCLUDED.smart,
-      updated_at = NOW()
-  `, [fromUserId, toUserId, beauty, friendly, happy, smart]);
-
-  res.redirect(`/u/${target.username}`);
 });
 
 app.get("/profile/edit", requireAuth, async (req, res) => {

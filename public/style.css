@@ -970,19 +970,17 @@ input:focus, textarea:focus{
   min-width:0;
 }
 .profile-side-card{
-  position:static;
+  position:sticky;
+  top:12px;
 }
-.profile-sidebar-left{
+.profile-sidebar .profile-side-card + .profile-side-card{
   position:static;
-  top:auto;
-  align-self:start;
 }
 .profile-sidebar-right .profile-side-card{
   position:static;
 }
-
-.profile-sidebar-left .user-rating-card-shell{
-  margin-top:12px;
+.profile-sidebar-left .profile-side-card{
+  position:sticky;
 }
 .profile-side-user{
   display:flex;
@@ -1329,117 +1327,3 @@ input:focus, textarea:focus{
 .caderno-feed-user{display:flex;gap:10px;align-items:center;margin-bottom:10px}
 .caderno-feed-user img{width:44px;height:44px;border-radius:14px;object-fit:cover;border:1px solid var(--line);background:var(--panel)}
 @media (max-width:960px){.caderno-page-grid{grid-template-columns:1fr}.caderno-side-stack{position:static}}
-
-
-/* Cartão de usuário */
-.user-rating-card-shell{
-  padding: 14px;
-  margin-top: 0;
-  flex: 0 0 auto;
-}
-
-.user-rating-votes-count{
-  color:#666;
-  font-size:12px;
-  margin:-4px 0 10px;
-}
-.rating-item{
-  margin-bottom:10px;
-}
-.rating-item-top{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  font-size:13px;
-  margin-bottom:4px;
-  color:#333;
-}
-.rating-item-top b{
-  font-size:12px;
-  color:#666;
-}
-.bar{
-  background:#e8e8e8;
-  height:10px;
-  border-radius:999px;
-  overflow:hidden;
-  box-shadow: inset 0 1px 2px rgba(0,0,0,.08);
-}
-.bar div{
-  height:100%;
-  background:linear-gradient(90deg,#6da9ff,#a569ff);
-}
-.rating-toggle-wrap{
-  margin-top:12px;
-}
-.rating-toggle-btn{
-  width:100%;
-  text-align:left;
-  border:1px solid #c7d7ff;
-  background:linear-gradient(180deg,#f7fbff,#edf4ff);
-  color:#2c4a87;
-  border-radius:10px;
-  padding:10px 12px;
-  cursor:pointer;
-  font-weight:700;
-}
-.rating-toggle-btn:hover{
-  filter:brightness(.98);
-}
-.rating-toggle-box{
-  margin-top:10px;
-  border-top:1px solid #edf0f6;
-  padding-top:10px;
-}
-.rating-form{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-}
-.rating-form label{
-  font-size:12px;
-  color:#555;
-}
-.rating-form select{
-  background-color:#f8f8f8 !important;
-  color:#333 !important;
-  border:1px solid #ccd5e6;
-  padding:8px 10px;
-  border-radius:8px;
-  font-size:14px;
-}
-.rating-form select option{
-  background-color:#ffffff;
-  color:#000000;
-}
-
-/* ===== Rei da Klein Dream ===== */
-.duel-hero-card{padding:20px;}
-.duel-hero-copy{line-height:1.7;color:var(--muted);font-size:1rem;margin:6px 0 0 0;}
-.duel-category-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
-.duel-pill{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:rgba(83,109,254,.08);border:1px solid rgba(83,109,254,.16);font-weight:700;color:var(--text);text-decoration:none;}
-.duel-pill.active{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;border-color:transparent;box-shadow:var(--shadow-soft);}
-.duel-stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-top:14px;}
-.duel-stat-card{padding:14px;}
-.duel-stat-card .k{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);}
-.duel-stat-card .v{font-size:1.2rem;font-weight:900;margin-top:6px;color:var(--accent);}
-.duel-battle-grid{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:16px;align-items:stretch;margin-top:16px;}
-.duel-versus{display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:900;color:var(--accent);padding:0 4px;}
-.duel-user-card{padding:18px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;}
-.duel-user-top{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);}
-.duel-user-link{text-decoration:none;color:inherit;display:flex;flex-direction:column;align-items:center;gap:8px;}
-.duel-avatar{width:140px;height:140px;border-radius:18px;object-fit:cover;box-shadow:var(--shadow-soft);border:3px solid rgba(255,255,255,.85);}
-.duel-avatar.ph{display:flex;align-items:center;justify-content:center;background:rgba(83,109,254,.08);font-size:3rem;font-weight:900;color:var(--accent);}
-.duel-user-name{font-size:1.12rem;font-weight:900;}
-.duel-user-username{font-size:.95rem;color:var(--muted);}
-.duel-vote-form{width:100%;}
-.duel-vote-btn{width:100%;justify-content:center;}
-.duel-user-note{line-height:1.5;}
-.duel-ranking-card{margin-top:16px;padding:18px;}
-.duel-ranking-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px;}
-.duel-ranking-row{align-items:center;}
-.duel-empty-card{margin-top:16px;padding:18px;}
-@media (max-width: 860px){
-  .duel-battle-grid{grid-template-columns:1fr;}
-  .duel-versus{padding:4px 0;}
-}

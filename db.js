@@ -343,40 +343,6 @@ async function init() {
     CREATE INDEX IF NOT EXISTS idx_caderno_answers_created ON caderno_answers(created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_caderno_answers_user ON caderno_answers(user_id, created_at DESC);
   `);
-
-  await query(`
-    CREATE TABLE IF NOT EXISTS user_ratings (
-      id SERIAL PRIMARY KEY,
-      from_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      to_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      beauty INTEGER NOT NULL DEFAULT 3,
-      friendly INTEGER NOT NULL DEFAULT 3,
-      happy INTEGER NOT NULL DEFAULT 3,
-      smart INTEGER NOT NULL DEFAULT 3,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      UNIQUE(from_user_id, to_user_id),
-      CHECK (beauty BETWEEN 1 AND 5),
-      CHECK (friendly BETWEEN 1 AND 5),
-      CHECK (happy BETWEEN 1 AND 5),
-      CHECK (smart BETWEEN 1 AND 5)
-    );
-
-    CREATE TABLE IF NOT EXISTS duel_votes (
-      id SERIAL PRIMARY KEY,
-      voter_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      winner_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      loser_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      category TEXT NOT NULL,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      CHECK (winner_user_id <> loser_user_id)
-    );
-
-    CREATE INDEX IF NOT EXISTS idx_user_ratings_target ON user_ratings(to_user_id);
-    CREATE INDEX IF NOT EXISTS idx_duel_votes_category_created ON duel_votes(category, created_at DESC);
-    CREATE INDEX IF NOT EXISTS idx_duel_votes_winner_category ON duel_votes(winner_user_id, category);
-    CREATE INDEX IF NOT EXISTS idx_duel_votes_voter_created ON duel_votes(voter_user_id, created_at DESC);
-  `);
 }
 
 const db = { query, get, all, run, pool };
