@@ -1,0 +1,63 @@
+<%- include("layout", { title: "Rei da Cocada Klein Dream", body: `
+  <div class="game-page-grid">
+    <div class="card game-shell">
+      <div class="game-header">
+        <div>
+          <div class="game-kicker">🍬 Votação social</div>
+          <div class="h" style="font-size:2rem;">Rei da Cocada Klein Dream</div>
+        </div>
+        <a class="btn secondary" href="/games">Voltar aos jogos</a>
+      </div>
+
+      <div style="margin:10px 0 16px 0;" class="small">Escolha quem combina mais com a categoria da vez. Depois do voto, um novo duelo aparece.</div>
+
+      ${message ? `<div class="notice">${escapeHtml(message)}</div>` : ``}
+
+      ${u1 && u2 ? `
+        <form method="get" action="/games/cocada" style="margin-bottom:16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <label for="category"><b>Categoria:</b></label>
+          <select id="category" name="category">
+            ${categories.map(c => `<option value="${c.key}" ${c.key === currentCategory ? 'selected' : ''}>${c.label}</option>`).join('')}
+          </select>
+          <button class="button" type="submit">Trocar categoria</button>
+        </form>
+
+        <div class="duel-stage">
+          ${[u1,u2].map((u, idx) => `
+            <div class="card duel-card">
+              <div class="duel-face">
+                ${u.profile_photo ? `<img src="${photoSrc(u.profile_photo)}" alt="${escapeHtml(u.username)}" class="duel-avatar kd-zoom" />` : `<div class="duel-avatar ph">?</div>`}
+              </div>
+              <div class="duel-name">${escapeHtml(u.username)}</div>
+              <div class="small">${escapeHtml(u.full_name || 'Membro da Klein Dream')}</div>
+              <div style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+                <a class="btn secondary" href="/u/${u.username}">Ver perfil</a>
+                <form method="post" action="/games/cocada/vote" style="display:inline;">
+                  <input type="hidden" name="category" value="${currentCategory}">
+                  <input type="hidden" name="winner_id" value="${u.id}">
+                  <input type="hidden" name="loser_id" value="${idx === 0 ? u2.id : u1.id}">
+                  <button class="button" type="submit">Votar</button>
+                </form>
+              </div>
+            </div>
+          `).join('<div class="duel-vs">VS</div>')}
+        </div>
+      ` : `<div class="small">Ainda não há usuários suficientes para montar um duelo.</div>`}
+    </div>
+
+    <aside class="card ranking-card">
+      <div class="h">🏆 Top da categoria</div>
+      <div class="small">${escapeHtml(currentLabel)}</div>
+      <div class="ranking-list">
+        ${ranking.length ? ranking.map((row, idx) => `
+          <div class="ranking-row">
+            <span class="ranking-pos">${idx+1}º</span>
+            <span class="ranking-name"><a href="/u/${row.username}">${escapeHtml(row.username)}</a></span>
+            <span class="ranking-score">${row.votes}</span>
+          </div>
+        `).join('') : `<div class="small">Ainda não há votos nessa categoria.</div>`}
+      </div>
+      <div style="margin-top:12px;" class="small">Cada voto cria um novo duelo e ajuda a mostrar quem está brilhando mais na Klein Dream.</div>
+    </aside>
+  </div>
+` }) %>
