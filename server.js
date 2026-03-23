@@ -518,6 +518,83 @@ async function renderGamePage(req, res, viewName, game) {
   });
 }
 
+
+
+const COCADA_CATEGORIES = [
+  { key: "simpatico", label: "Mais simpático" },
+  { key: "estiloso", label: "Mais estiloso" },
+  { key: "inteligente", label: "Mais inteligente" },
+  { key: "bonito", label: "Mais bonito" },
+  { key: "engracado", label: "Mais engraçado" },
+  { key: "genteboa", label: "Mais gente boa" }
+];
+
+app.get("/games/cocada", requireAuth, async (req, res, next) => {
+  try {
+    const currentCategory = String(req.query.category || "simpatico").trim();
+    const selected = COCADA_CATEGORIES.find(c => c.key === currentCategory) || COCADA_CATEGORIES[0];
+    const currentLabel = selected.label;
+
+    const ranking = await db.all(`
+      SELECT u.username, COUNT(*)::int AS votes
+      FROM duel_votes dv
+      JOIN users u ON u.id = dv.winner_id
+      WHERE dv.category = ?
+      GROUP BY u.id, u.username
+      ORDER BY votes DESC, u.username ASC
+      LIMIT 10
+    `, [selected.key]);
+
+    const users = await db.all(`
+      SELECT id, username, full_name, profile_photo
+      FROM users
+      WHERE id <> ?
+      ORDER BY RANDOM()
+      LIMIT 2
+    `, [req.session.userId]);
+
+    const [u1, u2] = users;
+    const message = req.query.voted ? "Seu voto foi registrado. Novo duelo liberado!" : null;
+
+    res.render("game_cocada", {
+      categories: COCADA_CATEGORIES,
+      currentCategory: selected.key,
+      currentLabel,
+      ranking,
+      u1: u1 || null,
+      u2: u2 || null,
+      message
+    });
+  } catch (err) { next(err); }
+});
+
+app.get("/duelo", requireAuth, async (req, res) => {
+  const qs = new URLSearchParams(req.query || {});
+  const suffix = qs.toString();
+  res.redirect("/games/cocada" + (suffix ? `?${suffix}` : ""));
+});
+
+app.post("/games/cocada/vote", requireAuth, limiterWrite, async (req, res, next) => {
+  try {
+    const winnerId = Number(req.body.winner_id);
+    const loserId = Number(req.body.loser_id);
+    const currentCategory = String(req.body.category || "simpatico").trim();
+    const selected = COCADA_CATEGORIES.find(c => c.key === currentCategory) || COCADA_CATEGORIES[0];
+
+    if (!winnerId || !loserId || winnerId === loserId) {
+      req.flash("error", "Duelo inválido.");
+      return res.redirect("/games/cocada");
+    }
+
+    await db.run(`
+      INSERT INTO duel_votes (voter_id, winner_id, loser_id, category)
+      VALUES (?,?,?,?)
+    `, [req.session.userId, winnerId, loserId, selected.key]);
+
+    res.redirect(`/games/cocada?category=${encodeURIComponent(selected.key)}&voted=1`);
+  } catch (err) { next(err); }
+});
+
 app.get("/games/memory", requireAuth, async (req, res) => {
   await renderGamePage(req, res, "game_memory", "memory");
 });
@@ -1185,6 +1262,27 @@ app.get("/u/:username", requireAuth, async (req, res) => {
     }
   }
 
+  const ratings = await db.get(`
+    SELECT
+      COALESCE(ROUND(AVG(beauty) * 20), 0)::int AS beauty,
+      COALESCE(ROUND(AVG(friendly) * 20), 0)::int AS friendly,
+      COALESCE(ROUND(AVG(happy) * 20), 0)::int AS happy,
+      COALESCE(ROUND(AVG(smart) * 20), 0)::int AS smart,
+      COUNT(*)::int AS votes_count
+    FROM user_ratings
+    WHERE to_user_id=?
+  `, [user.id]) || { beauty:0, friendly:0, happy:0, smart:0, votes_count:0 };
+
+  const myRating = (!isMe && meId)
+    ? await db.get(`
+        SELECT beauty, friendly, happy, smart
+        FROM user_ratings
+        WHERE from_user_id=? AND to_user_id=?
+      `, [meId, user.id])
+    : null;
+
+  const canRateProfile = !isMe && !!friend;
+
   res.render("profile", {
     user, isMe,
     friend: !!friend, reqOut, reqIn,
@@ -1192,8 +1290,48 @@ app.get("/u/:username", requireAuth, async (req, res) => {
     profileFriends, profileGroups, groupsCount,
     totalVisits, visitors, canSeeVisitors,
     isBirthdayToday: isBirthdayToday(user.birth_date), memberSince,
-    sign, vibeFrase
+    sign, vibeFrase, ratings, myRating, canRateProfile
   });
+});
+
+app.post("/rate-user", requireAuth, async (req, res) => {
+  const fromUserId = req.session.userId;
+  const toUserId = Number(req.body.user_id || 0);
+  if (!toUserId || fromUserId === toUserId) {
+    return res.redirect("/");
+  }
+
+  const target = await db.get("SELECT username FROM users WHERE id=?", [toUserId]);
+  if (!target) return res.redirect("/");
+
+  const friendship = await db.get(
+    "SELECT 1 FROM friendships WHERE user_id=? AND friend_id=?",
+    [fromUserId, toUserId]
+  );
+  if (!friendship) {
+    req.flash("error", "Somente amigos podem avaliar este perfil.");
+    return res.redirect(`/u/${target.username}`);
+  }
+
+  const beauty = Math.max(1, Math.min(5, Number(req.body.beauty || 1)));
+  const friendly = Math.max(1, Math.min(5, Number(req.body.friendly || 1)));
+  const happy = Math.max(1, Math.min(5, Number(req.body.happy || 1)));
+  const smart = Math.max(1, Math.min(5, Number(req.body.smart || 1)));
+
+  await db.run(`
+    INSERT INTO user_ratings (from_user_id, to_user_id, beauty, friendly, happy, smart)
+    VALUES (?,?,?,?,?,?)
+    ON CONFLICT (from_user_id, to_user_id)
+    DO UPDATE SET
+      beauty=EXCLUDED.beauty,
+      friendly=EXCLUDED.friendly,
+      happy=EXCLUDED.happy,
+      smart=EXCLUDED.smart,
+      updated_at=NOW()
+  `, [fromUserId, toUserId, beauty, friendly, happy, smart]);
+
+  req.flash("success", "Avaliação salva com sucesso.");
+  return res.redirect(`/u/${target.username}`);
 });
 
 app.get("/profile/edit", requireAuth, async (req, res) => {

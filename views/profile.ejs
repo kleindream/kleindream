@@ -24,7 +24,7 @@
           <a href="javascript:history.back()">⬅ Voltar</a>
         </div>
       </div>
-      <div class="card profile-side-card">
+      <div class="card profile-side-card vibe-card">
         <div class="h">✨ Vibe do dia</div>
         ${sign ? `
           <div class="small" style="margin-bottom:6px;"><b>${escapeHtml(sign)}</b></div>
@@ -33,6 +33,67 @@
           <div class="small">Adicione sua data de nascimento para ver sua vibe do dia.</div>
         `}
       </div>
+
+      <div class="card profile-side-card user-rating-card">
+        <div class="h">⭐ Cartão de usuário</div>
+        <div class="small" style="margin-bottom:8px;">Como os amigos veem este perfil${ratings && Number(ratings.votes_count || 0) > 0 ? ` • ${Number(ratings.votes_count)} voto${Number(ratings.votes_count) === 1 ? '' : 's'}` : ''}</div>
+
+        <div class="rating-item">
+          <div class="rating-row"><span>Bonito</span><b>${Number(ratings?.beauty || 0)}%</b></div>
+          <div class="rating-bar"><div style="width:${Number(ratings?.beauty || 0)}%"></div></div>
+        </div>
+
+        <div class="rating-item">
+          <div class="rating-row"><span>Simpático</span><b>${Number(ratings?.friendly || 0)}%</b></div>
+          <div class="rating-bar"><div style="width:${Number(ratings?.friendly || 0)}%"></div></div>
+        </div>
+
+        <div class="rating-item">
+          <div class="rating-row"><span>Alegre</span><b>${Number(ratings?.happy || 0)}%</b></div>
+          <div class="rating-bar"><div style="width:${Number(ratings?.happy || 0)}%"></div></div>
+        </div>
+
+        <div class="rating-item" style="margin-bottom:0;">
+          <div class="rating-row"><span>Inteligente</span><b>${Number(ratings?.smart || 0)}%</b></div>
+          <div class="rating-bar"><div style="width:${Number(ratings?.smart || 0)}%"></div></div>
+        </div>
+      </div>
+
+      ${canRateProfile ? `
+        <div class="card profile-side-card rate-box-card">
+          <div class="h">🗳️ Avaliar usuário</div>
+          <form method="post" action="/rate-user" class="rate-user-form">
+            <input type="hidden" name="user_id" value="${user.id}" />
+
+            <label>Bonito</label>
+            <select name="beauty">
+              ${[1,2,3,4,5].map(n => `<option value="${n}" ${Number(myRating?.beauty || 0) === n ? 'selected' : ''}>${n}</option>`).join('')}
+            </select>
+
+            <label>Simpático</label>
+            <select name="friendly">
+              ${[1,2,3,4,5].map(n => `<option value="${n}" ${Number(myRating?.friendly || 0) === n ? 'selected' : ''}>${n}</option>`).join('')}
+            </select>
+
+            <label>Alegre</label>
+            <select name="happy">
+              ${[1,2,3,4,5].map(n => `<option value="${n}" ${Number(myRating?.happy || 0) === n ? 'selected' : ''}>${n}</option>`).join('')}
+            </select>
+
+            <label>Inteligente</label>
+            <select name="smart">
+              ${[1,2,3,4,5].map(n => `<option value="${n}" ${Number(myRating?.smart || 0) === n ? 'selected' : ''}>${n}</option>`).join('')}
+            </select>
+
+            <button class="btn" type="submit">Salvar avaliação</button>
+          </form>
+        </div>
+      ` : (!isMe ? `
+        <div class="card profile-side-card rate-box-card">
+          <div class="h">🗳️ Avaliar usuário</div>
+          <div class="small">Somente amigos podem avaliar este perfil.</div>
+        </div>
+      ` : ``)}
 
     </aside>
 
