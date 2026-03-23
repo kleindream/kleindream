@@ -445,16 +445,6 @@ async function getCadernoMyAnswers(userId, limit = 12) {
 
 app.get("/", async (req, res) => res.render("index"));
 
-
-app.get("/termos", (req, res) => {
-  res.sendFile(path.join(__dirname, "views", "termos.html"));
-});
-
-app.get("/logo1.png", (req, res) => {
-  res.sendFile(path.join(__dirname, "views", "logo1.png"));
-});
-
-
 // Sobre (texto fictício para o Digão editar)
 app.get("/about", async (req, res) => {
   res.render("about");
@@ -1170,14 +1160,71 @@ app.get("/u/:username", requireAuth, async (req, res) => {
 
   for (const v of visitors) v.created_at = formatDateBR(v.created_at);
 
+  const ratings = await db.get(`
+    SELECT
+      COALESCE(ROUND(AVG(beauty) * 20), 0) AS beauty,
+      COALESCE(ROUND(AVG(friendly) * 20), 0) AS friendly,
+      COALESCE(ROUND(AVG(happy) * 20), 0) AS happy,
+      COALESCE(ROUND(AVG(smart) * 20), 0) AS smart,
+      COUNT(*)::int AS votes_count
+    FROM user_ratings
+    WHERE to_user_id=?
+  `, [user.id]);
+
+  const myRating = !isMe ? await db.get(`
+    SELECT beauty, friendly, happy, smart
+    FROM user_ratings
+    WHERE from_user_id=? AND to_user_id=?
+  `, [meId, user.id]) : null;
+
   res.render("profile", {
     user, isMe,
     friend: !!friend, reqOut, reqIn,
     scraps, testimonials, friendsCount, fansCount, isFan, recentFans,
     profileFriends, profileGroups, groupsCount,
     totalVisits, visitors, canSeeVisitors,
+    ratings, myRating,
     isBirthdayToday: isBirthdayToday(user.birth_date), memberSince
   });
+});
+
+
+app.post("/rate-user", limiterActions, requireAuth, async (req, res) => {
+  const fromId = req.session.userId;
+  const toId = Number(req.body.user_id || 0);
+  if (!toId) return res.redirect("/home");
+  if (fromId === toId) return res.redirect("/u/" + encodeURIComponent((await getUserById(toId))?.username || ""));
+
+  const target = await getUserById(toId);
+  if (!target) return res.status(404).send("Usuário não encontrado.");
+
+  const friendship = await db.get("SELECT 1 FROM friendships WHERE user_id=? AND friend_id=?", [fromId, toId]);
+  if (!friendship) return res.redirect("/u/" + encodeURIComponent(target.username));
+
+  const clamp = (value) => {
+    const n = Number(value || 1);
+    if (!Number.isFinite(n)) return 1;
+    return Math.max(1, Math.min(5, Math.round(n)));
+  };
+
+  const beauty = clamp(req.body.beauty);
+  const friendly = clamp(req.body.friendly);
+  const happy = clamp(req.body.happy);
+  const smart = clamp(req.body.smart);
+
+  await db.run(`
+    INSERT INTO user_ratings (from_user_id, to_user_id, beauty, friendly, happy, smart)
+    VALUES (?,?,?,?,?,?)
+    ON CONFLICT (from_user_id, to_user_id)
+    DO UPDATE SET
+      beauty = EXCLUDED.beauty,
+      friendly = EXCLUDED.friendly,
+      happy = EXCLUDED.happy,
+      smart = EXCLUDED.smart,
+      updated_at = NOW()
+  `, [fromId, toId, beauty, friendly, happy, smart]);
+
+  return res.redirect("/u/" + encodeURIComponent(target.username));
 });
 
 app.get("/profile/edit", requireAuth, async (req, res) => {

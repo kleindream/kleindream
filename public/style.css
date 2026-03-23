@@ -1327,3 +1327,63 @@ input:focus, textarea:focus{
 .caderno-feed-user{display:flex;gap:10px;align-items:center;margin-bottom:10px}
 .caderno-feed-user img{width:44px;height:44px;border-radius:14px;object-fit:cover;border:1px solid var(--line);background:var(--panel)}
 @media (max-width:960px){.caderno-page-grid{grid-template-columns:1fr}.caderno-side-stack{position:static}}
+
+
+.user-rating-card,
+.user-rating-vote-card{
+  position:static;
+}
+.user-rating-subtitle{
+  margin:-2px 0 12px;
+}
+.rating-item{
+  margin-bottom:12px;
+}
+.rating-item:last-child{
+  margin-bottom:0;
+}
+.rating-label-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin-bottom:5px;
+  font-size:13px;
+}
+.rating-label-row b{
+  color:var(--text);
+  font-size:12px;
+}
+.bar{
+  background:rgba(255,255,255,.08);
+  height:12px;
+  border-radius:999px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.08);
+}
+.bar div{
+  height:100%;
+  background:linear-gradient(90deg,#4f46e5,#a855f7);
+  border-radius:999px;
+}
+.rating-form{
+  display:grid;
+  gap:8px;
+}
+.rating-form label{
+  font-size:12px;
+  font-weight:700;
+  color:var(--muted);
+}
+.rating-form select{
+  width:100%;
+  padding:9px 10px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.04);
+  color:var(--text);
+}
+.rating-form .btn{
+  margin-top:4px;
+  width:100%;
+}
