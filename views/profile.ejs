@@ -283,8 +283,112 @@
         ` : `<div class="small">Este perfil ainda não entrou em grupos.</div>`}
         <div style="margin-top:10px;"><a class="btn secondary" href="/groups">Ver grupos</a></div>
       </div>
+
+      <div class="card profile-side-card right-side-card profile-poll-card">
+        <div class="h">📊 Minha enquete</div>
+        ${isMe ? `
+          ${profilePoll ? `
+            <div class="small" style="margin-bottom:8px;">Peça para seus amigos visitarem seu perfil e votarem.</div>
+            <div class="poll-question">${escapeHtml(profilePoll.question)}</div>
+            <div class="small" style="margin:6px 0 10px 0;">${profilePoll.totalVotes} voto${profilePoll.totalVotes === 1 ? '' : 's'}</div>
+            <div class="profile-poll-options-view">
+              ${profilePoll.options.map(option => `
+                <div class="profile-poll-result-line">
+                  <div class="profile-poll-result-top"><span>${escapeHtml(option.option_text)}</span><b>${option.percent}%</b></div>
+                  <div class="profile-poll-bar"><div style="width:${option.percent}%"></div></div>
+                </div>
+              `).join('')}
+            </div>
+            <form method="post" action="/profile-poll/close" style="margin-top:10px;">
+              <input type="hidden" name="poll_id" value="${profilePoll.id}" />
+              <button class="btn secondary" type="submit">Encerrar enquete</button>
+            </form>
+          ` : `
+            <div class="small" style="margin-bottom:8px;">Crie uma pergunta para os seus amigos responderem.</div>
+            <form method="post" action="/profile-poll/create" class="profile-poll-form">
+              <input type="hidden" name="owner_id" value="${user.id}" />
+              <input type="text" name="question" placeholder="Ex.: Qual minha melhor qualidade?" maxlength="140" required />
+              <input type="text" name="option1" placeholder="Opção 1" maxlength="80" required />
+              <input type="text" name="option2" placeholder="Opção 2" maxlength="80" required />
+              <input type="text" name="option3" placeholder="Opção 3 (opcional)" maxlength="80" />
+              <input type="text" name="option4" placeholder="Opção 4 (opcional)" maxlength="80" />
+              <button class="btn" type="submit">Criar enquete</button>
+            </form>
+          `}
+        ` : `
+          ${profilePoll ? `
+            <div class="poll-question">${escapeHtml(profilePoll.question)}</div>
+            <div class="small" style="margin:6px 0 10px 0;">Vote e ajude este perfil a se conhecer melhor.</div>
+            ${profilePoll.canVote ? `
+              <form method="post" action="/profile-poll/vote" class="profile-poll-vote-form">
+                <input type="hidden" name="poll_id" value="${profilePoll.id}" />
+                <input type="hidden" name="username" value="${escapeHtml(user.username)}" />
+                ${profilePoll.options.map(option => `
+                  <label class="profile-poll-choice">
+                    <input type="radio" name="option_id" value="${option.id}" ${profilePoll.myVoteOptionId === option.id ? 'checked' : ''} />
+                    <span>${escapeHtml(option.option_text)}</span>
+                  </label>
+                  <div class="profile-poll-bar"><div style="width:${option.percent}%"></div></div>
+                  <div class="small profile-poll-meta">${option.percent}% • ${option.votes} voto${option.votes === 1 ? '' : 's'}</div>
+                `).join('')}
+                <button class="btn" type="submit" style="margin-top:8px;">Salvar voto</button>
+              </form>
+            ` : `
+              <div class="small">Somente amigos podem votar nesta enquete.</div>
+              <div class="profile-poll-options-view">
+                ${profilePoll.options.map(option => `
+                  <div class="profile-poll-result-line">
+                    <div class="profile-poll-result-top"><span>${escapeHtml(option.option_text)}</span><b>${option.percent}%</b></div>
+                    <div class="profile-poll-bar"><div style="width:${option.percent}%"></div></div>
+                  </div>
+                `).join('')}
+              </div>
+            `}
+          ` : `<div class="small">Este perfil ainda não criou uma enquete.</div>`}
+        `}
+      </div>
+
+      <div class="card profile-side-card right-side-card profile-gifts-card">
+        <div class="h">🎁 Presentes rápidos</div>
+        ${!isMe ? `
+          ${friend ? `
+            <div class="small" style="margin-bottom:8px;">Envie um mimo rápido para este amigo.</div>
+            <form method="post" action="/profile-gift/send" class="profile-gifts-form">
+              <input type="hidden" name="to_user_id" value="${user.id}" />
+              <button class="gift-btn" type="submit" name="gift_key" value="piscar">😉<span>Piscar</span></button>
+              <button class="gift-btn" type="submit" name="gift_key" value="coracao">💖<span>Coração</span></button>
+              <button class="gift-btn" type="submit" name="gift_key" value="flor">🌹<span>Flor</span></button>
+              <button class="gift-btn" type="submit" name="gift_key" value="abraco">🤗<span>Abraço</span></button>
+              <button class="gift-btn" type="submit" name="gift_key" value="joinha">👍<span>Joinha</span></button>
+            </form>
+          ` : `<div class="small">Somente amigos podem enviar presentes rápidos.</div>`}
+        ` : `
+          <div class="small" style="margin-bottom:8px;">Veja como os amigos têm interagido com seu perfil.</div>
+        `}
+
+        <div class="gift-summary-grid">
+          <div class="gift-pill">😉 ${Number(giftSummary?.piscar || 0)}</div>
+          <div class="gift-pill">💖 ${Number(giftSummary?.coracao || 0)}</div>
+          <div class="gift-pill">🌹 ${Number(giftSummary?.flor || 0)}</div>
+          <div class="gift-pill">🤗 ${Number(giftSummary?.abraco || 0)}</div>
+          <div class="gift-pill">👍 ${Number(giftSummary?.joinha || 0)}</div>
+        </div>
+
+        ${recentGifts && recentGifts.length ? `
+          <div class="gift-feed">
+            ${recentGifts.map(g => `
+              <div class="gift-feed-item">
+                <div><b>${escapeHtml(g.from_username)}</b> enviou ${giftLabel(g.gift_key)}</div>
+                <div class="small">${g.created_at}</div>
+              </div>
+            `).join('')}
+          </div>
+        ` : `<div class="small">Ainda não há presentes por aqui.</div>`}
+      </div>
     </aside>
   </div>
 ` }) %>
+
+<% function giftLabel(key){ return ({ piscar:'uma piscadinha 😉', coracao:'um coração 💖', flor:'uma flor 🌹', abraco:'um abraço 🤗', joinha:'um joinha 👍' }[key] || 'um presente'); } %>
 
 <% function escapeHtml(str){ return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); } %>
