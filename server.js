@@ -444,7 +444,7 @@ async function getCadernoMyAnswers(userId, limit = 12) {
   `, [userId, limit]);
 }
 
-app.get("/", async (req, res) => res.render("index"));
+app.get("/", async (req, res) => res.redirect("/home"));
 
 
 app.get("/termos", (req, res) => {
@@ -475,8 +475,8 @@ app.post("/register", limiterAuth, async (req, res) => {
   const info = await db.run("INSERT INTO users (email, username, password_hash, full_name) VALUES (?,?,?,?) RETURNING id", [email, username, hash, full_name || null]);
 
   req.session.userId = info.rows[0].id;
-  req.flash("success", "Conta criada! Bem-vindo(a) ao KleinDream 💙");
-  res.redirect("/home");
+  req.flash("success", "Conta criada! Agora personalize seu perfil para as pessoas conhecerem você melhor 💙");
+  res.redirect("/profile/edit?welcome=1");
 });
 
 app.get("/login", async (req, res) => res.render("login", { error: null }));
@@ -520,40 +520,6 @@ async function renderGamePage(req, res, viewName, game) {
 
 
 
-
-async function ensureDuelVotesCompat() {
-  await db.run(`
-    CREATE TABLE IF NOT EXISTS duel_votes (
-      id SERIAL PRIMARY KEY,
-      voter_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-      winner_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-      loser_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-      category TEXT,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    )
-  `);
-
-  await db.run(`ALTER TABLE duel_votes ADD COLUMN IF NOT EXISTS voter_id INTEGER`);
-  await db.run(`ALTER TABLE duel_votes ADD COLUMN IF NOT EXISTS winner_id INTEGER`);
-  await db.run(`ALTER TABLE duel_votes ADD COLUMN IF NOT EXISTS loser_id INTEGER`);
-  await db.run(`ALTER TABLE duel_votes ADD COLUMN IF NOT EXISTS category TEXT`);
-  await db.run(`ALTER TABLE duel_votes ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`);
-
-  await db.run(`ALTER TABLE duel_votes ADD COLUMN IF NOT EXISTS voter_user_id INTEGER`);
-  await db.run(`ALTER TABLE duel_votes ADD COLUMN IF NOT EXISTS winner_user_id INTEGER`);
-  await db.run(`ALTER TABLE duel_votes ADD COLUMN IF NOT EXISTS loser_user_id INTEGER`);
-
-  await db.run(`UPDATE duel_votes SET voter_id = COALESCE(voter_id, voter_user_id)`);
-  await db.run(`UPDATE duel_votes SET winner_id = COALESCE(winner_id, winner_user_id)`);
-  await db.run(`UPDATE duel_votes SET loser_id = COALESCE(loser_id, loser_user_id)`);
-  await db.run(`UPDATE duel_votes SET voter_user_id = COALESCE(voter_user_id, voter_id)`);
-  await db.run(`UPDATE duel_votes SET winner_user_id = COALESCE(winner_user_id, winner_id)`);
-  await db.run(`UPDATE duel_votes SET loser_user_id = COALESCE(loser_user_id, loser_id)`);
-
-  await db.run(`CREATE INDEX IF NOT EXISTS idx_duel_votes_category_created_at ON duel_votes(category, created_at DESC)`);
-  await db.run(`CREATE INDEX IF NOT EXISTS idx_duel_votes_winner_category ON duel_votes(winner_id, category)`);
-}
-
 const COCADA_CATEGORIES = [
   { key: "simpatico", label: "Mais simpático" },
   { key: "estiloso", label: "Mais estiloso" },
@@ -565,7 +531,6 @@ const COCADA_CATEGORIES = [
 
 app.get("/games/cocada", requireAuth, async (req, res, next) => {
   try {
-    await ensureDuelVotesCompat();
     const currentCategory = String(req.query.category || "simpatico").trim();
     const selected = COCADA_CATEGORIES.find(c => c.key === currentCategory) || COCADA_CATEGORIES[0];
     const currentLabel = selected.label;
@@ -611,7 +576,6 @@ app.get("/duelo", requireAuth, async (req, res) => {
 
 app.post("/games/cocada/vote", requireAuth, limiterWrite, async (req, res, next) => {
   try {
-    await ensureDuelVotesCompat();
     const winnerId = Number(req.body.winner_id);
     const loserId = Number(req.body.loser_id);
     const currentCategory = String(req.body.category || "simpatico").trim();
@@ -2486,7 +2450,6 @@ app.use((err, req, res, next) => {
 async function main() {
   await init();
   await migrate();
-  await ensureDuelVotesCompat();
 
   const server = http.createServer(app);
 

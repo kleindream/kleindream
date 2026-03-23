@@ -1387,3 +1387,11 @@ input:focus, textarea:focus{
   color:#222 !important;
 }
 .rate-user-form .btn{margin-top:6px;width:100%;justify-content:center;}
+
+
+.home-complete-profile-card{
+  border:1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  background:linear-gradient(180deg, color-mix(in srgb, var(--accent) 12%, var(--panel)), var(--panel));
+  box-shadow:0 10px 30px rgba(0,0,0,.18);
+  margin-bottom:14px;
+}

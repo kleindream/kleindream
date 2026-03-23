@@ -1,6 +1,21 @@
 <%- include("layout", { title: "Início", body: `
   <div class="grid home-orbit" style="align-items:start;">
     <div>
+      ${me && (!me.profile_photo || !me.bio || !me.city || !me.birth_date) ? `
+      <div class="card home-complete-profile-card">
+        <div class="home-section-head">
+          <div class="h" style="font-size:1.25rem;font-weight:900;color:var(--accent);">✨ Complete seu perfil</div>
+          <span class="small">isso ajuda as pessoas a encontrarem você</span>
+        </div>
+        <p style="font-size:0.98rem;line-height:1.6;margin:6px 0 0 0;">
+          Coloque foto, cidade, bio e seus detalhes para a Klein Dream ficar com a sua cara desde o primeiro dia.
+        </p>
+        <div class="row" style="gap:8px;margin-top:12px;flex-wrap:wrap;">
+          <a class="button" href="/profile/edit">✏️ Editar meu perfil</a>
+          <a class="button secondary" href="/u/${me.username}">Ver meu perfil</a>
+        </div>
+      </div>` : ``}
+
       <div class="card mascot-chip home-hero-card">
         <img src="/img/sr-disquete.png" alt="Sr. Disquete" class="kd-zoom" />
         <div>
