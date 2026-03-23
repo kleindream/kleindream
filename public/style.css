@@ -1329,99 +1329,81 @@ input:focus, textarea:focus{
 @media (max-width:960px){.caderno-page-grid{grid-template-columns:1fr}.caderno-side-stack{position:static}}
 
 
-.user-rating-card,
-.user-rating-vote-card{
-  position:static;
+/* Cartão de usuário */
+.user-rating-card-shell{
+  padding: 14px;
 }
-.user-rating-subtitle{
-  margin:-2px 0 12px;
+.user-rating-votes-count{
+  color:#666;
+  font-size:12px;
+  margin:-4px 0 10px;
 }
 .rating-item{
-  margin-bottom:12px;
+  margin-bottom:10px;
 }
-.rating-item:last-child{
-  margin-bottom:0;
-}
-.rating-label-row{
+.rating-item-top{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:8px;
-  margin-bottom:5px;
   font-size:13px;
+  margin-bottom:4px;
+  color:#333;
 }
-.rating-label-row b{
-  color:var(--text);
+.rating-item-top b{
   font-size:12px;
+  color:#666;
 }
 .bar{
-  background:rgba(255,255,255,.08);
-  height:12px;
+  background:#e8e8e8;
+  height:10px;
   border-radius:999px;
   overflow:hidden;
-  border:1px solid rgba(255,255,255,.08);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.08);
 }
 .bar div{
   height:100%;
-  background:linear-gradient(90deg,#4f46e5,#a855f7);
-  border-radius:999px;
+  background:linear-gradient(90deg,#6da9ff,#a569ff);
+}
+.rating-toggle-wrap{
+  margin-top:12px;
+}
+.rating-toggle-btn{
+  width:100%;
+  text-align:left;
+  border:1px solid #c7d7ff;
+  background:linear-gradient(180deg,#f7fbff,#edf4ff);
+  color:#2c4a87;
+  border-radius:10px;
+  padding:10px 12px;
+  cursor:pointer;
+  font-weight:700;
+}
+.rating-toggle-btn:hover{
+  filter:brightness(.98);
+}
+.rating-toggle-box{
+  margin-top:10px;
+  border-top:1px solid #edf0f6;
+  padding-top:10px;
 }
 .rating-form{
-  display:grid;
-  gap:8px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
 }
 .rating-form label{
   font-size:12px;
-  font-weight:700;
-  color:var(--muted);
+  color:#555;
 }
 .rating-form select{
-  width:100%;
-  padding:9px 10px;
-  border-radius:10px;
-  border:1px solid rgba(255,255,255,.1);
-  background:rgba(255,255,255,.04);
-  color:var(--text);
+  background-color:#f8f8f8 !important;
+  color:#333 !important;
+  border:1px solid #ccd5e6;
+  padding:8px 10px;
+  border-radius:8px;
+  font-size:14px;
 }
-.rating-form .btn{
-  margin-top:4px;
-  width:100%;
-}
-/* ===== FIX SELECT AVALIAÇÃO ===== */
-
-select {
-  background-color: #f8f8f8 !important;
-  color: #333 !important;
-  border: 1px solid #ccc;
-  padding: 6px;
-  border-radius: 6px;
-  margin-bottom: 10px;
-  font-size: 14px;
-  appearance: none;
-}
-
-select option {
-  background-color: #ffffff;
-  color: #000000;
-}
-
-/* Força visibilidade em qualquer tema */
-select:focus {
-  outline: none;
-  border-color: #ff69b4;
-}
-
-/* ===== BOTÃO MAIS BONITO ===== */
-
-.button {
-  background: linear-gradient(90deg,#ff69b4,#ff1493);
-  color: #fff !important;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.button:hover {
-  opacity: 0.9;
+.rating-form select option{
+  background-color:#ffffff;
+  color:#000000;
 }

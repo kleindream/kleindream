@@ -24,6 +24,59 @@
           <a href="javascript:history.back()">⬅ Voltar</a>
         </div>
       </div>
+
+      <div class="card profile-side-card user-rating-card-shell">
+        <div class="h">Cartão de usuário</div>
+        <div class="user-rating-votes-count">${Number(ratings?.votes_count || 0)} avaliação${Number(ratings?.votes_count || 0) === 1 ? '' : 'ões'}</div>
+
+        ${[
+          ['Bonito', ratings?.beauty || 0],
+          ['Simpático', ratings?.friendly || 0],
+          ['Alegre', ratings?.happy || 0],
+          ['Inteligente', ratings?.smart || 0]
+        ].map(([label, value]) => `
+          <div class="rating-item">
+            <div class="rating-item-top">
+              <span>${label}</span>
+              <b>${Math.round(Number(value) || 0)}%</b>
+            </div>
+            <div class="bar"><div style="width:${Math.max(0, Math.min(100, Math.round(Number(value) || 0)))}%"></div></div>
+          </div>
+        `).join('')}
+
+        ${canRateUser ? `
+          <div class="rating-toggle-wrap">
+            <button type="button" class="rating-toggle-btn" onclick="toggleUserRatingBox()">⭐ Avaliar usuário</button>
+            <div id="user-rating-box" class="rating-toggle-box" style="display:none;">
+              <form method="POST" action="/rate-user" class="rating-form">
+                <input type="hidden" name="user_id" value="${user.id}" />
+
+                <label>Bonito</label>
+                <select name="beauty">
+                  ${[1,2,3,4,5].map(n => `<option value="${n}" ${Number(myRating?.beauty || 3) === n ? 'selected' : ''}>${n}</option>`).join('')}
+                </select>
+
+                <label>Simpático</label>
+                <select name="friendly">
+                  ${[1,2,3,4,5].map(n => `<option value="${n}" ${Number(myRating?.friendly || 3) === n ? 'selected' : ''}>${n}</option>`).join('')}
+                </select>
+
+                <label>Alegre</label>
+                <select name="happy">
+                  ${[1,2,3,4,5].map(n => `<option value="${n}" ${Number(myRating?.happy || 3) === n ? 'selected' : ''}>${n}</option>`).join('')}
+                </select>
+
+                <label>Inteligente</label>
+                <select name="smart">
+                  ${[1,2,3,4,5].map(n => `<option value="${n}" ${Number(myRating?.smart || 3) === n ? 'selected' : ''}>${n}</option>`).join('')}
+                </select>
+
+                <button class="btn" type="submit">Salvar avaliação</button>
+              </form>
+            </div>
+          </div>
+        ` : `${!isMe ? `<div class="small" style="margin-top:10px;">Somente amigos podem avaliar este perfil.</div>` : ``}`}
+      </div>
     </aside>
 
     <div class="profile-main-column">
@@ -182,63 +235,6 @@
     </div>
 
     <aside class="profile-sidebar profile-sidebar-right">
-      <div class="card profile-side-card right-side-card user-rating-card">
-        <div class="h">Cartão de usuário</div>
-        <div class="small user-rating-subtitle">${ratings && ratings.votes_count ? `${ratings.votes_count} voto${Number(ratings.votes_count) === 1 ? '' : 's'}` : 'Nenhuma avaliação ainda.'}</div>
-
-        <div class="rating-item">
-          <div class="rating-label-row"><span>Bonito</span><b>${Number((ratings && ratings.beauty) || 0)}%</b></div>
-          <div class="bar"><div style="width:${Number((ratings && ratings.beauty) || 0)}%"></div></div>
-        </div>
-
-        <div class="rating-item">
-          <div class="rating-label-row"><span>Simpático</span><b>${Number((ratings && ratings.friendly) || 0)}%</b></div>
-          <div class="bar"><div style="width:${Number((ratings && ratings.friendly) || 0)}%"></div></div>
-        </div>
-
-        <div class="rating-item">
-          <div class="rating-label-row"><span>Alegre</span><b>${Number((ratings && ratings.happy) || 0)}%</b></div>
-          <div class="bar"><div style="width:${Number((ratings && ratings.happy) || 0)}%"></div></div>
-        </div>
-
-        <div class="rating-item">
-          <div class="rating-label-row"><span>Inteligente</span><b>${Number((ratings && ratings.smart) || 0)}%</b></div>
-          <div class="bar"><div style="width:${Number((ratings && ratings.smart) || 0)}%"></div></div>
-        </div>
-      </div>
-
-      ${!isMe && friend ? `
-        <div class="card profile-side-card right-side-card user-rating-vote-card">
-          <div class="h">Avaliar usuário</div>
-          <div class="small user-rating-subtitle">Só amigos podem votar. Cada amigo pode alterar a própria nota depois.</div>
-          <form method="post" action="/rate-user" class="rating-form">
-            <input type="hidden" name="user_id" value="${user.id}" />
-
-            <label>Bonito</label>
-            <select name="beauty">
-              ${[1,2,3,4,5].map(n => `<option value="${n}" ${(myRating && Number(myRating.beauty) === n) ? 'selected' : ''}>${n}</option>`).join('')}
-            </select>
-
-            <label>Simpático</label>
-            <select name="friendly">
-              ${[1,2,3,4,5].map(n => `<option value="${n}" ${(myRating && Number(myRating.friendly) === n) ? 'selected' : ''}>${n}</option>`).join('')}
-            </select>
-
-            <label>Alegre</label>
-            <select name="happy">
-              ${[1,2,3,4,5].map(n => `<option value="${n}" ${(myRating && Number(myRating.happy) === n) ? 'selected' : ''}>${n}</option>`).join('')}
-            </select>
-
-            <label>Inteligente</label>
-            <select name="smart">
-              ${[1,2,3,4,5].map(n => `<option value="${n}" ${(myRating && Number(myRating.smart) === n) ? 'selected' : ''}>${n}</option>`).join('')}
-            </select>
-
-            <button class="btn" type="submit">Salvar avaliação</button>
-          </form>
-        </div>
-      ` : ``}
-
       <div class="card profile-side-card right-side-card">
         <div class="h">Amigos (${friendsCount})</div>
         ${profileFriends.length ? `
@@ -269,8 +265,17 @@
         ` : `<div class="small">Este perfil ainda não entrou em grupos.</div>`}
         <div style="margin-top:10px;"><a class="btn secondary" href="/groups">Ver grupos</a></div>
       </div>
+
     </aside>
   </div>
+
+  <script>
+    function toggleUserRatingBox(){
+      var box = document.getElementById('user-rating-box');
+      if(!box) return;
+      box.style.display = box.style.display === 'none' ? 'block' : 'none';
+    }
+  </script>
 ` }) %>
 
 <% function escapeHtml(str){ return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); } %>
