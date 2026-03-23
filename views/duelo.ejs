@@ -1,0 +1,79 @@
+<%- include("layout", { title: "Rei da Klein Dream", body: `
+  <div class="card duel-hero-card">
+    <div class="h" style="font-size:2rem;font-weight:900;color:var(--accent);">👑 Rei da Klein Dream</div>
+    <p class="duel-hero-copy">Vote no perfil que melhor combina com a categoria do momento e descubra quem está brilhando mais na rede.</p>
+    <div class="duel-category-pills">
+      ${Object.entries(categories).map(([key, meta]) => `
+        <a class="duel-pill ${key === category ? 'active' : ''}" href="/duelo?category=${key}">${meta.icon} ${meta.label}</a>
+      `).join('')}
+    </div>
+  </div>
+
+  <div class="duel-stats-grid">
+    <div class="card duel-stat-card"><div class="k">Categoria</div><div class="v">${categoryMeta.icon} ${categoryMeta.label}</div></div>
+    <div class="card duel-stat-card"><div class="k">Votos</div><div class="v">${Number(duelStats?.totalVotes || 0)}</div></div>
+    <div class="card duel-stat-card"><div class="k">Votantes</div><div class="v">${Number(duelStats?.totalVoters || 0)}</div></div>
+    <div class="card duel-stat-card"><div class="k">Perfis destacados</div><div class="v">${Number(duelStats?.totalProfiles || 0)}</div></div>
+  </div>
+
+  ${pair.length < 2 ? `
+    <div class="card duel-empty-card">
+      <div class="h">Ainda faltam perfis para montar um duelo</div>
+      <div class="small">Quando houver pelo menos duas pessoas além de você na Klein Dream, esta página passa a funcionar.</div>
+    </div>
+  ` : `
+    <div class="duel-battle-grid">
+      <div class="card duel-user-card">
+        <div class="duel-user-top">Lado A</div>
+        <a class="duel-user-link" href="/u/${pair[0].username}">
+          ${pair[0].profile_photo ? `<img class="duel-avatar kd-zoom" src="${photoSrc(pair[0].profile_photo)}" alt="${escapeHtml(pair[0].username)}" />` : `<div class="duel-avatar ph">?</div>`}
+          <div class="duel-user-name">${escapeHtml(pair[0].full_name || pair[0].username)}</div>
+          <div class="duel-user-username">@${escapeHtml(pair[0].username)}</div>
+        </a>
+        <form method="POST" action="/duelo/votar" class="duel-vote-form">
+          <input type="hidden" name="category" value="${category}" />
+          <input type="hidden" name="winner_user_id" value="${pair[0].id}" />
+          <input type="hidden" name="loser_user_id" value="${pair[1].id}" />
+          <button class="button duel-vote-btn" type="submit">Votar neste perfil</button>
+        </form>
+        <div class="small duel-user-note">Clique para dizer quem vence em <b>${categoryMeta.label.toLowerCase()}</b>.</div>
+      </div>
+
+      <div class="duel-versus">VS</div>
+
+      <div class="card duel-user-card">
+        <div class="duel-user-top">Lado B</div>
+        <a class="duel-user-link" href="/u/${pair[1].username}">
+          ${pair[1].profile_photo ? `<img class="duel-avatar kd-zoom" src="${photoSrc(pair[1].profile_photo)}" alt="${escapeHtml(pair[1].username)}" />` : `<div class="duel-avatar ph">?</div>`}
+          <div class="duel-user-name">${escapeHtml(pair[1].full_name || pair[1].username)}</div>
+          <div class="duel-user-username">@${escapeHtml(pair[1].username)}</div>
+        </a>
+        <form method="POST" action="/duelo/votar" class="duel-vote-form">
+          <input type="hidden" name="category" value="${category}" />
+          <input type="hidden" name="winner_user_id" value="${pair[1].id}" />
+          <input type="hidden" name="loser_user_id" value="${pair[0].id}" />
+          <button class="button duel-vote-btn" type="submit">Votar neste perfil</button>
+        </form>
+        <div class="small duel-user-note">Clique para dizer quem vence em <b>${categoryMeta.label.toLowerCase()}</b>.</div>
+      </div>
+    </div>
+  `}
+
+  <div class="card duel-ranking-card">
+    <div class="duel-ranking-head">
+      <div class="h">🏆 Top do momento</div>
+      <div class="small">Ranking em ${categoryMeta.label.toLowerCase()}</div>
+    </div>
+    ${ranking.length ? `
+      <div class="ranking-list duel-ranking-list">
+        ${ranking.map((row, idx) => `
+          <div class="ranking-row duel-ranking-row">
+            <span class="ranking-pos">${idx + 1}º</span>
+            <span class="ranking-name"><a href="/u/${row.username}">${escapeHtml(row.full_name || row.username)}</a></span>
+            <span class="ranking-score">${Number(row.wins || 0)} voto${Number(row.wins || 0) === 1 ? '' : 's'}</span>
+          </div>
+        `).join('')}
+      </div>
+    ` : `<div class="small">Ainda não há votos nesta categoria. Seja a primeira pessoa a escolher um vencedor.</div>`}
+  </div>
+` }) %>

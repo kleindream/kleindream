@@ -309,6 +309,20 @@ const GAME_META = {
   caderno: { label: "Caderno de Perguntas", icon: "📓" }
 };
 
+
+const DUEL_CATEGORY_META = {
+  friendly: { label: "Mais simpático", icon: "😄" },
+  stylish: { label: "Mais estiloso", icon: "😎" },
+  smart: { label: "Mais inteligente", icon: "🧠" },
+  beautiful: { label: "Mais bonito", icon: "🔥" },
+  funny: { label: "Mais engraçado", icon: "😂" },
+  kind: { label: "Mais gente boa", icon: "💙" }
+};
+
+function getDuelCategoryMeta(category) {
+  return DUEL_CATEGORY_META[category] || DUEL_CATEGORY_META.friendly;
+}
+
 function getGameMeta(game) {
   return GAME_META[game] || { label: game, icon: "🎮" };
 }
@@ -351,6 +365,48 @@ async function getGamesOverview(limit = 5) {
     }))
   );
   return entries;
+}
+
+
+async function getDuelPair(currentUserId) {
+  const users = await db.all(`
+    SELECT id, username, full_name, profile_photo
+    FROM users
+    WHERE id <> ?
+      AND COALESCE(is_suspended, FALSE) = FALSE
+    ORDER BY RANDOM()
+    LIMIT 2
+  `, [currentUserId]);
+  return users;
+}
+
+async function getDuelRanking(category, limit = 10) {
+  return db.all(`
+    SELECT
+      u.id,
+      u.username,
+      u.full_name,
+      u.profile_photo,
+      COUNT(*)::int AS wins,
+      COUNT(DISTINCT dv.voter_user_id)::int AS unique_voters
+    FROM duel_votes dv
+    JOIN users u ON u.id = dv.winner_user_id
+    WHERE dv.category = ?
+    GROUP BY u.id, u.username, u.full_name, u.profile_photo
+    ORDER BY wins DESC, unique_voters DESC, u.username ASC
+    LIMIT ?
+  `, [category, limit]);
+}
+
+async function getDuelCategoryStats(category) {
+  return db.get(`
+    SELECT
+      COUNT(*)::int AS total_votes,
+      COUNT(DISTINCT voter_user_id)::int AS total_voters,
+      COUNT(DISTINCT winner_user_id)::int AS total_profiles
+    FROM duel_votes
+    WHERE category = ?
+  `, [category]);
 }
 
 
@@ -578,6 +634,69 @@ app.get("/games/caderno", requireAuth, async (req, res) => {
       totalPlayers: Number(playerCountRow?.total || 0)
     }
   });
+});
+
+
+app.get("/duelo", requireAuth, async (req, res) => {
+  const requestedCategory = String(req.query.category || "friendly").trim();
+  const category = DUEL_CATEGORY_META[requestedCategory] ? requestedCategory : "friendly";
+
+  const [pair, ranking, stats] = await Promise.all([
+    getDuelPair(req.session.userId),
+    getDuelRanking(category, 10),
+    getDuelCategoryStats(category)
+  ]);
+
+  res.render("duelo", {
+    category,
+    categoryMeta: getDuelCategoryMeta(category),
+    categories: DUEL_CATEGORY_META,
+    pair,
+    ranking,
+    duelStats: {
+      totalVotes: Number(stats?.total_votes || 0),
+      totalVoters: Number(stats?.total_voters || 0),
+      totalProfiles: Number(stats?.total_profiles || 0)
+    }
+  });
+});
+
+app.post("/duelo/votar", requireAuth, limiterActions, async (req, res) => {
+  const voterUserId = req.session.userId;
+  const winnerUserId = Number(req.body.winner_user_id || 0);
+  const loserUserId = Number(req.body.loser_user_id || 0);
+  const requestedCategory = String(req.body.category || "friendly").trim();
+  const category = DUEL_CATEGORY_META[requestedCategory] ? requestedCategory : "friendly";
+
+  if (!winnerUserId || !loserUserId || winnerUserId === loserUserId) {
+    req.flash("error", "Não deu para registrar esse voto.");
+    return res.redirect(`/duelo?category=${encodeURIComponent(category)}`);
+  }
+
+  if (winnerUserId === voterUserId || loserUserId === voterUserId) {
+    req.flash("error", "Você não pode participar do próprio duelo.");
+    return res.redirect(`/duelo?category=${encodeURIComponent(category)}`);
+  }
+
+  const candidates = await db.all(`
+    SELECT id
+    FROM users
+    WHERE id = ANY($1::int[])
+      AND COALESCE(is_suspended, FALSE) = FALSE
+  `, [[winnerUserId, loserUserId]]);
+
+  if (candidates.length !== 2) {
+    req.flash("error", "Um dos perfis desse duelo não está mais disponível.");
+    return res.redirect(`/duelo?category=${encodeURIComponent(category)}`);
+  }
+
+  await db.run(`
+    INSERT INTO duel_votes (voter_user_id, winner_user_id, loser_user_id, category)
+    VALUES (?, ?, ?, ?)
+  `, [voterUserId, winnerUserId, loserUserId, category]);
+
+  req.flash("success", `Voto contado em ${getDuelCategoryMeta(category).label.toLowerCase()}!`);
+  return res.redirect(`/duelo?category=${encodeURIComponent(category)}`);
 });
 
 app.post("/games/caderno/answer", requireAuth, limiterWrite, async (req, res) => {
