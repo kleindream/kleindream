@@ -12,7 +12,7 @@ const rateLimit = require("express-rate-limit");
 const { createClient } = require("@supabase/supabase-js");
 
 const { db, init, migrate, pool } = require("./db");
-const { getVibeFromBirthDate } = require("./utils/horoscopo");
+const { getVibeFromBirthDate } = require("./utils/horoscopo.js");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
