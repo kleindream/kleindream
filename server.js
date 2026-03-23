@@ -305,7 +305,8 @@ const GAME_META = {
   snake: { label: "Snake", icon: "🐍" },
   rps: { label: "Pedra, Papel e Tesoura", icon: "✊" },
   velha: { label: "Jogo da Velha", icon: "❌" },
-  quiz: { label: "Quiz Nostalgia", icon: "📺" }
+  quiz: { label: "Quiz Nostalgia", icon: "📺" },
+  caderno: { label: "Caderno de Perguntas", icon: "📓" }
 };
 
 function getGameMeta(game) {
@@ -350,6 +351,96 @@ async function getGamesOverview(limit = 5) {
     }))
   );
   return entries;
+}
+
+
+const CADERNO_DEFAULT_QUESTIONS = [
+  ["Qual é o seu nome?", "Sobre você", 1],
+  ["Qual é a sua data de nascimento?", "Sobre você", 2],
+  ["Qual é o seu estado civil?", "Sobre você", 3],
+  ["O que você faz da vida?", "Sobre você", 4],
+  ["Qual é a sua maior qualidade e seu maior defeito?", "Sobre você", 5],
+  ["Em que cidade e estado você mora?", "Sobre você", 6],
+  ["Para você, todo ser humano é corruptível?", "Reflexão", 7],
+  ["Você acredita em destino? Por quê?", "Reflexão", 8],
+  ["Você acredita em Deus?", "Reflexão", 9],
+  ["O que faria você arriscar tudo?", "Reflexão", 10],
+  ["O que você faria hoje se soubesse que morreria amanhã?", "Reflexão", 11],
+  ["Onde você gostaria de estar agora?", "Reflexão", 12],
+  ["Em um relacionamento, o que é essencial?", "Amor", 13],
+  ["Para você, o amor é uma utopia?", "Amor", 14],
+  ["Quem foi a grande paixão da sua vida?", "Amor", 15],
+  ["Quem é o(a) dono(a) do seu coração hoje?", "Amor", 16],
+  ["Qual foi a pior pessoa que você já gostou ou se envolveu? Por quê?", "Amor", 17],
+  ["Vale tudo no amor e na guerra?", "Amor", 18],
+  ["Para você, como é o beijo perfeito?", "Intimidade leve", 19],
+  ["Qual é o seu ponto forte na hora de seduzir alguém?", "Intimidade leve", 20],
+  ["Qual é a roupa ideal para um encontro?", "Intimidade leve", 21],
+  ["Qual é a sua música favorita?", "Gostos", 22],
+  ["Qual é o seu filme favorito?", "Gostos", 23],
+  ["Qual é o seu livro favorito?", "Gostos", 24],
+  ["Qual é a sua comida favorita?", "Gostos", 25],
+  ["Qual é a sua bebida favorita?", "Gostos", 26],
+  ["Qual é a sua cor favorita?", "Gostos", 27],
+  ["Você prefere dia ou noite?", "Gostos", 28],
+  ["Qual é o seu programa de TV favorito?", "Gostos", 29],
+  ["Qual é o seu desenho animado favorito?", "Gostos", 30],
+  ["Qual é o seu animal favorito?", "Gostos", 31],
+  ["Qual é o seu esporte favorito?", "Estilo de vida", 32],
+  ["Para qual time você torce?", "Estilo de vida", 33],
+  ["Qual é o programa ideal para o final de semana?", "Estilo de vida", 34],
+  ["Qual foi a melhor viagem da sua vida?", "Estilo de vida", 35],
+  ["Qual é a mania mais estranha que você tem?", "Curiosidades", 36],
+  ["Qual é algo sobre você que ninguém acredita?", "Curiosidades", 37],
+  ["Qual foi a coisa mais maluca que você já fez?", "Curiosidades", 38],
+  ["Qual foi a coisa mais esquisita que você já viu?", "Curiosidades", 39],
+  ["Você já bebeu além da conta e deu vexame?", "Curiosidades", 40],
+  ["Quem são seus melhores amigos?", "Pessoas e história", 41],
+  ["Qual foi o melhor professor que você já teve?", "Pessoas e história", 42],
+  ["Se você ganhasse na Mega Sena, o que faria?", "Extras", 43],
+  ["Qual é a melhor data comemorativa pra você?", "Extras", 44],
+  ["Se você fosse um animal, qual seria?", "Extras", 45],
+  ["Você já bateu no seu PC?", "Extras", 46],
+  ["Você já teve uma crise de choro incontrolável?", "Extras", 47],
+  ["Qual era seu MSN ou ICQ?", "Nostalgia", 48]
+];
+
+async function ensureCadernoQuestionsSeeded() {
+  const row = await db.get("SELECT COUNT(*)::int AS total FROM caderno_questions");
+  if ((row && Number(row.total)) > 0) return;
+  for (const [questionText, category, sortOrder] of CADERNO_DEFAULT_QUESTIONS) {
+    await db.run(
+      `INSERT INTO caderno_questions (question_text, category, sort_order)
+       VALUES (?, ?, ?)
+       ON CONFLICT (question_text) DO NOTHING`,
+      [questionText, category, sortOrder]
+    );
+  }
+}
+
+async function getCadernoRecentAnswers(limit = 24) {
+  return db.all(`
+    SELECT a.id, a.answer_text, a.created_at,
+           q.id AS question_id, q.question_text, q.category,
+           u.id AS user_id, u.username, u.full_name, u.profile_photo
+    FROM caderno_answers a
+    JOIN caderno_questions q ON q.id = a.question_id
+    JOIN users u ON u.id = a.user_id
+    ORDER BY a.created_at DESC
+    LIMIT ?
+  `, [limit]);
+}
+
+async function getCadernoMyAnswers(userId, limit = 12) {
+  return db.all(`
+    SELECT a.id, a.answer_text, a.created_at,
+           q.id AS question_id, q.question_text, q.category
+    FROM caderno_answers a
+    JOIN caderno_questions q ON q.id = a.question_id
+    WHERE a.user_id = ?
+    ORDER BY a.created_at DESC
+    LIMIT ?
+  `, [userId, limit]);
 }
 
 app.get("/", async (req, res) => res.render("index"));
@@ -434,6 +525,97 @@ app.get("/games/velha", requireAuth, async (req, res) => {
 
 app.get("/games/quiz", requireAuth, async (req, res) => {
   await renderGamePage(req, res, "game_quiz", "quiz");
+});
+
+app.get("/games/caderno", requireAuth, async (req, res) => {
+  await ensureCadernoQuestionsSeeded();
+  const category = String(req.query.category || "").trim();
+  const [questions, recentAnswers, myAnswers] = await Promise.all([
+    category
+      ? db.all(`
+          SELECT q.id, q.question_text, q.category, q.sort_order,
+                 a.answer_text AS my_answer, a.created_at AS answered_at
+          FROM caderno_questions q
+          LEFT JOIN caderno_answers a
+            ON a.question_id = q.id AND a.user_id = ?
+          WHERE q.is_active = TRUE AND q.category = ?
+          ORDER BY q.sort_order ASC, q.id ASC
+        `, [req.session.userId, category])
+      : db.all(`
+          SELECT q.id, q.question_text, q.category, q.sort_order,
+                 a.answer_text AS my_answer, a.created_at AS answered_at
+          FROM caderno_questions q
+          LEFT JOIN caderno_answers a
+            ON a.question_id = q.id AND a.user_id = ?
+          WHERE q.is_active = TRUE
+          ORDER BY q.category ASC, q.sort_order ASC, q.id ASC
+        `, [req.session.userId]),
+    getCadernoRecentAnswers(24),
+    getCadernoMyAnswers(req.session.userId, 12)
+  ]);
+
+  const categoriesRows = await db.all(`
+    SELECT category, COUNT(*)::int AS total
+    FROM caderno_questions
+    WHERE is_active = TRUE
+    GROUP BY category
+    ORDER BY category ASC
+  `);
+
+  const answerCountRow = await db.get("SELECT COUNT(*)::int AS total FROM caderno_answers");
+  const playerCountRow = await db.get("SELECT COUNT(DISTINCT user_id)::int AS total FROM caderno_answers");
+
+  res.render("game_caderno", {
+    gameKey: "caderno",
+    gameMeta: getGameMeta("caderno"),
+    category,
+    categories: categoriesRows,
+    questions,
+    recentAnswers,
+    myAnswers,
+    cadernoStats: {
+      totalAnswers: Number(answerCountRow?.total || 0),
+      totalPlayers: Number(playerCountRow?.total || 0)
+    }
+  });
+});
+
+app.post("/games/caderno/answer", requireAuth, limiterWrite, async (req, res) => {
+  await ensureCadernoQuestionsSeeded();
+  const questionId = Number(req.body.question_id);
+  const answerText = String(req.body.answer_text || "").trim();
+
+  if (!Number.isInteger(questionId) || questionId <= 0) {
+    req.flash("error", "Pergunta inválida.");
+    return res.redirect("/games/caderno");
+  }
+  if (!answerText) {
+    req.flash("error", "Escreva uma resposta antes de publicar.");
+    return res.redirect("/games/caderno");
+  }
+  if (answerText.length > 600) {
+    req.flash("error", "A resposta pode ter no máximo 600 caracteres.");
+    return res.redirect("/games/caderno");
+  }
+
+  const question = await db.get(
+    "SELECT id, question_text FROM caderno_questions WHERE id = ? AND is_active = TRUE",
+    [questionId]
+  );
+  if (!question) {
+    req.flash("error", "Essa pergunta não está disponível.");
+    return res.redirect("/games/caderno");
+  }
+
+  await db.run(`
+    INSERT INTO caderno_answers (user_id, question_id, answer_text)
+    VALUES (?, ?, ?)
+    ON CONFLICT (user_id, question_id)
+    DO UPDATE SET answer_text = EXCLUDED.answer_text, created_at = NOW()
+  `, [req.session.userId, questionId, answerText]);
+
+  req.flash("success", "Sua resposta foi publicada no Caderno da Klein Dream 💙");
+  return res.redirect("/games/caderno");
 });
 
 app.post("/api/games/score", requireAuth, async (req, res) => {

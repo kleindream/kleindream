@@ -1,0 +1,74 @@
+<%- include("layout", { title: "Caderno de Perguntas", body: `
+  <div class="game-page-grid caderno-page-grid">
+    <div class="card game-wrap" style="max-width:none;">
+      <div class="h" style="font-size:2rem;font-weight:900;color:var(--accent);">📓 Caderno de Perguntas</div>
+      <p style="line-height:1.7;color:var(--muted);font-size:1.04rem;">Um cantinho da Klein Dream para responder, lembrar, contar histórias e deixar o perfil mais vivo. Respondeu? Publicou na hora.</p>
+
+      <div class="caderno-stats-strip">
+        <span class="pill">👥 Participantes: <b>${cadernoStats.totalPlayers}</b></span>
+        <span class="pill">📝 Respostas publicadas: <b>${cadernoStats.totalAnswers}</b></span>
+        <a class="button secondary" href="/games">Voltar aos jogos</a>
+      </div>
+
+      <div class="caderno-cats">
+        <a class="caderno-cat-chip ${!category ? 'active' : ''}" href="/games/caderno">Todas</a>
+        ${categories.map(cat => `<a class="caderno-cat-chip ${category === cat.category ? 'active' : ''}" href="/games/caderno?category=${encodeURIComponent(cat.category)}">${cat.category} <span>${cat.total}</span></a>`).join("")}
+      </div>
+
+      <div class="caderno-form-grid">
+        ${questions.length ? questions.map((item, idx) => `
+          <div class="caderno-question-card ${item.my_answer ? 'answered' : ''}">
+            <div class="caderno-question-head">
+              <span class="caderno-question-number">${idx + 1}</span>
+              <div>
+                <div class="caderno-question-text">${item.question_text}</div>
+                <div class="small" style="color:var(--muted);">${item.category}${item.answered_at ? ` • respondido em ${new Date(item.answered_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}` : ''}</div>
+              </div>
+            </div>
+            <form method="post" action="/games/caderno/answer" class="caderno-answer-form">
+              <input type="hidden" name="question_id" value="${item.id}" />
+              <textarea name="answer_text" maxlength="600" placeholder="Escreva sua resposta...">${item.my_answer ? String(item.my_answer).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') : ''}</textarea>
+              <div class="caderno-form-actions">
+                <span class="small" style="color:var(--muted);">Até 600 caracteres</span>
+                <button class="button" type="submit">${item.my_answer ? 'Atualizar resposta' : 'Publicar resposta'}</button>
+              </div>
+            </form>
+          </div>
+        `).join("") : `<div class="small">Nenhuma pergunta encontrada nessa categoria.</div>`}
+      </div>
+    </div>
+
+    <div class="ranking-card caderno-side-stack">
+      <div class="card overview-card">
+        <div class="overview-title">✨ Suas últimas respostas</div>
+        <div class="ranking-list compact-ranking caderno-mini-list">
+          ${myAnswers.length ? myAnswers.map(row => `
+            <div class="caderno-mini-item">
+              <div class="caderno-mini-q">${row.question_text}</div>
+              <div class="caderno-mini-a">${row.answer_text}</div>
+            </div>
+          `).join("") : `<div class="small">Você ainda não respondeu nenhuma pergunta.</div>`}
+        </div>
+      </div>
+
+      <div class="card overview-card">
+        <div class="overview-title">🌐 Respostas recentes da rede</div>
+        <div class="ranking-list compact-ranking caderno-feed-list">
+          ${recentAnswers.length ? recentAnswers.map(row => `
+            <div class="caderno-feed-item">
+              <div class="caderno-feed-user">
+                <img src="${photoSrc(row.profile_photo)}" alt="${row.username}" />
+                <div>
+                  <a href="/u/${row.username}"><b>${row.full_name || row.username}</b></a>
+                  <div class="small" style="color:var(--muted);">@${row.username} • ${new Date(row.created_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</div>
+                </div>
+              </div>
+              <div class="caderno-feed-question">${row.question_text}</div>
+              <div class="caderno-feed-answer">${row.answer_text}</div>
+            </div>
+          `).join("") : `<div class="small">As respostas publicadas vão aparecer aqui.</div>`}
+        </div>
+      </div>
+    </div>
+  </div>
+` }) %>

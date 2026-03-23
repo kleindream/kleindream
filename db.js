@@ -318,6 +318,30 @@ async function init() {
 
     CREATE INDEX IF NOT EXISTS idx_game_scores_game_score ON game_scores(game, score DESC, played_at ASC);
     CREATE INDEX IF NOT EXISTS idx_game_scores_user_game ON game_scores(user_id, game, score DESC, played_at ASC);
+
+
+    -- Caderno de perguntas da Klein Dream
+    CREATE TABLE IF NOT EXISTS caderno_questions (
+      id           SERIAL PRIMARY KEY,
+      question_text TEXT NOT NULL UNIQUE,
+      category     TEXT NOT NULL DEFAULT 'Geral',
+      is_active    BOOLEAN NOT NULL DEFAULT TRUE,
+      sort_order   INTEGER NOT NULL DEFAULT 0,
+      created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS caderno_answers (
+      id           SERIAL PRIMARY KEY,
+      user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      question_id  INTEGER NOT NULL REFERENCES caderno_questions(id) ON DELETE CASCADE,
+      answer_text  TEXT NOT NULL,
+      created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE(user_id, question_id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_caderno_questions_active ON caderno_questions(is_active, category, sort_order, id);
+    CREATE INDEX IF NOT EXISTS idx_caderno_answers_created ON caderno_answers(created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_caderno_answers_user ON caderno_answers(user_id, created_at DESC);
   `);
 }
 
