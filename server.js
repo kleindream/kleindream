@@ -12,6 +12,7 @@ const rateLimit = require("express-rate-limit");
 const { createClient } = require("@supabase/supabase-js");
 
 const { db, init, migrate, pool } = require("./db");
+const { getVibeFromBirthDate } = require("./utils/horoscopo");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -1280,6 +1281,7 @@ app.get("/u/:username", requireAuth, async (req, res) => {
   `, [meId, user.id]) : null;
 
   const canRateUser = !isMe && !!friend;
+  const vibe = getVibeFromBirthDate(user.birth_date);
 
   // Visitas (contador + últimos visitantes)
   const totalVisits = (await db.get("SELECT COUNT(*)::int AS c FROM profile_visits WHERE visited_id=?", [user.id]))?.c || 0;
@@ -1304,7 +1306,7 @@ app.get("/u/:username", requireAuth, async (req, res) => {
     scraps, testimonials, friendsCount, fansCount, isFan, recentFans,
     profileFriends, profileGroups, groupsCount,
     totalVisits, visitors, canSeeVisitors,
-    ratings, myRating, canRateUser,
+    ratings, myRating, canRateUser, vibe,
     isBirthdayToday: isBirthdayToday(user.birth_date), memberSince
   });
 });
