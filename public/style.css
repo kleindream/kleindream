@@ -1348,3 +1348,42 @@ input:focus, textarea:focus{
 .duel-vs{font-size:1.4rem;font-weight:900;color:var(--accent);}
 .notice{margin:0 0 14px 0;padding:10px 12px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);}
 @media (max-width: 900px){.duel-stage{grid-template-columns:1fr;}.duel-vs{justify-self:center;}}
+
+
+/* ===== Cartão de usuário / avaliação ===== */
+.profile-sidebar-left .profile-side-card{
+  position:static !important;
+  top:auto !important;
+}
+.profile-sidebar-left{
+  position:static;
+}
+.profile-sidebar-left .profile-side-card + .profile-side-card{
+  margin-top:12px;
+}
+.vibe-card,
+.user-rating-card,
+.rate-box-card{
+  position:static !important;
+  clear:both;
+  width:100%;
+}
+.rating-item{margin-bottom:10px;}
+.rating-row{display:flex;justify-content:space-between;gap:8px;margin-bottom:4px;font-size:13px;align-items:center;}
+.rating-row b{color:var(--accent);font-size:12px;}
+.rating-bar{height:10px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.10);}
+.rating-bar > div{height:100%;background:linear-gradient(90deg,#ff82cc,#7db3ff);}
+.rate-user-form{display:flex;flex-direction:column;gap:6px;}
+.rate-user-form label{font-size:12px;font-weight:700;color:var(--muted);}
+.rate-user-form select{
+  background:#fff !important;
+  color:#222 !important;
+  border:1px solid rgba(0,0,0,.18);
+  border-radius:8px;
+  padding:7px 9px;
+}
+.rate-user-form select option{
+  background:#fff !important;
+  color:#222 !important;
+}
+.rate-user-form .btn{margin-top:6px;width:100%;justify-content:center;}
