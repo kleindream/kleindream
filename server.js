@@ -520,40 +520,6 @@ async function renderGamePage(req, res, viewName, game) {
 
 
 
-
-async function ensureDuelVotesCompat() {
-  await db.run(`
-    CREATE TABLE IF NOT EXISTS duel_votes (
-      id SERIAL PRIMARY KEY,
-      voter_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-      winner_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-      loser_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-      category TEXT,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    )
-  `);
-
-  await db.run(`ALTER TABLE duel_votes ADD COLUMN IF NOT EXISTS voter_id INTEGER`);
-  await db.run(`ALTER TABLE duel_votes ADD COLUMN IF NOT EXISTS winner_id INTEGER`);
-  await db.run(`ALTER TABLE duel_votes ADD COLUMN IF NOT EXISTS loser_id INTEGER`);
-  await db.run(`ALTER TABLE duel_votes ADD COLUMN IF NOT EXISTS category TEXT`);
-  await db.run(`ALTER TABLE duel_votes ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`);
-
-  await db.run(`ALTER TABLE duel_votes ADD COLUMN IF NOT EXISTS voter_user_id INTEGER`);
-  await db.run(`ALTER TABLE duel_votes ADD COLUMN IF NOT EXISTS winner_user_id INTEGER`);
-  await db.run(`ALTER TABLE duel_votes ADD COLUMN IF NOT EXISTS loser_user_id INTEGER`);
-
-  await db.run(`UPDATE duel_votes SET voter_id = COALESCE(voter_id, voter_user_id)`);
-  await db.run(`UPDATE duel_votes SET winner_id = COALESCE(winner_id, winner_user_id)`);
-  await db.run(`UPDATE duel_votes SET loser_id = COALESCE(loser_id, loser_user_id)`);
-  await db.run(`UPDATE duel_votes SET voter_user_id = COALESCE(voter_user_id, voter_id)`);
-  await db.run(`UPDATE duel_votes SET winner_user_id = COALESCE(winner_user_id, winner_id)`);
-  await db.run(`UPDATE duel_votes SET loser_user_id = COALESCE(loser_user_id, loser_id)`);
-
-  await db.run(`CREATE INDEX IF NOT EXISTS idx_duel_votes_category_created_at ON duel_votes(category, created_at DESC)`);
-  await db.run(`CREATE INDEX IF NOT EXISTS idx_duel_votes_winner_category ON duel_votes(winner_id, category)`);
-}
-
 const COCADA_CATEGORIES = [
   { key: "simpatico", label: "Mais simpático" },
   { key: "estiloso", label: "Mais estiloso" },
@@ -565,7 +531,6 @@ const COCADA_CATEGORIES = [
 
 app.get("/games/cocada", requireAuth, async (req, res, next) => {
   try {
-    await ensureDuelVotesCompat();
     const currentCategory = String(req.query.category || "simpatico").trim();
     const selected = COCADA_CATEGORIES.find(c => c.key === currentCategory) || COCADA_CATEGORIES[0];
     const currentLabel = selected.label;
@@ -611,7 +576,6 @@ app.get("/duelo", requireAuth, async (req, res) => {
 
 app.post("/games/cocada/vote", requireAuth, limiterWrite, async (req, res, next) => {
   try {
-    await ensureDuelVotesCompat();
     const winnerId = Number(req.body.winner_id);
     const loserId = Number(req.body.loser_id);
     const currentCategory = String(req.body.category || "simpatico").trim();
@@ -1298,27 +1262,6 @@ app.get("/u/:username", requireAuth, async (req, res) => {
     }
   }
 
-  const ratings = await db.get(`
-    SELECT
-      COALESCE(ROUND(AVG(beauty) * 20), 0)::int AS beauty,
-      COALESCE(ROUND(AVG(friendly) * 20), 0)::int AS friendly,
-      COALESCE(ROUND(AVG(happy) * 20), 0)::int AS happy,
-      COALESCE(ROUND(AVG(smart) * 20), 0)::int AS smart,
-      COUNT(*)::int AS votes_count
-    FROM user_ratings
-    WHERE to_user_id=?
-  `, [user.id]) || { beauty:0, friendly:0, happy:0, smart:0, votes_count:0 };
-
-  const myRating = (!isMe && meId)
-    ? await db.get(`
-        SELECT beauty, friendly, happy, smart
-        FROM user_ratings
-        WHERE from_user_id=? AND to_user_id=?
-      `, [meId, user.id])
-    : null;
-
-  const canRateProfile = !isMe && !!friend;
-
   res.render("profile", {
     user, isMe,
     friend: !!friend, reqOut, reqIn,
@@ -1326,48 +1269,8 @@ app.get("/u/:username", requireAuth, async (req, res) => {
     profileFriends, profileGroups, groupsCount,
     totalVisits, visitors, canSeeVisitors,
     isBirthdayToday: isBirthdayToday(user.birth_date), memberSince,
-    sign, vibeFrase, ratings, myRating, canRateProfile
+    sign, vibeFrase
   });
-});
-
-app.post("/rate-user", requireAuth, async (req, res) => {
-  const fromUserId = req.session.userId;
-  const toUserId = Number(req.body.user_id || 0);
-  if (!toUserId || fromUserId === toUserId) {
-    return res.redirect("/");
-  }
-
-  const target = await db.get("SELECT username FROM users WHERE id=?", [toUserId]);
-  if (!target) return res.redirect("/");
-
-  const friendship = await db.get(
-    "SELECT 1 FROM friendships WHERE user_id=? AND friend_id=?",
-    [fromUserId, toUserId]
-  );
-  if (!friendship) {
-    req.flash("error", "Somente amigos podem avaliar este perfil.");
-    return res.redirect(`/u/${target.username}`);
-  }
-
-  const beauty = Math.max(1, Math.min(5, Number(req.body.beauty || 1)));
-  const friendly = Math.max(1, Math.min(5, Number(req.body.friendly || 1)));
-  const happy = Math.max(1, Math.min(5, Number(req.body.happy || 1)));
-  const smart = Math.max(1, Math.min(5, Number(req.body.smart || 1)));
-
-  await db.run(`
-    INSERT INTO user_ratings (from_user_id, to_user_id, beauty, friendly, happy, smart)
-    VALUES (?,?,?,?,?,?)
-    ON CONFLICT (from_user_id, to_user_id)
-    DO UPDATE SET
-      beauty=EXCLUDED.beauty,
-      friendly=EXCLUDED.friendly,
-      happy=EXCLUDED.happy,
-      smart=EXCLUDED.smart,
-      updated_at=NOW()
-  `, [fromUserId, toUserId, beauty, friendly, happy, smart]);
-
-  req.flash("success", "Avaliação salva com sucesso.");
-  return res.redirect(`/u/${target.username}`);
 });
 
 app.get("/profile/edit", requireAuth, async (req, res) => {
@@ -2486,7 +2389,6 @@ app.use((err, req, res, next) => {
 async function main() {
   await init();
   await migrate();
-  await ensureDuelVotesCompat();
 
   const server = http.createServer(app);
 
