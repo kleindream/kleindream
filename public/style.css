@@ -1387,3 +1387,41 @@ input:focus, textarea:focus{
   margin-top:4px;
   width:100%;
 }
+/* ===== FIX SELECT AVALIAÇÃO ===== */
+
+select {
+  background-color: #f8f8f8 !important;
+  color: #333 !important;
+  border: 1px solid #ccc;
+  padding: 6px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  appearance: none;
+}
+
+select option {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+/* Força visibilidade em qualquer tema */
+select:focus {
+  outline: none;
+  border-color: #ff69b4;
+}
+
+/* ===== BOTÃO MAIS BONITO ===== */
+
+.button {
+  background: linear-gradient(90deg,#ff69b4,#ff1493);
+  color: #fff !important;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.button:hover {
+  opacity: 0.9;
+}
