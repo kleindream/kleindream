@@ -520,79 +520,26 @@ async function renderGamePage(req, res, viewName, game) {
 
 
 
-const COCADA_CATEGORIES = [
-  { key: "simpatico", label: "Mais simpático" },
-  { key: "estiloso", label: "Mais estiloso" },
-  { key: "inteligente", label: "Mais inteligente" },
-  { key: "bonito", label: "Mais bonito" },
-  { key: "engracado", label: "Mais engraçado" },
-  { key: "genteboa", label: "Mais gente boa" }
-];
+function renderCocadaDisabled(req, res) {
+  return res.status(403).render("error", {
+    title: "Recurso temporariamente desativado",
+    message: "O Rei da Cocada Klein Dream foi retirado do ar por enquanto. Assim a rede fica mais segura e sem erro 500.",
+    status: 403,
+    requestId: req.requestId
+  });
+}
 
-app.get("/games/cocada", requireAuth, async (req, res, next) => {
-  try {
-    const currentCategory = String(req.query.category || "simpatico").trim();
-    const selected = COCADA_CATEGORIES.find(c => c.key === currentCategory) || COCADA_CATEGORIES[0];
-    const currentLabel = selected.label;
-
-    const ranking = await db.all(`
-      SELECT u.username, COUNT(*)::int AS votes
-      FROM duel_votes dv
-      JOIN users u ON u.id = dv.winner_id
-      WHERE dv.category = ?
-      GROUP BY u.id, u.username
-      ORDER BY votes DESC, u.username ASC
-      LIMIT 10
-    `, [selected.key]);
-
-    const users = await db.all(`
-      SELECT id, username, full_name, profile_photo
-      FROM users
-      WHERE id <> ?
-      ORDER BY RANDOM()
-      LIMIT 2
-    `, [req.session.userId]);
-
-    const [u1, u2] = users;
-    const message = req.query.voted ? "Seu voto foi registrado. Novo duelo liberado!" : null;
-
-    res.render("game_cocada", {
-      categories: COCADA_CATEGORIES,
-      currentCategory: selected.key,
-      currentLabel,
-      ranking,
-      u1: u1 || null,
-      u2: u2 || null,
-      message
-    });
-  } catch (err) { next(err); }
+app.get("/games/cocada", requireAuth, (req, res) => {
+  return renderCocadaDisabled(req, res);
 });
 
-app.get("/duelo", requireAuth, async (req, res) => {
-  const qs = new URLSearchParams(req.query || {});
-  const suffix = qs.toString();
-  res.redirect("/games/cocada" + (suffix ? `?${suffix}` : ""));
+app.get("/duelo", requireAuth, (req, res) => {
+  return renderCocadaDisabled(req, res);
 });
 
-app.post("/games/cocada/vote", requireAuth, limiterWrite, async (req, res, next) => {
-  try {
-    const winnerId = Number(req.body.winner_id);
-    const loserId = Number(req.body.loser_id);
-    const currentCategory = String(req.body.category || "simpatico").trim();
-    const selected = COCADA_CATEGORIES.find(c => c.key === currentCategory) || COCADA_CATEGORIES[0];
-
-    if (!winnerId || !loserId || winnerId === loserId) {
-      req.flash("error", "Duelo inválido.");
-      return res.redirect("/games/cocada");
-    }
-
-    await db.run(`
-      INSERT INTO duel_votes (voter_id, winner_id, loser_id, category)
-      VALUES (?,?,?,?)
-    `, [req.session.userId, winnerId, loserId, selected.key]);
-
-    res.redirect(`/games/cocada?category=${encodeURIComponent(selected.key)}&voted=1`);
-  } catch (err) { next(err); }
+app.post("/games/cocada/vote", requireAuth, limiterWrite, (req, res) => {
+  req.flash("info", "O Rei da Cocada Klein Dream está temporariamente desativado.");
+  return res.redirect("/games");
 });
 
 app.get("/games/memory", requireAuth, async (req, res) => {
