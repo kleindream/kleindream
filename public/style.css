@@ -60,7 +60,6 @@ a:hover{ text-decoration:underline; }
   align-items:center;
   justify-content:space-between;
   gap:12px;
-  position:relative;
 }
 
 .brand{
@@ -68,7 +67,7 @@ a:hover{ text-decoration:underline; }
   font-size:18px;
   letter-spacing:.5px;
 }
-.brand a{ display:inline-flex; gap:6px; align-items:center; }
+.brand a{ display:inline-flex; gap:2px; align-items:baseline; }
 .brand span{
   color:var(--accent);
   text-shadow: 0 0 18px rgba(74,163,255,.18);
@@ -84,19 +83,6 @@ a:hover{ text-decoration:underline; }
   gap:10px;
   align-items:center;
   flex-wrap:wrap;
-  min-width:0;
-}
-.kd-nav-toggle{
-  display:none;
-  min-width:44px;
-  min-height:44px;
-  padding:8px 12px;
-  border-radius:12px;
-  border:1px solid var(--border);
-  background:rgba(255,255,255,.05);
-  color:var(--text);
-  font-size:1.2rem;
-  line-height:1;
 }
 .badge{
   display:inline-block;
@@ -917,7 +903,7 @@ input:focus, textarea:focus{
 
 
 /* Avatar gallery + mascot */
-.kd-brand-mascot{width:34px;height:34px;display:block;flex:0 0 auto;object-fit:contain;object-position:center;vertical-align:middle;filter:drop-shadow(0 0 8px rgba(125,179,255,.28));}
+.kd-brand-mascot{width:28px;height:28px;object-fit:contain;vertical-align:middle;filter:drop-shadow(0 0 8px rgba(125,179,255,.28));}
 .brand a{gap:8px;align-items:center;}
 .brand-text{display:inline-flex;gap:2px;align-items:baseline;}
 .mascot-chip{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));}
@@ -1427,74 +1413,75 @@ input:focus, textarea:focus{
 }
 
 
-/* ===== Mobile polish ===== */
-img{max-width:100%;height:auto;}
-input, select, textarea{max-width:100%;}
-textarea{resize:vertical;}
-button, .btn, .button, .nav a, .home-side-links a, .home-game-link{touch-action:manipulation;}
-@media (max-width: 840px){
-  body{font-size:16px;}
+/* ===== Mobile refinements March 2026 ===== */
+.kd-nav-toggle{display:none;min-width:44px;min-height:44px;padding:8px 12px;font-size:1.1rem;}
+.topbar .nav form{margin:0;}
+.topbar .nav .btn,.topbar .nav a{white-space:nowrap;}
+.table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+table{width:100%;}
+
+@media (max-width: 760px){
   .container{padding:12px;}
-  .topbar .container{align-items:center; flex-wrap:wrap;}
-  .brand{flex:1 1 auto; min-width:0;}
-  .brand-text{font-size:1rem;}
-  .kd-nav-toggle{display:inline-flex; align-items:center; justify-content:center; margin-left:auto;}
-  .topbar .nav{
-    display:none;
-    width:100%;
-    flex-direction:column;
-    align-items:stretch;
-    gap:8px;
-    padding:10px 0 0;
-  }
+  .topbar .container{align-items:center;flex-wrap:wrap;}
+  .brand{font-size:17px;}
+  .kd-brand-mascot{width:34px;height:34px;object-position:center center;}
+  .kd-nav-toggle{display:inline-flex;align-items:center;justify-content:center;margin-left:auto;}
+  .topbar .nav{display:none;width:100%;flex-direction:column;align-items:stretch;gap:8px;padding-top:8px;}
   .topbar .nav.open{display:flex;}
   .topbar .nav a,
   .topbar .nav form,
-  .topbar .nav .btn{width:100%;}
+  .topbar .nav button{width:100%;}
   .topbar .nav a,
-  .topbar .nav .btn,
-  .topbar .nav form button{
-    min-height:44px;
-    display:flex;
-    align-items:center;
-    justify-content:flex-start;
-    padding:10px 12px;
-    border-radius:12px;
-    background:rgba(255,255,255,.04);
-    border:1px solid rgba(255,255,255,.08);
-  }
-  .topbar .nav form{margin:0;}
-  .page-utility-bar .btn{flex:1 1 calc(50% - 8px); justify-content:center;}
-  .grid{gap:12px;}
-  .kv, .profile-kv{grid-template-columns:1fr; gap:4px 10px;}
-  .profile-username{font-size:1.3rem;}
-  .dashboard-hero-actions{grid-template-columns:1fr;}
+  .topbar .nav .btn{display:flex;align-items:center;justify-content:center;min-height:42px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);}
+  .page-utility-bar{gap:6px;margin:10px 0 12px 0;}
+  .page-utility-bar .btn{flex:1 1 calc(50% - 6px);justify-content:center;padding:10px 12px;}
+  .card{padding:10px;border-radius:14px;margin-bottom:10px;}
+  .h{margin-bottom:6px;}
+  .mascot-chip{gap:10px;padding:10px;}
+  .mascot-chip img{width:56px;height:56px;}
+  .home-hero-card .h,
+  .home-network-card .h{font-size:1.08rem !important;}
+  .home-hero-card p{font-size:.95rem !important;line-height:1.45 !important;}
+  .home-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+  .home-stat-box{padding:10px;border-radius:12px;}
+  .home-stat-box .v{font-size:1.35rem;margin:4px 0 2px 0;}
+  .home-side-links a,.home-game-link{padding:9px 10px;border-radius:10px;font-size:.95rem;}
+  .home-thumb-grid,.home-group-grid,.orkut-thumb-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+  .orkut-thumb-card{min-height:96px;padding:8px 4px;border-radius:10px;}
+  .orkut-thumb-avatar,.orkut-thumb-avatar.ph,.orkut-group-icon{width:46px;height:46px;border-radius:12px;}
+  .orkut-thumb-name{font-size:11px;line-height:1.15;}
+  .orkut-thumb-meta{font-size:10px;line-height:1.1;}
+  .profile-side-user{gap:8px;margin-bottom:10px;}
+  .profile-side-photo img,.profile-side-photo .profile-photo-ph{width:58px;height:58px;border-radius:14px;}
+  .profile-side-links a{padding:7px 9px;border-radius:9px;font-size:.92rem;}
+  .profile-hero-top{gap:10px;}
+  .profile-actions{gap:8px;}
+  .profile-actions .btn,.profile-actions form{width:100%;}
+  .profile-actions .btn{justify-content:center;}
+  .profile-kv{gap:8px 10px;}
+  .thumb-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+  .thumb-card{padding:8px 4px;min-height:88px;}
+  .thumb-avatar,.thumb-avatar.ph{width:42px;height:42px;border-radius:12px;}
+  .friends-grid,.groups-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
 }
-@media (max-width: 700px){
-  .card{padding:10px;}
-  .mascot-chip{align-items:flex-start;}
-  .mascot-chip img{width:72px;height:72px;align-self:flex-start;object-position:center top;}
-  .home-section-head{align-items:flex-start; flex-direction:column;}
-  .profile-actions .btn,
-  .profile-actions form,
-  .profile-actions .inline{width:100%;}
-  .profile-actions .btn{justify-content:center; width:100%; min-height:44px;}
-  .table{display:block; overflow-x:auto; white-space:nowrap; -webkit-overflow-scrolling:touch;}
-  .table th, .table td{padding:10px 8px;}
-}
+
 @media (max-width: 520px){
+  body{font-size:15px;}
   .container{padding:10px;}
-  .small{font-size:12px;}
-  .page-utility-bar{display:grid; grid-template-columns:1fr 1fr;}
-  .page-utility-bar .btn{width:100%;}
-  .home-thumb-grid, .home-group-grid, .home-stat-grid, .orkut-thumb-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
-  .thumb-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
-  .dashboard-title{font-size:1.45rem;}
-  .dashboard-lead{font-size:.98rem;}
-}
-@media (max-width: 380px){
-  .home-thumb-grid, .home-group-grid, .home-stat-grid, .orkut-thumb-grid, .thumb-grid{grid-template-columns:1fr;}
-  .page-utility-bar{grid-template-columns:1fr;}
-  .brand-text{font-size:.96rem;}
-  .kd-brand-mascot{width:32px;height:32px;}
+  .card{padding:9px;border-radius:12px;}
+  .home-thumb-grid,.home-group-grid,.orkut-thumb-grid,.thumb-grid,.friends-grid,.groups-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;}
+  .home-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;}
+  .home-stat-box{padding:8px;}
+  .home-stat-box .k{font-size:10px;}
+  .home-stat-box .v{font-size:1.12rem;}
+  .orkut-thumb-card,.thumb-card{min-height:82px;padding:6px 3px;}
+  .orkut-thumb-avatar,.orkut-thumb-avatar.ph,.orkut-group-icon,.thumb-avatar,.thumb-avatar.ph{width:38px;height:38px;border-radius:10px;}
+  .orkut-thumb-name,.thumb-name{font-size:10px;}
+  .orkut-thumb-meta{display:none;}
+  .profile-side-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;}
+  .profile-side-links a{text-align:center;padding:7px 6px;font-size:.88rem;}
+  .profile-side-user{align-items:center;}
+  .profile-side-name{font-size:1rem;}
+  .home-side-links a,.home-game-link{padding:8px 9px;font-size:.9rem;}
+  .page-utility-bar .btn{flex:1 1 100%;}
 }

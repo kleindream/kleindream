@@ -444,7 +444,7 @@ async function getCadernoMyAnswers(userId, limit = 12) {
   `, [userId, limit]);
 }
 
-app.get("/", async (req, res) => res.render("index"));
+app.get("/", async (req, res) => res.redirect("/home"));
 
 
 app.get("/termos", (req, res) => {
