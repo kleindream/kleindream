@@ -28,3 +28,10 @@ self.addEventListener("fetch", (event) => {
     })
   );
 });
+
+self.addEventListener('fetch', function(event) {
+  const url = event.request.url;
+  if (url.includes('/login') || url.includes('/logout') || url.includes('/register')) {
+    return;
+  }
+});

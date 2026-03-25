@@ -204,7 +204,7 @@ function formatMemberSince(value) {
 
 
 function requireAuth(req, res, next) {
-  if (!req.session.userId) return res.redirect("/login");
+  if (!req.session.userId) return res.redirect('/home');
   next();
 }
 
@@ -496,7 +496,7 @@ app.post("/login", limiterAuth, async (req, res) => {
 });
 
 app.post("/logout", async (req, res) => {
-  req.session.destroy(() => res.redirect("/"));
+  req.session.destroy(() => res.redirect('/home'));
 });
 
 
@@ -1360,11 +1360,11 @@ app.post("/rate-user", requireAuth, async (req, res) => {
   const fromUserId = req.session.userId;
   const toUserId = Number(req.body.user_id || 0);
   if (!toUserId || fromUserId === toUserId) {
-    return res.redirect("/");
+    return res.redirect('/home');
   }
 
   const target = await db.get("SELECT username FROM users WHERE id=?", [toUserId]);
-  if (!target) return res.redirect("/");
+  if (!target) return res.redirect('/home');
 
   const friendship = await db.get(
     "SELECT 1 FROM friendships WHERE user_id=? AND friend_id=?",
@@ -1689,7 +1689,7 @@ app.post("/account/delete", limiterActions, requireAuth, async (req, res, next) 
 
     req.session.destroy(() => {});
     req.flash("success", "Conta excluída com sucesso.");
-    res.redirect("/");
+    res.redirect('/home');
   } catch (err) {
     return next(err);
   }
