@@ -21,3 +21,30 @@
 .kd-gtalk-form button{border:1px solid #8eb1ec;background:linear-gradient(#fff,#e1eeff);color:#234a88;border-radius:6px;padding:6px 9px;font-size:12px;font-weight:700;cursor:pointer}
 .kd-gtalk-note{padding:5px 8px;border-top:1px solid #e7eefb;background:#fffef2;color:#7c5a00;font-size:11px}
 @media (max-width:700px){.kd-gtalk-dock{right:8px;bottom:44px}.kd-gtalk-roster,.kd-gtalk-window{width:min(220px,calc(100vw - 16px))}}
+
+/* SUPER LOLITA MOBILE FIX */
+@media (max-width:768px){
+  .container{padding:8px;}
+  .box,.card{padding:6px;margin-bottom:6px;}
+  .layout{display:block;}
+  .left,.center,.right{width:100%;margin-bottom:8px;}
+
+  .users-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:6px;
+  }
+  @media(max-width:480px){
+    .users-grid{grid-template-columns:repeat(2,1fr);}
+  }
+
+  img{max-width:100%;height:auto;}
+  button,a,input{min-height:38px;font-size:14px;}
+}
+
+/* Sr Disquete fix */
+.sr-disquete img{
+  width:100%;
+  height:auto;
+  object-fit:contain;
+}
