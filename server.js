@@ -520,26 +520,79 @@ async function renderGamePage(req, res, viewName, game) {
 
 
 
-function renderCocadaDisabled(req, res) {
-  return res.status(403).render("error", {
-    title: "Recurso temporariamente desativado",
-    message: "O Rei da Cocada Klein Dream foi retirado do ar por enquanto. Assim a rede fica mais segura e sem erro 500.",
-    status: 403,
-    requestId: req.requestId
-  });
-}
+const COCADA_CATEGORIES = [
+  { key: "simpatico", label: "Mais simpático" },
+  { key: "estiloso", label: "Mais estiloso" },
+  { key: "inteligente", label: "Mais inteligente" },
+  { key: "bonito", label: "Mais bonito" },
+  { key: "engracado", label: "Mais engraçado" },
+  { key: "genteboa", label: "Mais gente boa" }
+];
 
-app.get("/games/cocada", requireAuth, (req, res) => {
-  return renderCocadaDisabled(req, res);
+app.get("/games/cocada", requireAuth, async (req, res, next) => {
+  try {
+    const currentCategory = String(req.query.category || "simpatico").trim();
+    const selected = COCADA_CATEGORIES.find(c => c.key === currentCategory) || COCADA_CATEGORIES[0];
+    const currentLabel = selected.label;
+
+    const ranking = await db.all(`
+      SELECT u.username, COUNT(*)::int AS votes
+      FROM duel_votes dv
+      JOIN users u ON u.id = dv.winner_id
+      WHERE dv.category = ?
+      GROUP BY u.id, u.username
+      ORDER BY votes DESC, u.username ASC
+      LIMIT 10
+    `, [selected.key]);
+
+    const users = await db.all(`
+      SELECT id, username, full_name, profile_photo
+      FROM users
+      WHERE id <> ?
+      ORDER BY RANDOM()
+      LIMIT 2
+    `, [req.session.userId]);
+
+    const [u1, u2] = users;
+    const message = req.query.voted ? "Seu voto foi registrado. Novo duelo liberado!" : null;
+
+    res.render("game_cocada", {
+      categories: COCADA_CATEGORIES,
+      currentCategory: selected.key,
+      currentLabel,
+      ranking,
+      u1: u1 || null,
+      u2: u2 || null,
+      message
+    });
+  } catch (err) { next(err); }
 });
 
-app.get("/duelo", requireAuth, (req, res) => {
-  return renderCocadaDisabled(req, res);
+app.get("/duelo", requireAuth, async (req, res) => {
+  const qs = new URLSearchParams(req.query || {});
+  const suffix = qs.toString();
+  res.redirect("/games/cocada" + (suffix ? `?${suffix}` : ""));
 });
 
-app.post("/games/cocada/vote", requireAuth, limiterWrite, (req, res) => {
-  req.flash("info", "O Rei da Cocada Klein Dream está temporariamente desativado.");
-  return res.redirect("/games");
+app.post("/games/cocada/vote", requireAuth, limiterWrite, async (req, res, next) => {
+  try {
+    const winnerId = Number(req.body.winner_id);
+    const loserId = Number(req.body.loser_id);
+    const currentCategory = String(req.body.category || "simpatico").trim();
+    const selected = COCADA_CATEGORIES.find(c => c.key === currentCategory) || COCADA_CATEGORIES[0];
+
+    if (!winnerId || !loserId || winnerId === loserId) {
+      req.flash("error", "Duelo inválido.");
+      return res.redirect("/games/cocada");
+    }
+
+    await db.run(`
+      INSERT INTO duel_votes (voter_id, winner_id, loser_id, category)
+      VALUES (?,?,?,?)
+    `, [req.session.userId, winnerId, loserId, selected.key]);
+
+    res.redirect(`/games/cocada?category=${encodeURIComponent(selected.key)}&voted=1`);
+  } catch (err) { next(err); }
 });
 
 app.get("/games/memory", requireAuth, async (req, res) => {
@@ -1209,88 +1262,6 @@ app.get("/u/:username", requireAuth, async (req, res) => {
     }
   }
 
-  const ratings = await db.get(`
-    SELECT
-      COALESCE(ROUND(AVG(beauty) * 20), 0)::int AS beauty,
-      COALESCE(ROUND(AVG(friendly) * 20), 0)::int AS friendly,
-      COALESCE(ROUND(AVG(happy) * 20), 0)::int AS happy,
-      COALESCE(ROUND(AVG(smart) * 20), 0)::int AS smart,
-      COUNT(*)::int AS votes_count
-    FROM user_ratings
-    WHERE to_user_id=?
-  `, [user.id]) || { beauty:0, friendly:0, happy:0, smart:0, votes_count:0 };
-
-  const myRating = (!isMe && meId)
-    ? await db.get(`
-        SELECT beauty, friendly, happy, smart
-        FROM user_ratings
-        WHERE from_user_id=? AND to_user_id=?
-      `, [meId, user.id])
-    : null;
-
-  const canRateProfile = !isMe && !!friend;
-
-  const activeProfilePoll = await db.get(`
-    SELECT id, user_id, question, created_at
-    FROM profile_polls
-    WHERE user_id=? AND is_active=1
-    ORDER BY created_at DESC
-    LIMIT 1
-  `, [user.id]);
-
-  let profilePoll = null;
-  if (activeProfilePoll) {
-    const pollOptions = await db.all(`
-      SELECT
-        o.id,
-        o.option_text,
-        o.sort_order,
-        COUNT(v.id)::int AS votes
-      FROM profile_poll_options o
-      LEFT JOIN profile_poll_votes v ON v.option_id = o.id
-      WHERE o.poll_id=?
-      GROUP BY o.id
-      ORDER BY o.sort_order ASC, o.id ASC
-    `, [activeProfilePoll.id]);
-
-    const totalVotesPoll = pollOptions.reduce((sum, opt) => sum + Number(opt.votes || 0), 0);
-    const myPollVote = (!isMe && meId)
-      ? await db.get(`SELECT option_id FROM profile_poll_votes WHERE poll_id=? AND user_id=? LIMIT 1`, [activeProfilePoll.id, meId])
-      : null;
-
-    profilePoll = {
-      ...activeProfilePoll,
-      created_at: formatDateBR(activeProfilePoll.created_at),
-      totalVotes: totalVotesPoll,
-      myVoteOptionId: myPollVote ? Number(myPollVote.option_id) : null,
-      canVote: !isMe && !!friend,
-      options: pollOptions.map(opt => ({
-        ...opt,
-        votes: Number(opt.votes || 0),
-        percent: totalVotesPoll > 0 ? Math.round((Number(opt.votes || 0) * 100) / totalVotesPoll) : 0
-      }))
-    };
-  }
-
-  const giftSummaryRows = await db.all(`
-    SELECT gift_key, COUNT(*)::int AS total
-    FROM profile_gifts
-    WHERE to_user_id=?
-    GROUP BY gift_key
-    ORDER BY total DESC, gift_key ASC
-  `, [user.id]);
-  const giftSummary = Object.fromEntries(giftSummaryRows.map(row => [row.gift_key, Number(row.total || 0)]));
-
-  const recentGifts = await db.all(`
-    SELECT pg.gift_key, pg.message, pg.created_at, u.username AS from_username
-    FROM profile_gifts pg
-    JOIN users u ON u.id = pg.from_user_id
-    WHERE pg.to_user_id=?
-    ORDER BY pg.created_at DESC
-    LIMIT 8
-  `, [user.id]);
-  for (const g of recentGifts) g.created_at = formatDateBR(g.created_at);
-
   res.render("profile", {
     user, isMe,
     friend: !!friend, reqOut, reqIn,
@@ -1298,171 +1269,8 @@ app.get("/u/:username", requireAuth, async (req, res) => {
     profileFriends, profileGroups, groupsCount,
     totalVisits, visitors, canSeeVisitors,
     isBirthdayToday: isBirthdayToday(user.birth_date), memberSince,
-    sign, vibeFrase, ratings, myRating, canRateProfile,
-    profilePoll, giftSummary, recentGifts
+    sign, vibeFrase
   });
-});
-
-app.post("/rate-user", requireAuth, async (req, res) => {
-  const fromUserId = req.session.userId;
-  const toUserId = Number(req.body.user_id || 0);
-  if (!toUserId || fromUserId === toUserId) {
-    return res.redirect("/");
-  }
-
-  const target = await db.get("SELECT username FROM users WHERE id=?", [toUserId]);
-  if (!target) return res.redirect("/");
-
-  const friendship = await db.get(
-    "SELECT 1 FROM friendships WHERE user_id=? AND friend_id=?",
-    [fromUserId, toUserId]
-  );
-  if (!friendship) {
-    req.flash("error", "Somente amigos podem avaliar este perfil.");
-    return res.redirect(`/u/${target.username}`);
-  }
-
-  const beauty = Math.max(1, Math.min(5, Number(req.body.beauty || 1)));
-  const friendly = Math.max(1, Math.min(5, Number(req.body.friendly || 1)));
-  const happy = Math.max(1, Math.min(5, Number(req.body.happy || 1)));
-  const smart = Math.max(1, Math.min(5, Number(req.body.smart || 1)));
-
-  await db.run(`
-    INSERT INTO user_ratings (from_user_id, to_user_id, beauty, friendly, happy, smart)
-    VALUES (?,?,?,?,?,?)
-    ON CONFLICT (from_user_id, to_user_id)
-    DO UPDATE SET
-      beauty=EXCLUDED.beauty,
-      friendly=EXCLUDED.friendly,
-      happy=EXCLUDED.happy,
-      smart=EXCLUDED.smart,
-      updated_at=NOW()
-  `, [fromUserId, toUserId, beauty, friendly, happy, smart]);
-
-  req.flash("success", "Avaliação salva com sucesso.");
-  return res.redirect(`/u/${target.username}`);
-});
-
-app.post("/profile-poll/create", requireAuth, limiterWrite, async (req, res) => {
-  const meId = req.session.userId;
-  const ownerId = Number(req.body.owner_id || 0);
-  if (!ownerId || ownerId !== meId) return res.redirect("/home");
-
-  const me = await getUserById(meId);
-  if (!me) return res.redirect("/home");
-
-  const question = String(req.body.question || "").trim().slice(0, 140);
-  const options = [req.body.option1, req.body.option2, req.body.option3, req.body.option4]
-    .map(v => String(v || "").trim().slice(0, 80))
-    .filter(Boolean);
-
-  if (!question || options.length < 2) {
-    req.flash("error", "Crie uma pergunta e pelo menos 2 opções.");
-    return res.redirect(`/u/${me.username}`);
-  }
-
-  await db.run("UPDATE profile_polls SET is_active=0, updated_at=NOW() WHERE user_id=? AND is_active=1", [meId]);
-
-  const created = await db.get(`
-    INSERT INTO profile_polls (user_id, question, is_active)
-    VALUES (?,?,1)
-    RETURNING id
-  `, [meId, question]);
-
-  for (let i = 0; i < options.length; i++) {
-    await db.run(`
-      INSERT INTO profile_poll_options (poll_id, option_text, sort_order)
-      VALUES (?,?,?)
-    `, [created.id, options[i], i + 1]);
-  }
-
-  req.flash("success", "Sua enquete foi criada.");
-  return res.redirect(`/u/${me.username}`);
-});
-
-app.post("/profile-poll/close", requireAuth, limiterWrite, async (req, res) => {
-  const meId = req.session.userId;
-  const pollId = Number(req.body.poll_id || 0);
-  const me = await getUserById(meId);
-  if (!pollId || !me) return res.redirect("/home");
-
-  await db.run("UPDATE profile_polls SET is_active=0, updated_at=NOW() WHERE id=? AND user_id=?", [pollId, meId]);
-  req.flash("success", "Enquete encerrada.");
-  return res.redirect(`/u/${me.username}`);
-});
-
-app.post("/profile-poll/vote", requireAuth, limiterWrite, async (req, res) => {
-  const meId = req.session.userId;
-  const pollId = Number(req.body.poll_id || 0);
-  const optionId = Number(req.body.option_id || 0);
-  const username = String(req.body.username || "").trim();
-  if (!pollId || !optionId || !username) return res.redirect("/home");
-
-  const target = await db.get("SELECT id, username FROM users WHERE username=?", [username]);
-  if (!target || target.id === meId) return res.redirect(target ? `/u/${target.username}` : "/home");
-
-  const friendship = await db.get("SELECT 1 FROM friendships WHERE user_id=? AND friend_id=?", [meId, target.id]);
-  if (!friendship) {
-    req.flash("error", "Somente amigos podem votar nesta enquete.");
-    return res.redirect(`/u/${username}`);
-  }
-
-  const validOption = await db.get(`
-    SELECT o.id
-    FROM profile_poll_options o
-    JOIN profile_polls p ON p.id = o.poll_id
-    WHERE o.id=? AND p.id=? AND p.user_id=? AND p.is_active=1
-    LIMIT 1
-  `, [optionId, pollId, target.id]);
-  if (!validOption) {
-    req.flash("error", "Opção inválida.");
-    return res.redirect(`/u/${username}`);
-  }
-
-  await db.run(`
-    INSERT INTO profile_poll_votes (poll_id, option_id, user_id)
-    VALUES (?,?,?)
-    ON CONFLICT (poll_id, user_id)
-    DO UPDATE SET option_id=EXCLUDED.option_id, updated_at=NOW()
-  `, [pollId, optionId, meId]);
-
-  req.flash("success", "Seu voto foi salvo.");
-  return res.redirect(`/u/${username}`);
-});
-
-app.post("/profile-gift/send", requireAuth, limiterWrite, async (req, res) => {
-  const meId = req.session.userId;
-  const toUserId = Number(req.body.to_user_id || 0);
-  const giftKey = String(req.body.gift_key || "").trim().toLowerCase();
-  const validGifts = new Set(["piscar", "coracao", "flor", "abraco", "joinha"]);
-  if (!toUserId || toUserId === meId || !validGifts.has(giftKey)) return res.redirect("/home");
-
-  const target = await db.get("SELECT id, username FROM users WHERE id=?", [toUserId]);
-  if (!target) return res.redirect("/home");
-
-  const friendship = await db.get("SELECT 1 FROM friendships WHERE user_id=? AND friend_id=?", [meId, toUserId]);
-  if (!friendship) {
-    req.flash("error", "Somente amigos podem enviar presentes rápidos.");
-    return res.redirect(`/u/${target.username}`);
-  }
-
-  await db.run(`
-    INSERT INTO profile_gifts (from_user_id, to_user_id, gift_key, message)
-    VALUES (?,?,?,NULL)
-  `, [meId, toUserId, giftKey]);
-
-  const me = await getUserById(meId);
-  const giftNames = {
-    piscar: "uma piscadinha 😉",
-    coracao: "um coração 💖",
-    flor: "uma flor 🌹",
-    abraco: "um abraço 🤗",
-    joinha: "um joinha 👍"
-  };
-  await addNotif(toUserId, "gift", `${me.username} enviou ${giftNames[giftKey] || 'um presente'} para você.`, `/u/${target.username}`);
-
-  req.flash("success", "Presente enviado.");
-  return res.redirect(`/u/${target.username}`);
 });
 
 app.get("/profile/edit", requireAuth, async (req, res) => {

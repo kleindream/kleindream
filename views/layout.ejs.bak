@@ -5,13 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title><%= title || "KleinDream" %></title>
   <link rel="icon" type="image/png" href="/img/favicon.png" />
-  <link rel="manifest" href="/manifest.json" />
-  <meta name="theme-color" content="#6d4aff" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="KleinDream" />
-  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
   <link rel="stylesheet" href="/style.css" />
   <link rel="stylesheet" href="/gtalk-mini.css" />
 </head>
@@ -25,19 +18,6 @@
   </div>
 
   <div id="kdToasts" class="kd-toasts" aria-live="polite" aria-atomic="true"></div>
-  <div id="kdInstallBanner" class="kd-install-banner" hidden>
-    <div class="kd-install-banner__content">
-      <img src="/icons/icon-192.png" alt="Klein Dream" class="kd-install-banner__icon" />
-      <div class="kd-install-banner__text">
-        <strong>Instale a Klein Dream</strong>
-        <span>Abra como app, direto da tela inicial.</span>
-      </div>
-    </div>
-    <div class="kd-install-banner__actions">
-      <button id="kdInstallBtn" class="btn" type="button">Instalar</button>
-      <button id="kdInstallClose" class="btn ghost" type="button">Agora não</button>
-    </div>
-  </div>
 
   <div class="topbar">
     <div class="container">
@@ -122,84 +102,5 @@
   <script src="/gtalk-mini.js"></script>
 <% } %>
 <script src="/kd.js"></script>
-  <script>
-    (function () {
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-      const installBanner = document.getElementById('kdInstallBanner');
-      const installBtn = document.getElementById('kdInstallBtn');
-      const closeBtn = document.getElementById('kdInstallClose');
-      const canInstallKey = 'kd-install-dismissed-v1';
-      let deferredPrompt = null;
-
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function () {
-          navigator.serviceWorker.register('/service-worker.js').catch(function (err) {
-            console.warn('Service worker não registrado:', err);
-          });
-        });
-      }
-
-      function isMobile() {
-        return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|Mobile/i.test(navigator.userAgent || '');
-      }
-
-      function showBanner() {
-        if (!installBanner || isStandalone || !isMobile()) return;
-        if (localStorage.getItem(canInstallKey) === '1') return;
-        installBanner.hidden = false;
-      }
-
-      function hideBanner(persist) {
-        if (!installBanner) return;
-        installBanner.hidden = true;
-        if (persist) localStorage.setItem(canInstallKey, '1');
-      }
-
-      window.addEventListener('beforeinstallprompt', function (e) {
-        e.preventDefault();
-        deferredPrompt = e;
-        showBanner();
-      });
-
-      window.addEventListener('appinstalled', function () {
-        deferredPrompt = null;
-        hideBanner(true);
-        localStorage.removeItem(canInstallKey);
-      });
-
-      if (installBtn) {
-        installBtn.addEventListener('click', async function () {
-          if (deferredPrompt) {
-            deferredPrompt.prompt();
-            try { await deferredPrompt.userChoice; } catch (_) {}
-            deferredPrompt = null;
-            hideBanner(true);
-            return;
-          }
-
-          const isiOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
-          if (isiOS) {
-            alert('No iPhone/iPad, toque em Compartilhar e depois em “Adicionar à Tela de Início”.');
-            hideBanner(true);
-            return;
-          }
-
-          alert('Use a opção “Instalar app” ou “Adicionar à tela inicial” no menu do navegador.');
-          hideBanner(true);
-        });
-      }
-
-      if (closeBtn) {
-        closeBtn.addEventListener('click', function () { hideBanner(true); });
-      }
-
-      window.addEventListener('load', function () {
-        setTimeout(function () {
-          if (!deferredPrompt && isMobile() && !isStandalone) showBanner();
-        }, 1800);
-      });
-    })();
-  </script>
-
 </body>
 </html>
