@@ -126,35 +126,4 @@
   window.KD = window.KD || {};
   window.KD.toast = toast;
   window.kdToast = toast;
-  // Mobile nav
-  function syncMobileNav() {
-    const btn = document.getElementById('kdNavToggle');
-    const nav = document.getElementById('kdPrimaryNav');
-    if (!btn || !nav) return;
-    if (window.innerWidth > 760) {
-      nav.classList.remove('open');
-      btn.setAttribute('aria-expanded', 'false');
-    }
-  }
-  document.addEventListener('click', (e) => {
-    const btn = e.target && e.target.closest ? e.target.closest('#kdNavToggle') : null;
-    if (btn) {
-      const nav = document.getElementById('kdPrimaryNav');
-      if (!nav) return;
-      const open = nav.classList.toggle('open');
-      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-      return;
-    }
-    const nav = document.getElementById('kdPrimaryNav');
-    const toggle = document.getElementById('kdNavToggle');
-    if (!nav || !toggle || window.innerWidth > 760) return;
-    const clickedInside = e.target && (e.target.closest('#kdPrimaryNav') || e.target.closest('#kdNavToggle'));
-    if (!clickedInside && nav.classList.contains('open')) {
-      nav.classList.remove('open');
-      toggle.setAttribute('aria-expanded', 'false');
-    }
-  });
-  window.addEventListener('resize', syncMobileNav);
-  document.addEventListener('DOMContentLoaded', syncMobileNav);
-
 })();

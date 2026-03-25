@@ -2,11 +2,11 @@
   "name": "Klein Dream",
   "short_name": "KleinDream",
   "description": "Rede social nostálgica inspirada na melhor era da internet.",
-  "start_url": "/home",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#f3efff",
+  "background_color": "#ffffff",
   "theme_color": "#6d4aff",
   "icons": [
     {
@@ -19,11 +19,5 @@
       "sizes": "512x512",
       "type": "image/png"
     }
-  ],
-  "id": "/home",
-  "display_override": [
-    "window-controls-overlay",
-    "standalone"
-  ],
-  "prefer_related_applications": false
+  ]
 }

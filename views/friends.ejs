@@ -2,30 +2,32 @@
   <div class="card">
     <div class="h">Meus amigos</div>
     ${friends.length ? `
-      <div class="small" style="margin-bottom:12px;">Total: ${total} amigo${total === 1 ? '' : 's'}</div>
-      <div class="thumb-grid compact-people-grid">
-        ${friends.map(f => `
-          <div class="thumb-card">
-            <a href="/u/${f.username}" style="text-decoration:none;color:inherit;display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;">
-              ${f.profile_photo
-                ? `<img class="thumb-avatar kd-zoom" src="${photoSrc(f.profile_photo)}" alt="${escapeHtml(f.username)}" />`
-                : `<div class="thumb-avatar ph">?</div>`}
-              <div class="thumb-name">${escapeHtml(f.full_name || f.username)}</div>
-              <div class="small">@${escapeHtml(f.username)}</div>
-            </a>
-            <form method="post" action="/friends/remove/${f.id}">
-              <button class="btn danger mini" type="submit">Remover</button>
-            </form>
-          </div>
-        `).join("")}
-      </div>
+      <table class="table">
+        <thead><tr><th>Usuário</th><th>Nome</th><th></th></tr></thead>
+        <tbody>
+          ${friends.map(f => `
+            <tr>
+              <td><a href="/u/${f.username}">${f.username}</a></td>
+              <td>${f.full_name || ""}</td>
+              <td>
+                <form method="post" action="/friends/remove/${f.id}">
+                  <button class="btn danger" type="submit">Remover</button>
+                </form>
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      
+      </table>
       <div class="kd-pagination" style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap;">
-        <div style="opacity:.9;">Página ${page} de ${pages}</div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <div style="opacity:.9;">Total: ${total}</div>
+        <div style="display:flex;gap:8px;align-items:center;">
           ${page > 1 ? `<a class="btn ghost" href="/friends?page=${page-1}">← Anterior</a>` : `<span class="btn ghost" style="opacity:.4;pointer-events:none;">← Anterior</span>`}
+          <span style="opacity:.85;">Página ${page} de ${pages}</span>
           ${page < pages ? `<a class="btn ghost" href="/friends?page=${page+1}">Próxima →</a>` : `<span class="btn ghost" style="opacity:.4;pointer-events:none;">Próxima →</span>`}
         </div>
       </div>
+    
     ` : `<div class="small">Você ainda não tem amigos aqui.</div>`}
   </div>
 
