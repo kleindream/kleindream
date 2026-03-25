@@ -43,7 +43,8 @@
     <div class="container">
       <div class="brand"><a href="/"><img class="kd-brand-mascot" src="/img/sr-disquete.png" alt="Sr. Disquete" /><span class="brand-text"><span>Klein</span>Dream</span></a></div>
 
-      <div class="nav">
+      <button id="kdNavToggle" class="kd-nav-toggle" type="button" aria-expanded="false" aria-controls="kdMainNav" aria-label="Abrir menu">☰</button>
+      <div class="nav" id="kdMainNav">
         <% if (me) { %>
           <a href="/home">🏠 Início</a>
           <a href="/friends">👥 Amigos</a>
@@ -122,6 +123,29 @@
   <script src="/gtalk-mini.js"></script>
 <% } %>
 <script src="/kd.js"></script>
+  <script>
+    (function () {
+      const toggle = document.getElementById("kdNavToggle");
+      const nav = document.getElementById("kdMainNav");
+      if (!toggle || !nav) return;
+      function closeNav() {
+        nav.classList.remove("open");
+        toggle.setAttribute("aria-expanded", "false");
+      }
+      toggle.addEventListener("click", function () {
+        const willOpen = !nav.classList.contains("open");
+        nav.classList.toggle("open", willOpen);
+        toggle.setAttribute("aria-expanded", willOpen ? "true" : "false");
+      });
+      nav.querySelectorAll("a").forEach(function (link) {
+        link.addEventListener("click", closeNav);
+      });
+      window.addEventListener("resize", function () {
+        if (window.innerWidth > 840) closeNav();
+      });
+    })();
+  </script>
+
   <script>
     (function () {
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
