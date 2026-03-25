@@ -207,6 +207,99 @@
         <div style="margin-top:10px;"><a class="btn secondary" href="/friends">Ver amigos</a></div>
       </div>
 
+      <div class="card profile-side-card right-side-card profile-utility-card">
+        <div class="h">Cartão de usuário</div>
+        <div class="profile-card-mini">
+          <div class="profile-card-row"><span>💬 Humor</span><b>${escapeHtml(user.mood || 'Não informado')}</b></div>
+          <div class="profile-card-row"><span>💕 Relacionamento</span><b>${escapeHtml(user.marital_status || '-')}</b></div>
+          <div class="profile-card-row"><span>🎯 Procura</span><b>${escapeHtml(user.looking_for || '-')}</b></div>
+          <div class="profile-card-row"><span>⭐ Fãs</span><b>${fansCount}</b></div>
+          <div class="profile-card-row"><span>👥 Amigos</span><b>${friendsCount}</b></div>
+          <div class="profile-card-row"><span>🧩 Grupos</span><b>${groupsCount}</b></div>
+        </div>
+      </div>
+
+      <div class="card profile-side-card right-side-card profile-utility-card">
+        <div class="h">Dê uma nota</div>
+        <div class="small" style="margin-bottom:8px;">Média: <b>${ratingSummary.avg ? ratingSummary.avg.toFixed(1) : '0.0'}</b>/5 · ${ratingSummary.total} voto${ratingSummary.total === 1 ? '' : 's'}</div>
+        ${!isMe ? `
+          <form method="post" action="/u/${user.username}/rate" class="profile-rating-form">
+            <div class="rating-grid">
+              ${[1,2,3,4,5].map(n => `
+                <button class="rating-pill ${myRating === n ? 'active' : ''}" type="submit" name="rating" value="${n}">${n}★</button>
+              `).join('')}
+            </div>
+          </form>
+        ` : `<div class="small">As notas aparecem aqui para quem visitar seu perfil.</div>`}
+      </div>
+
+      <div class="card profile-side-card right-side-card profile-utility-card">
+        <div class="h">Presentes (${giftsCount})</div>
+        ${!isMe ? `
+          <form method="post" action="/u/${user.username}/gift" class="gift-form">
+            <div class="gift-grid">
+              ${profileGiftOptions.map(g => `
+                <button class="gift-pill" type="submit" name="gift_key" value="${g.key}" title="${g.label}">${g.icon}<span>${g.label}</span></button>
+              `).join('')}
+            </div>
+          </form>
+        ` : `<div class="small" style="margin-bottom:8px;">Os presentes que enviarem para você aparecem aqui.</div>`}
+        ${recentGifts.length ? `
+          <div class="gift-history">
+            ${recentGifts.map(g => `
+              <div class="gift-history-item">
+                <span class="gift-badge">${escapeHtml(g.gift_label)}</span>
+                <span class="small">de <a href="/u/${g.from_username}">${escapeHtml(g.from_username)}</a></span>
+              </div>
+            `).join('')}
+          </div>
+        ` : `<div class="small">Ainda não há presentes neste perfil.</div>`}
+      </div>
+
+      <div class="card profile-side-card right-side-card profile-utility-card">
+        <div class="h">Enquete</div>
+        ${poll ? `
+          <div class="poll-card">
+            <div class="poll-question">${escapeHtml(poll.question)}</div>
+            ${!isMe ? `
+              <form method="post" action="/poll/${poll.id}/vote">
+                <div class="poll-options">
+                  ${poll.options.map(o => { const pct = poll.totalVotes ? Math.round((Number(o.votes || 0) / poll.totalVotes) * 100) : 0; return `
+                    <label class="poll-option ${poll.myVote === o.id ? 'selected' : ''}">
+                      <input type="radio" name="option_id" value="${o.id}" ${poll.myVote === o.id ? 'checked' : ''} />
+                      <span>${escapeHtml(o.option_text)}</span>
+                      <b>${o.votes} voto${Number(o.votes) === 1 ? '' : 's'}</b>
+                      <em>${pct}%</em>
+                    </label>
+                  `; }).join('')}
+                </div>
+                <button class="btn" type="submit">Votar</button>
+              </form>
+            ` : `
+              <div class="poll-options readonly">
+                ${poll.options.map(o => { const pct = poll.totalVotes ? Math.round((Number(o.votes || 0) / poll.totalVotes) * 100) : 0; return `
+                  <div class="poll-option readonly">
+                    <span>${escapeHtml(o.option_text)}</span>
+                    <b>${o.votes} voto${Number(o.votes) === 1 ? '' : 's'}</b>
+                    <em>${pct}%</em>
+                  </div>
+                `; }).join('')}
+              </div>
+            `}
+            <div class="small" style="margin-top:8px;">Total de votos: ${poll.totalVotes}</div>
+          </div>
+        ` : isMe ? `
+          <form method="post" action="/u/${user.username}/poll" class="poll-create-form">
+            <input name="question" maxlength="160" placeholder="Pergunta da enquete" required />
+            <input name="option1" maxlength="80" placeholder="Opção 1" required />
+            <input name="option2" maxlength="80" placeholder="Opção 2" required />
+            <input name="option3" maxlength="80" placeholder="Opção 3 (opcional)" />
+            <input name="option4" maxlength="80" placeholder="Opção 4 (opcional)" />
+            <button class="btn" type="submit">Publicar enquete</button>
+          </form>
+        ` : `<div class="small">Este perfil ainda não publicou uma enquete.</div>`}
+      </div>
+
       <div class="card profile-side-card right-side-card">
         <div class="h">Grupos (${groupsCount})</div>
         ${profileGroups.length ? `
