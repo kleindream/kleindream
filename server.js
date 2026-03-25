@@ -32,16 +32,6 @@ const BUILTIN_AVATARS = [
   { path: '/avatars/avatar-sun.svg', label: 'Estrelinha' }
 ];
 
-const PROFILE_GIFTS = [
-  { key: "flor", icon: "🌹", label: "Flor" },
-  { key: "cafe", icon: "☕", label: "Café" },
-  { key: "coracao", icon: "💖", label: "Coração" },
-  { key: "game", icon: "🎮", label: "Game" },
-  { key: "estrela", icon: "⭐", label: "Estrela" },
-  { key: "disquete", icon: "💾", label: "Disquete" }
-];
-
-
 // Supabase Storage (for profile photos & albums)
 // Set these env vars in Render/Vercel:
 //   SUPABASE_URL
@@ -454,7 +444,7 @@ async function getCadernoMyAnswers(userId, limit = 12) {
   `, [userId, limit]);
 }
 
-app.get("/", async (req, res) => res.redirect("/home"));
+app.get("/", async (req, res) => res.render("index"));
 
 
 app.get("/termos", (req, res) => {
@@ -1258,57 +1248,6 @@ app.get("/u/:username", requireAuth, async (req, res) => {
 
   for (const v of visitors) v.created_at = formatDateBR(v.created_at);
 
-  const ratingSummary = await db.get(`
-    SELECT COALESCE(ROUND(AVG(rating)::numeric, 1), 0) AS avg_rating, COUNT(*)::int AS total
-    FROM profile_ratings
-    WHERE rated_user_id=?
-  `, [user.id]);
-
-  const myRatingRow = !isMe ? await db.get(`
-    SELECT rating
-    FROM profile_ratings
-    WHERE rated_user_id=? AND rater_user_id=?
-  `, [user.id, meId]) : null;
-
-  const giftsCount = Number((await db.get(`
-    SELECT COUNT(*)::int AS c FROM profile_gifts WHERE to_user_id=?
-  `, [user.id]))?.c || 0);
-
-  const recentGifts = await db.all(`
-    SELECT g.gift_key, g.gift_label, g.created_at, u.username AS from_username
-    FROM profile_gifts g
-    JOIN users u ON u.id = g.from_user_id
-    WHERE g.to_user_id=?
-    ORDER BY g.created_at DESC
-    LIMIT 9
-  `, [user.id]);
-
-  const activePoll = await db.get(`
-    SELECT id, question, created_at
-    FROM profile_polls
-    WHERE user_id=? AND is_active=1
-    ORDER BY created_at DESC
-    LIMIT 1
-  `, [user.id]);
-
-  let poll = null;
-  if (activePoll) {
-    const options = await db.all(`
-      SELECT o.id, o.option_text, o.sort_order,
-             COUNT(v.id)::int AS votes
-      FROM profile_poll_options o
-      LEFT JOIN profile_poll_votes v ON v.option_id = o.id
-      WHERE o.poll_id=?
-      GROUP BY o.id, o.option_text, o.sort_order
-      ORDER BY o.sort_order ASC, o.id ASC
-    `, [activePoll.id]);
-    const myVote = !isMe ? await db.get(`
-      SELECT option_id FROM profile_poll_votes WHERE poll_id=? AND voter_user_id=?
-    `, [activePoll.id, meId]) : null;
-    const totalVotes = options.reduce((n, o) => n + Number(o.votes || 0), 0);
-    poll = { ...activePoll, options, myVote: myVote?.option_id || null, totalVotes };
-  }
-
   let sign = null;
   let vibeFrase = null;
   if (user.birth_date) {
@@ -1330,89 +1269,8 @@ app.get("/u/:username", requireAuth, async (req, res) => {
     profileFriends, profileGroups, groupsCount,
     totalVisits, visitors, canSeeVisitors,
     isBirthdayToday: isBirthdayToday(user.birth_date), memberSince,
-    sign, vibeFrase,
-    ratingSummary: { avg: Number(ratingSummary?.avg_rating || 0), total: Number(ratingSummary?.total || 0) },
-    myRating: Number(myRatingRow?.rating || 0),
-    giftsCount, recentGifts,
-    poll,
-    profileGiftOptions: PROFILE_GIFTS
+    sign, vibeFrase
   });
-});
-
-
-app.post("/u/:username/rate", limiterWrite, requireAuth, async (req, res) => {
-  const target = await db.get("SELECT id, username FROM users WHERE username=?", [req.params.username]);
-  if (!target) return res.status(404).send("Usuário não encontrado.");
-  if (Number(target.id) === Number(req.session.userId)) return res.redirect(`/u/${req.params.username}`);
-  const rating = Math.max(1, Math.min(5, Number(req.body.rating || 0)));
-  if (!rating) return res.redirect(`/u/${req.params.username}`);
-  await db.run(`
-    INSERT INTO profile_ratings (rated_user_id, rater_user_id, rating)
-    VALUES (?,?,?)
-    ON CONFLICT (rated_user_id, rater_user_id)
-    DO UPDATE SET rating=EXCLUDED.rating, created_at=NOW()
-  `, [target.id, req.session.userId, rating]);
-  res.redirect(`/u/${req.params.username}`);
-});
-
-app.post("/u/:username/gift", limiterWrite, requireAuth, async (req, res) => {
-  const target = await db.get("SELECT id, username FROM users WHERE username=?", [req.params.username]);
-  if (!target) return res.status(404).send("Usuário não encontrado.");
-  if (Number(target.id) === Number(req.session.userId)) return res.redirect(`/u/${req.params.username}`);
-  const selected = PROFILE_GIFTS.find(g => g.key === String(req.body.gift_key || "")) || PROFILE_GIFTS[0];
-  await db.run(`
-    INSERT INTO profile_gifts (to_user_id, from_user_id, gift_key, gift_label)
-    VALUES (?,?,?,?)
-  `, [target.id, req.session.userId, selected.key, `${selected.icon} ${selected.label}`]);
-  res.redirect(`/u/${req.params.username}`);
-});
-
-app.post("/u/:username/poll", limiterWrite, requireAuth, async (req, res) => {
-  const target = await db.get("SELECT id, username FROM users WHERE username=?", [req.params.username]);
-  if (!target) return res.status(404).send("Usuário não encontrado.");
-  if (Number(target.id) !== Number(req.session.userId)) return res.redirect(`/u/${req.params.username}`);
-  const question = String(req.body.question || "").trim().slice(0, 160);
-  const options = [];
-  for (const key of ["option1","option2","option3","option4"]) {
-    const value = String(req.body[key] || "").trim().slice(0, 80);
-    if (value) options.push(value);
-  }
-  if (!question || options.length < 2) return res.redirect(`/u/${req.params.username}`);
-  await db.run("UPDATE profile_polls SET is_active=0 WHERE user_id=?", [target.id]);
-  const created = await db.get(`
-    INSERT INTO profile_polls (user_id, question, is_active)
-    VALUES (?,?,1)
-    RETURNING id
-  `, [target.id, question]);
-  for (let i = 0; i < options.length; i++) {
-    await db.run(`
-      INSERT INTO profile_poll_options (poll_id, option_text, sort_order)
-      VALUES (?,?,?)
-    `, [created.id, options[i], i + 1]);
-  }
-  res.redirect(`/u/${req.params.username}`);
-});
-
-app.post("/poll/:pollId/vote", limiterWrite, requireAuth, async (req, res) => {
-  const pollId = Number(req.params.pollId || 0);
-  const optionId = Number(req.body.option_id || 0);
-  const poll = await db.get(`
-    SELECT p.id, p.user_id, u.username
-    FROM profile_polls p
-    JOIN users u ON u.id = p.user_id
-    WHERE p.id=? AND p.is_active=1
-  `, [pollId]);
-  if (!poll) return res.redirect('/home');
-  if (Number(poll.user_id) === Number(req.session.userId)) return res.redirect(`/u/${poll.username}`);
-  const option = await db.get("SELECT id FROM profile_poll_options WHERE id=? AND poll_id=?", [optionId, pollId]);
-  if (!option) return res.redirect(`/u/${poll.username}`);
-  await db.run(`
-    INSERT INTO profile_poll_votes (poll_id, option_id, voter_user_id)
-    VALUES (?,?,?)
-    ON CONFLICT (poll_id, voter_user_id)
-    DO UPDATE SET option_id=EXCLUDED.option_id, created_at=NOW()
-  `, [pollId, optionId, req.session.userId]);
-  res.redirect(`/u/${poll.username}`);
 });
 
 app.get("/profile/edit", requireAuth, async (req, res) => {
