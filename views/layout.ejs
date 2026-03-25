@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title><%= title || "KleinDream" %></title>
   <link rel="icon" type="image/png" href="/img/favicon.png" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#4aa3ff" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="KleinDream" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
   <link rel="stylesheet" href="/style.css" />
   <link rel="stylesheet" href="/gtalk-mini.css" />
 </head>
@@ -43,6 +49,7 @@
           <a href="/about">ℹ️ Sobre</a>
           <a href="/me/visitors">👁 Visitantes</a>
           <button id="kdThemeToggle" class="btn ghost" type="button" title="Trocar tema">Tema</button>
+          <button id="kdPwaInstallNav" class="btn ghost kd-pwa-btn" type="button" title="Instalar app" hidden>Instalar app</button>
           <form method="post" action="/logout" style="display:inline;">
             <button class="btn secondary" type="submit">Sair</button>
           </form>

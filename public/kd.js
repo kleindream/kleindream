@@ -127,3 +127,51 @@
   window.KD.toast = toast;
   window.kdToast = toast;
 })();
+
+
+// PWA install + service worker
+(function(){
+  let deferredPrompt = null;
+  const selectors = ['#kdPwaInstallNav', '#kdPwaInstallHero'];
+  function buttons(){ return selectors.map(s => document.querySelector(s)).filter(Boolean); }
+  function syncButtons(show){
+    buttons().forEach(btn => {
+      btn.hidden = !show;
+      btn.disabled = !show;
+      btn.textContent = window.matchMedia('(display-mode: standalone)').matches ? 'App instalado' : 'Instalar app';
+    });
+  }
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function(){ navigator.serviceWorker.register('/service-worker.js').catch(function(){}); });
+  }
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault();
+    deferredPrompt = e;
+    syncButtons(true);
+  });
+  window.addEventListener('appinstalled', function(){
+    deferredPrompt = null;
+    syncButtons(false);
+    if (window.kdToast) window.kdToast('Klein Dream instalada como app 💙', 'success');
+  });
+  document.addEventListener('click', async function(e){
+    const btn = e.target.closest('.kd-pwa-btn');
+    if (!btn) return;
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      if (window.kdToast) window.kdToast('A Klein Dream já está instalada neste aparelho.', 'info');
+      return;
+    }
+    if (!deferredPrompt) {
+      if (window.kdToast) window.kdToast('No celular, use “Adicionar à tela inicial” se o navegador não mostrar o botão.', 'info');
+      return;
+    }
+    deferredPrompt.prompt();
+    const choice = await deferredPrompt.userChoice.catch(function(){ return null; });
+    deferredPrompt = null;
+    syncButtons(false);
+    if (choice && choice.outcome === 'accepted' && window.kdToast) {
+      window.kdToast('Perfeito! Agora a Klein Dream pode abrir como app.', 'success');
+    }
+  });
+  syncButtons(false);
+})();

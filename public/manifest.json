@@ -2,7 +2,7 @@
   "name": "Klein Dream",
   "short_name": "KleinDream",
   "description": "Rede social nostálgica inspirada na melhor era da internet.",
-  "start_url": "/",
+  "start_url": "/home",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",

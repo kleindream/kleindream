@@ -1,5 +1,5 @@
-const CACHE_NAME = "klein-dream-v1";
-const urlsToCache = ["/", "/manifest.json", "/style.css", "/kd.js", "/img/favicon.png", "/img/sr-disquete.png"];
+const CACHE_NAME = "klein-dream-v2";
+const urlsToCache = ["/home", "/manifest.json", "/style.css", "/kd.js", "/img/favicon.png", "/img/sr-disquete.png", "/icons/icon-192.png", "/icons/icon-512.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache)));
@@ -24,7 +24,7 @@ self.addEventListener("fetch", (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
           return response;
         })
-        .catch(() => caches.match("/"));
+        .catch(() => caches.match("/home"));
     })
   );
 });

@@ -1409,3 +1409,68 @@ input:focus, textarea:focus{
 .gift-feed{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
 .gift-feed-item{padding:10px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);}
 @media (max-width:960px){.gift-summary-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
+
+
+/* ===== Ajustes mobile /home + PWA ===== */
+.kd-pwa-btn{white-space:nowrap;}
+.home-thumb-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
+.home-thumb-grid .orkut-thumb-card,
+.home-thumb-grid .online-card-wrap{
+  min-height:110px;
+  padding:8px 5px;
+}
+.home-thumb-grid .orkut-thumb-avatar,
+.home-thumb-grid .orkut-thumb-avatar.ph{
+  width:52px;
+  height:52px;
+  border-radius:12px;
+}
+.home-thumb-grid .orkut-thumb-name{
+  font-size:11px;
+  line-height:1.15;
+}
+.home-thumb-grid .orkut-thumb-meta{
+  font-size:10px;
+  line-height:1.15;
+}
+.online-card-wrap .btn.mini{
+  min-height:28px;
+  padding:4px 6px;
+  font-size:11px;
+}
+@media (max-width: 760px){
+  .topbar .container{align-items:flex-start;}
+  .nav{gap:6px;}
+  .nav a, .nav .btn{font-size:12px;}
+  .kd-brand-mascot{width:32px;height:32px;object-fit:contain;}
+  .home-thumb-grid{grid-template-columns:repeat(3,minmax(0,1fr)) !important; gap:6px;}
+  .home-thumb-grid .orkut-thumb-card,
+  .home-thumb-grid .online-card-wrap{min-height:102px; padding:6px 4px; border-radius:10px;}
+  .home-thumb-grid .orkut-thumb-avatar,
+  .home-thumb-grid .orkut-thumb-avatar.ph{width:44px; height:44px; border-radius:10px;}
+  .home-thumb-grid .orkut-thumb-name{font-size:10px; line-height:1.1;}
+  .home-thumb-grid .orkut-thumb-meta{font-size:9px; line-height:1.1;}
+  .online-card-wrap .btn.mini{font-size:10px; min-height:24px; padding:3px 5px;}
+  .card{padding:10px; margin-bottom:10px;}
+  .page-utility-bar{margin:10px 0;}
+  .home-side-links a,
+  .home-game-link{padding:8px 10px; border-radius:10px; font-size:13px;}
+  .home-stat-box{padding:10px;}
+  .home-stat-box .v{font-size:1.35rem;}
+  .birthday-item{padding:7px 8px; gap:8px;}
+  .birthday-item img,.birthday-item .ph{width:38px;height:38px;border-radius:10px;}
+  .mascot-chip img{width:72px;height:72px;object-fit:contain;}
+}
+@media (max-width: 430px){
+  .container{padding:10px;}
+  .home-thumb-grid .orkut-thumb-name{font-size:9px;}
+  .home-thumb-grid .orkut-thumb-meta{font-size:8px;}
+  .home-thumb-grid .orkut-thumb-avatar,
+  .home-thumb-grid .orkut-thumb-avatar.ph{width:40px; height:40px;}
+  .home-thumb-grid .orkut-thumb-card,
+  .home-thumb-grid .online-card-wrap{min-height:94px; padding:5px 3px;}
+  .online-card-wrap .btn.mini{font-size:9px; min-height:22px; padding:2px 4px;}
+  .home-section-head .h{font-size:1.08rem !important;}
+}
