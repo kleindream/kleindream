@@ -1365,25 +1365,21 @@ app.get("/u/:username", requireAuth, async (req, res) => {
   });
 });
 
-
 app.post("/dreams", requireAuth, limiterWrite, async (req, res) => {
-  const meId = req.session.userId;
-  const me = await getUserById(meId);
-  if (!me) return res.redirect("/home");
-
-  const content = String(req.body.content || "").trim().slice(0, 1200);
+  const content = String(req.body.content || '').trim();
+  const fallbackUsername = String(req.body.username || req.session.username || '').trim();
   if (!content) {
-    req.flash("error", "Escreva algo para salvar em Meus Sonhos.");
-    return res.redirect(`/u/${me.username}`);
+    return res.redirect(fallbackUsername ? `/u/${fallbackUsername}` : '/home');
   }
 
-  await db.run(`
-    INSERT INTO dreams (user_id, content)
-    VALUES (?, ?)
-  `, [meId, content]);
+  await db.run(
+    `INSERT INTO dreams (user_id, content) VALUES (?, ?)`,
+    [req.session.userId, content]
+  );
 
-  req.flash("success", "Seu sonho foi salvo no perfil.");
-  return res.redirect(`/u/${me.username}`);
+  const me = await getUserById(req.session.userId);
+  const username = (me && me.username) ? me.username : fallbackUsername;
+  return res.redirect(username ? `/u/${username}` : '/home');
 });
 
 app.post("/rate-user", requireAuth, async (req, res) => {
