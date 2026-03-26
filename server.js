@@ -1344,6 +1344,15 @@ app.get("/u/:username", requireAuth, async (req, res) => {
   `, [user.id]);
   for (const g of recentGifts) g.created_at = formatDateBR(g.created_at);
 
+  const dreams = await db.all(`
+    SELECT id, content, created_at
+    FROM dreams
+    WHERE user_id=?
+    ORDER BY created_at DESC
+    LIMIT 10
+  `, [user.id]);
+  for (const d of dreams) d.created_at = formatDateBR(d.created_at);
+
   res.render("profile", {
     user, isMe,
     friend: !!friend, reqOut, reqIn,
@@ -1352,8 +1361,29 @@ app.get("/u/:username", requireAuth, async (req, res) => {
     totalVisits, visitors, canSeeVisitors,
     isBirthdayToday: isBirthdayToday(user.birth_date), memberSince,
     sign, vibeFrase, ratings, myRating, canRateProfile,
-    profilePoll, giftSummary, recentGifts
+    profilePoll, giftSummary, recentGifts, dreams
   });
+});
+
+
+app.post("/dreams", requireAuth, limiterWrite, async (req, res) => {
+  const meId = req.session.userId;
+  const me = await getUserById(meId);
+  if (!me) return res.redirect("/home");
+
+  const content = String(req.body.content || "").trim().slice(0, 1200);
+  if (!content) {
+    req.flash("error", "Escreva algo para salvar em Meus Sonhos.");
+    return res.redirect(`/u/${me.username}`);
+  }
+
+  await db.run(`
+    INSERT INTO dreams (user_id, content)
+    VALUES (?, ?)
+  `, [meId, content]);
+
+  req.flash("success", "Seu sonho foi salvo no perfil.");
+  return res.redirect(`/u/${me.username}`);
 });
 
 app.post("/rate-user", requireAuth, async (req, res) => {

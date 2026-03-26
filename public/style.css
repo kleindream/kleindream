@@ -1474,3 +1474,27 @@ input:focus, textarea:focus{
   .online-card-wrap .btn.mini{font-size:9px; min-height:22px; padding:2px 4px;}
   .home-section-head .h{font-size:1.08rem !important;}
 }
+
+
+/* Meus Sonhos */
+.profile-dreams-card { margin-top: 14px; }
+.dream-form { display: grid; gap: 8px; margin: 8px 0 12px; }
+.dream-form textarea {
+  width: 100%; min-height: 110px; resize: vertical; box-sizing: border-box;
+  border: 1px solid #c8d7ea; border-radius: 10px; padding: 10px 12px;
+  background: #fff; color: #183153; font: inherit;
+}
+.dream-feed { display: grid; gap: 10px; }
+.dream-item {
+  border: 1px solid #d7e4f3; border-radius: 12px; background: #f8fbff;
+  padding: 10px 12px;
+}
+.dream-text { margin-top: 6px; color: #183153; line-height: 1.45; }
+.preserve-lines { white-space: pre-wrap; }
+body.dark .dream-form textarea {
+  background: #182235; color: #e8f0ff; border-color: #30415f;
+}
+body.dark .dream-item {
+  background: #162236; border-color: #30415f;
+}
+body.dark .dream-text { color: #e8f0ff; }

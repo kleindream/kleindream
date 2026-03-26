@@ -225,6 +225,28 @@
       ` : ``}
 
 
+      <div class="card profile-dreams-card">
+        <div class="h">🌙 Meus Sonhos</div>
+        ${isMe ? `
+          <div class="small" style="margin-bottom:8px;">Um cantinho simples para registrar sonhos da noite ou sonhos de vida.</div>
+          <form method="post" action="/dreams" class="dream-form">
+            <textarea name="content" maxlength="1200" placeholder="Escreva aqui um sonho, ideia ou lembrança..." required></textarea>
+            <button class="btn" type="submit">Salvar sonho</button>
+          </form>
+        ` : ``}
+
+        ${dreams && dreams.length ? `
+          <div class="dream-feed">
+            ${dreams.map(d => `
+              <div class="dream-item">
+                <div class="small">${d.created_at}</div>
+                <div class="dream-text preserve-lines">${escapeHtml(d.content)}</div>
+              </div>
+            `).join("")}
+          </div>
+        ` : `<div class="small">${isMe ? 'Seus sonhos aparecerão aqui.' : 'Este perfil ainda não compartilhou sonhos.'}</div>`}
+      </div>
+
       <div class="card profile-activity">
         <div class="section">
           <div class="h">Recados (últimos)</div>
