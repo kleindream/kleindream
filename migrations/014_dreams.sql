@@ -5,4 +5,5 @@ CREATE TABLE IF NOT EXISTS dreams (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_dreams_user_created ON dreams(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_dreams_user_created
+  ON dreams (user_id, created_at DESC);
