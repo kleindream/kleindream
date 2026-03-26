@@ -1365,6 +1365,7 @@ app.get("/u/:username", requireAuth, async (req, res) => {
   });
 });
 
+
 app.post("/dreams", requireAuth, limiterWrite, async (req, res) => {
   const content = String(req.body.content || '').trim();
   const fallbackUsername = String(req.body.username || req.session.username || '').trim();
@@ -1379,6 +1380,32 @@ app.post("/dreams", requireAuth, limiterWrite, async (req, res) => {
 
   const me = await getUserById(req.session.userId);
   const username = (me && me.username) ? me.username : fallbackUsername;
+  return res.redirect(username ? `/u/${username}` : '/home');
+});
+
+app.post("/dreams/:id/delete", requireAuth, limiterWrite, async (req, res) => {
+  const dreamId = Number(req.params.id || 0);
+  const fallbackUsername = String(req.body.username || req.session.username || '').trim();
+
+  if (!dreamId) {
+    return res.redirect(fallbackUsername ? `/u/${fallbackUsername}` : '/home');
+  }
+
+  const dream = await db.get(
+    `SELECT id, user_id FROM dreams WHERE id=?`,
+    [dreamId]
+  );
+
+  if (!dream || Number(dream.user_id) !== Number(req.session.userId)) {
+    req.flash("error", "Você só pode apagar os seus próprios sonhos.");
+    return res.redirect(fallbackUsername ? `/u/${fallbackUsername}` : '/home');
+  }
+
+  await db.run(`DELETE FROM dreams WHERE id=?`, [dreamId]);
+
+  const me = await getUserById(req.session.userId);
+  const username = (me && me.username) ? me.username : fallbackUsername;
+  req.flash("success", "Sonho apagado com sucesso.");
   return res.redirect(username ? `/u/${username}` : '/home');
 });
 
