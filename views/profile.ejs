@@ -239,16 +239,22 @@
           <div class="dream-feed">
             ${dreams.map(d => `
               <div class="dream-item">
-                <div class="small">${d.created_at}</div>
+                <div class="small" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+                  <span>${d.created_at}</span>
+                  ${isMe ? `
+                    <form method="post" action="/dreams/${d.id}/delete" onsubmit="return confirm('Apagar este sonho?');" style="margin:0;">
+                      <input type="hidden" name="username" value="${escapeHtml(user.username)}">
+                      <button class="btn secondary" type="submit" style="padding:4px 8px;font-size:12px;">Apagar</button>
+                    </form>
+                  ` : ``}
+                </div>
                 <div class="dream-text preserve-lines">${escapeHtml(d.content)}</div>
               </div>
             `).join("")}
           </div>
         ` : `<div class="small">${isMe ? 'Seus sonhos aparecerão aqui.' : 'Este perfil ainda não compartilhou sonhos.'}</div>`}
       </div>
-<form action="/dreams/<%= dream.id %>/delete" method="POST" onsubmit="return confirm('Apagar este sonho?')">
-  <button type="submit">Apagar</button>
-</form>
+
       <div class="card profile-activity">
         <div class="section">
           <div class="h">Recados (últimos)</div>
