@@ -239,12 +239,12 @@
           <div class="dream-feed">
             ${dreams.map(d => `
               <div class="dream-item">
-                <div class="small" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+                <div class="small" style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;">
                   <span>${d.created_at}</span>
                   ${isMe ? `
-                    <form method="post" action="/dreams/${d.id}/delete" onsubmit="return confirm('Apagar este sonho?');" style="margin:0;">
-                      <input type="hidden" name="username" value="${escapeHtml(user.username)}">
-                      <button class="btn secondary" type="submit" style="padding:4px 8px;font-size:12px;">Apagar</button>
+                    <form method="post" action="/dreams/${d.id}/delete" onsubmit="return confirm('Tem certeza que deseja apagar este sonho?');" style="margin:0;">
+                      <input type="hidden" name="username" value="${user.username}">
+                      <button class="btn secondary" type="submit" style="padding:4px 10px;font-size:12px;">Apagar</button>
                     </form>
                   ` : ``}
                 </div>
