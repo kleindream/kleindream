@@ -246,7 +246,9 @@
           </div>
         ` : `<div class="small">${isMe ? 'Seus sonhos aparecerão aqui.' : 'Este perfil ainda não compartilhou sonhos.'}</div>`}
       </div>
-
+<form action="/dreams/<%= dream.id %>/delete" method="POST" onsubmit="return confirm('Apagar este sonho?')">
+  <button type="submit">Apagar</button>
+</form>
       <div class="card profile-activity">
         <div class="section">
           <div class="h">Recados (últimos)</div>
