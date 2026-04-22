@@ -204,7 +204,10 @@ function formatMemberSince(value) {
 
 
 function requireAuth(req, res, next) {
-  if (!req.session.userId) return res.redirect('/home');
+  if (!req.session.userId) {
+    req.flash("error", "Faça login para acessar esta página.");
+    return res.redirect('/login');
+  }
   next();
 }
 
