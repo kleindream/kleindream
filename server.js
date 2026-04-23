@@ -521,6 +521,11 @@ app.get("/games/nick", requireAuth, async (req, res) => {
   res.render("game_nick", {});
 });
 
+app.get("/games/ascii", requireAuth, (req, res) => {
+  res.render("game_ascii", {});
+});
+
+
 app.get("/paint", requireAuth, async (req, res) => {
   const drawings = await db.all(`
     SELECT id, title, image_data, created_at
