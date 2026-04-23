@@ -1,16 +1,20 @@
-<div class="retro-box">
-  <h2>🔠 Gerador ASCII</h2>
+<%- include("layout", { title: "Gerador ASCII", body: `
+<div class="card" style="max-width:600px;margin:20px auto;">
+  <div class="h" style="font-size:1.8rem;">🔠 Gerador ASCII</div>
+  <p class="small">Transforme seu texto em arte no estilo dos fóruns antigos.</p>
 
-  <p>Digite seu texto:</p>
-  <input id="ascii-input" type="text" maxlength="20" placeholder="Digite aqui..." />
+  <div style="margin-top:15px;">
+    <input id="ascii-input" class="input" type="text" maxlength="20" placeholder="Digite seu texto..." style="width:100%;padding:10px;">
+  </div>
 
-  <br><br>
+  <div style="margin-top:15px;">
+    <button class="button" onclick="gerarASCII()">Gerar</button>
+    <button class="button secondary" onclick="copiarASCII()">Copiar</button>
+    <button class="button secondary" onclick="limparASCII()">Limpar</button>
+  </div>
 
-  <button onclick="gerarASCII()">Gerar</button>
-  <button onclick="copiarASCII()">Copiar</button>
-
-  <pre id="ascii-output"></pre>
+  <pre id="ascii-output" style="margin-top:20px;background:#111;color:#0f0;padding:15px;border-radius:6px;min-height:100px;"></pre>
 </div>
 
-<link rel="stylesheet" href="/ascii.css">
 <script src="/ascii.js"></script>
+` }) %>
