@@ -1,0 +1,83 @@
+<%- include("layout", { title: "Paint Brush", body: `
+<link rel="stylesheet" href="/paint.css" />
+<div class="paint-page-grid">
+  <div class="card paint-shell">
+    <div class="paint-header-row">
+      <div>
+        <div class="h" style="font-size:1.8rem;font-weight:900;color:var(--accent);">🎨 Paint Brush</div>
+        <div class="small">Um cantinho retrô da Klein Dream para desenhar como nos tempos do Windows 95.</div>
+      </div>
+      <div class="paint-slots">Desenhos salvos: <b>${drawings.length}</b> / <b>${maxDrawings}</b></div>
+    </div>
+
+    <form id="paintSaveForm" method="post" action="/paint/save">
+      <div class="paint-window95">
+        <div class="paint-titlebar">Paint Brush - Klein Dream</div>
+        <div class="paint-toolbar">
+          <button class="btn secondary paint-tool active" type="button" data-tool="pen">✏️ Lápis</button>
+          <button class="btn secondary paint-tool" type="button" data-tool="eraser">🧽 Borracha</button>
+          <button class="btn secondary" id="paintUndo" type="button">↩️ Desfazer</button>
+          <button class="btn secondary" id="paintClear" type="button">🗑️ Limpar</button>
+          <button class="btn secondary" id="paintFillWhite" type="button">⬜ Fundo branco</button>
+          <a class="btn secondary" href="/u/${me.username}">👤 Ver perfil</a>
+        </div>
+
+        <div class="paint-workbench">
+          <div class="paint-sidebar-tools">
+            <label class="small" for="paintTitle">Título do desenho</label>
+            <input id="paintTitle" name="title" class="input" type="text" maxlength="60" placeholder="Ex.: Meu PC em 2002" />
+
+            <label class="small" for="paintBrushSize">Espessura</label>
+            <input id="paintBrushSize" type="range" min="1" max="24" value="3" />
+            <div class="small">Tamanho: <b id="paintBrushSizeValue">3 px</b></div>
+
+            <div class="small" style="margin-top:10px;">Cores</div>
+            <div class="paint-palette" id="paintPalette">
+              ${['#000000','#7f7f7f','#800000','#ff0000','#808000','#ffff00','#008000','#00ff00','#008080','#00ffff','#000080','#0000ff','#800080','#ff00ff','#ffffff','#c0c0c0'].map(color => `<button type="button" class="paint-color ${color === '#000000' ? 'active' : ''}" data-color="${color}" style="background:${color};" title="${color}"></button>`).join('')}
+            </div>
+
+            <div class="paint-status-box small">
+              • máximo de <b>${maxDrawings}</b> desenhos por perfil<br/>
+              • apagando um, você pode criar outro<br/>
+              • o desenho salvo aparece no seu perfil
+            </div>
+          </div>
+
+          <div class="paint-canvas-wrap">
+            <canvas id="paintCanvas" width="640" height="420" aria-label="Área de desenho"></canvas>
+          </div>
+        </div>
+      </div>
+      <input type="hidden" name="imageData" id="paintImageData" />
+      <div class="paint-actions-row">
+        <button class="btn" id="paintSaveBtn" type="submit" ${drawings.length >= maxDrawings ? 'disabled' : ''}>💾 Salvar desenho</button>
+        <button class="btn secondary" id="paintDownloadBtn" type="button">⬇️ Baixar PNG</button>
+        ${drawings.length >= maxDrawings ? `<span class="small" style="color:#ffd4d4;">Você já chegou ao limite de ${maxDrawings} desenhos salvos.</span>` : `<span class="small">Salve quando terminar. O desenho será guardado no seu perfil.</span>`}
+      </div>
+    </form>
+  </div>
+
+  <div class="card paint-gallery-card">
+    <div class="overview-title">🖼️ Meus desenhos salvos</div>
+    ${drawings.length ? `
+      <div class="paint-saved-grid">
+        ${drawings.map(d => `
+          <div class="paint-thumb-card">
+            <img src="${d.image_data}" alt="${escapeHtml(d.title)}" class="kd-zoom" />
+            <div class="paint-thumb-title">${escapeHtml(d.title)}</div>
+            <div class="small">${d.created_at}</div>
+            <form method="post" action="/paint/${d.id}/delete" onsubmit="return confirm('Apagar este desenho?');">
+              <button class="btn secondary" type="submit">Apagar</button>
+            </form>
+          </div>
+        `).join('')}
+      </div>
+    ` : `<div class="small">Você ainda não salvou nenhum desenho aqui.</div>`}
+  </div>
+</div>
+<script>window.__PAINT_CAN_SAVE__ = ${drawings.length < maxDrawings ? 'true' : 'false'};</script>
+<script src="/paint.js"></script>
+` }) %>
+
+
+<% function escapeHtml(str){ return String(str ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",""":"&quot;","'":"&#039;"}[m])); } %>
