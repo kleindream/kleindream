@@ -1,0 +1,57 @@
+<%- include("layout", { title: "Gerador de Nick", body: `
+<link rel="stylesheet" href="/nick.css" />
+<div class="card nick-shell">
+  <div class="h" style="font-size:2rem;font-weight:900;color:var(--accent);">✨ Gerador de Nick</div>
+  <p style="line-height:1.7;color:var(--muted);font-size:1.04rem;">Um clássico da internet antiga para brincar com o seu nome no estilo de MSN, fóruns e perfis retrô.</p>
+
+  <div class="nick-window95">
+    <div class="nick-titlebar">Gerador de Nick - Klein Dream</div>
+    <div class="nick-body">
+      <div class="nick-panel">
+        <label class="nick-label" for="nickInput">Nick atual</label>
+        <input id="nickInput" class="nick-input" type="text" maxlength="40" placeholder="Ex.: Digão" />
+
+        <div style="margin-top:14px;">
+          <label class="nick-label" for="nickStyle">Estilo</label>
+          <select id="nickStyle" class="nick-input">
+            <option value="classic">Clássico</option>
+            <option value="stars">Estrelas</option>
+            <option value="waves">Ondas</option>
+            <option value="brackets">Colchetes</option>
+          </select>
+        </div>
+
+        <div class="nick-actions">
+          <button type="button" class="btn" id="nickGenerate">✨ Gerar nick</button>
+          <button type="button" class="btn secondary" id="nickCopy">📋 Copiar</button>
+          <button type="button" class="btn secondary" id="nickClear">🧹 Limpar</button>
+        </div>
+
+        <div class="nick-presets">
+          <button type="button" class="nick-preset" data-value="Digão">Digão</button>
+          <button type="button" class="nick-preset" data-value="Klein Dream">Klein Dream</button>
+          <button type="button" class="nick-preset" data-value="MSN 2004">MSN 2004</button>
+          <button type="button" class="nick-preset" data-value="Orkut">Orkut</button>
+        </div>
+      </div>
+
+      <div class="nick-panel">
+        <label class="nick-label">Novo nick</label>
+        <div id="nickOutput" class="nick-output" aria-live="polite"></div>
+
+        <div class="nick-mini-preview">
+          <div class="preview-title">Prévia no perfil / recado</div>
+          <div id="nickPreview"></div>
+        </div>
+
+        <div class="nick-hint" style="margin-top:14px;">
+          • baseado no seu gerador clássico em JavaScript<br/>
+          • com efeito de digitação retrô<br/>
+          • ideal para brincar e copiar para o perfil
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/nick.js"></script>
+` }) %>
