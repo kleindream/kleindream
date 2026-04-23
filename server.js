@@ -318,7 +318,8 @@ const GAME_META = {
   rps: { label: "Pedra, Papel e Tesoura", icon: "✊" },
   velha: { label: "Jogo da Velha", icon: "❌" },
   quiz: { label: "Quiz Nostalgia", icon: "📺" },
-  caderno: { label: "Caderno de Perguntas", icon: "📓" }
+  caderno: { label: "Caderno de Perguntas", icon: "📓" },
+  nick: { label: "Gerador de Nick", icon: "✨" }
 };
 
 function getGameMeta(game) {
@@ -514,6 +515,10 @@ app.post("/logout", async (req, res) => {
 app.get("/games", requireAuth, async (req, res) => {
   const overview = await getGamesOverview(5);
   res.render("games", { overview });
+});
+
+app.get("/games/nick", requireAuth, async (req, res) => {
+  res.render("game_nick", {});
 });
 
 app.get("/paint", requireAuth, async (req, res) => {
