@@ -18,6 +18,7 @@
           <a href="/scraps/${user.username}">📝 Recados</a>
           <a href="/testimonials/${user.username}">💬 Depoimentos</a>
           <a href="/photos/${user.username}">📷 Fotos</a>
+          ${isMe ? `<a href="/paint">🎨 Paint Brush</a>` : ``}
           <a href="/fans/${user.username}">⭐ Fãs</a>
           ${isMe ? `<a href="/me/visitors">👁 Visitantes</a>` : ``}
           ${isMe ? `<a href="/profile/edit">⚙️ Editar perfil</a>` : ``}
@@ -224,6 +225,29 @@
         </div>
       ` : ``}
 
+
+      <div class="card profile-dreams-card">
+        <div class="h">🎨 Paint Brush</div>
+        <div class="small" style="margin-bottom:8px;">${isMe ? `Você pode salvar até ${maxPaintDrawings} desenhos no seu perfil.` : `Os desenhos retrô deste perfil aparecem aqui.`}</div>
+        ${isMe ? `<div style="margin-bottom:10px;"><a class="btn" href="/paint">Abrir Paint Brush</a></div>` : ``}
+
+        ${drawings && drawings.length ? `
+          <div class="thumb-grid">
+            ${drawings.map(d => `
+              <div class="thumb-card" style="width:100%;max-width:none;">
+                <img class="kd-zoom" src="${d.image_data}" alt="${escapeHtml(d.title)}" style="width:100%;height:auto;border-radius:10px;background:#fff;border:1px solid var(--line);" />
+                <div class="thumb-name" style="margin-top:8px;">${escapeHtml(d.title)}</div>
+                <div class="small">${d.created_at}</div>
+                ${isMe ? `
+                  <form method="post" action="/paint/${d.id}/delete" onsubmit="return confirm('Apagar este desenho?');" style="margin-top:8px;">
+                    <button class="btn secondary" type="submit" style="padding:4px 10px;font-size:12px;">Apagar</button>
+                  </form>
+                ` : ``}
+              </div>
+            `).join("")}
+          </div>
+        ` : `<div class="small">${isMe ? 'Seus desenhos aparecerão aqui.' : 'Este perfil ainda não publicou desenhos.'}</div>`}
+      </div>
 
       <div class="card profile-dreams-card">
         <div class="h">🌙 Meus Sonhos</div>
