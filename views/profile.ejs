@@ -19,7 +19,6 @@
           <a href="/testimonials/${user.username}">💬 Depoimentos</a>
           <a href="/photos/${user.username}">📷 Fotos</a>
           ${isMe ? `<a href="/paint">🎨 Paint Brush</a>` : ``}
-          ${isMe ? `<a href="/meu-avatar">🎭 Meu Avatar Klein</a>` : ``}
           <a href="/fans/${user.username}">⭐ Fãs</a>
           ${isMe ? `<a href="/me/visitors">👁 Visitantes</a>` : ``}
           ${isMe ? `<a href="/profile/edit">⚙️ Editar perfil</a>` : ``}
@@ -449,13 +448,22 @@
         `}
       </div>
 
-      <div class="card profile-side-card right-side-card klein-avatar-card">
-        <div class="h">🎭 Meu Avatar Klein</div>
-        <div class="avatar-card-wrap">
-          ${renderKleinAvatar(avatarConfig, 'avatar-profile-side')}
+
+
+      <div class="card profile-side-card right-side-card avatar-klein-card">
+        <div class="h">🎨 Meu Avatar Klein</div>
+        <div class="avatar-klein-mini" aria-label="Avatar Klein de ${escapeHtml(user.username)}">
+          <img src="/avatar-klein/fundos/fundo${Number(avatarKleinConfig?.fundo || 1)}.svg" alt="" />
+          <img src="/avatar-klein/rostos/rosto${Number(avatarKleinConfig?.rosto || 1)}.svg" alt="" />
+          <img src="/avatar-klein/roupas/roupa${Number(avatarKleinConfig?.roupa || 1)}.svg" alt="" />
+          ${Number(avatarKleinConfig?.barba || 0) ? `<img src="/avatar-klein/barbas/barba${Number(avatarKleinConfig.barba)}.svg" alt="" />` : ``}
+          <img src="/avatar-klein/cabelos/cabelo${Number(avatarKleinConfig?.cabelo || 1)}.svg" alt="" />
+          <img src="/avatar-klein/olhos/olhos${Number(avatarKleinConfig?.olhos || 1)}.svg" alt="" />
+          <img src="/avatar-klein/bocas/boca${Number(avatarKleinConfig?.boca || 1)}.svg" alt="" />
+          ${Number(avatarKleinConfig?.oculos || 0) ? `<img src="/avatar-klein/oculos/oculos${Number(avatarKleinConfig.oculos)}.svg" alt="" />` : ``}
         </div>
-        <div class="small" style="margin-top:8px;">Um avatar 2D leve, com jeitinho de rede social clássica.</div>
-        ${isMe ? `<div style="margin-top:10px;"><a class="btn secondary" href="/meu-avatar">Editar avatar</a></div>` : ``}
+        <div class="small avatar-klein-caption">Um retratinho 2D para dar mais alma ao perfil.</div>
+        ${isMe ? `<a class="btn" href="/meu-avatar">Editar avatar</a>` : ``}
       </div>
 
       <div class="card profile-side-card right-side-card profile-gifts-card">
