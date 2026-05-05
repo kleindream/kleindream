@@ -1610,29 +1610,262 @@ body.dark .me-discover-head p {
   color: #b8c7df;
 }
 
+.avatar-layer-hidden {
+  display: none !important;
+}
 
-/* Avatar Klein */
-.avatar-klein-card{ text-align:center; }
-.avatar-klein-mini,.avatar-klein-preview{ position:relative; width:190px; height:190px; margin:8px auto 10px; border-radius:24px; overflow:hidden; border:1px solid rgba(255,255,255,.16); box-shadow:0 10px 22px rgba(0,0,0,.16); background:#dbeafe; }
-.avatar-klein-preview{ width:260px; height:260px; max-width:100%; border-radius:30px; }
-.avatar-klein-mini img,.avatar-klein-preview img{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; pointer-events:none; user-select:none; }
-.avatar-klein-caption{ margin:0 0 10px 0; }
-.avatar-editor-page .avatar-editor-wrap{ display:grid; grid-template-columns:300px 1fr; gap:16px; align-items:start; }
-.avatar-editor-panel{ position:sticky; top:12px; text-align:center; }
-.avatar-editor-controls{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
-.avatar-editor-field{ border:1px solid var(--line); border-radius:14px; padding:10px; background:rgba(255,255,255,.66); }
-.avatar-editor-field label{ display:block; font-weight:800; margin-bottom:6px; }
-.avatar-editor-field select{ width:100%; border:1px solid var(--line); border-radius:10px; padding:9px 10px; background:var(--panel2); color:var(--text); }
-.avatar-editor-actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
-.avatar-layer-hidden{ display:none; }
-body.dark .avatar-editor-field{ background:#162236; border-color:#30415f; }
-body.dark .avatar-editor-field select{ background:#1d2a40; color:#e8f0ff; border-color:#3a4c6c; }
-body.dark .me-result-text-side, body.dark .me-result-text-side .small, body.dark .profile-highlight.me-result-text{ color:#f4f8ff; }
-.me-result-text-side, .profile-highlight.me-result-text{ color:var(--text); }
-@media (max-width: 780px){ .avatar-editor-page .avatar-editor-wrap{ grid-template-columns:1fr; } .avatar-editor-panel{ position:static; } .avatar-editor-controls{ grid-template-columns:1fr; } }
+/* Avatar Klein - correção definitiva das camadas no perfil e na edição */
+.avatar-klein-card{
+  text-align:center;
+}
 
-/* Avatar Klein - override sincronizado com public/style.css */
-.avatar-klein-mini{ width:138px !important; height:138px !important; max-width:100%; border-radius:18px; }
-.avatar-klein-mini,.avatar-klein-preview{ position:relative !important; display:block; overflow:hidden !important; isolation:isolate; }
-.avatar-klein-mini img,.avatar-klein-preview img{ position:absolute !important; inset:0 !important; display:block !important; width:100% !important; height:100% !important; max-width:none !important; object-fit:contain !important; object-position:center center !important; margin:0 !important; padding:0 !important; border:0 !important; border-radius:0 !important; background:transparent !important; box-shadow:none !important; pointer-events:none; user-select:none; }
-.avatar-layer-hidden{ display:none !important; }
+.avatar-klein-mini,
+.avatar-klein-preview{
+  position:relative !important;
+  display:block;
+  overflow:hidden !important;
+  margin:8px auto 10px;
+  background:#dbeafe;
+  border:1px solid rgba(255,255,255,.16);
+  box-shadow:0 10px 22px rgba(0,0,0,.16);
+  isolation:isolate;
+}
+
+.avatar-klein-mini{
+  width:138px !important;
+  height:138px !important;
+  max-width:100%;
+  border-radius:18px;
+}
+
+.avatar-klein-preview{
+  width:260px !important;
+  height:260px !important;
+  max-width:100%;
+  border-radius:30px;
+}
+
+.avatar-klein-mini img,
+.avatar-klein-preview img{
+  position:absolute !important;
+  inset:0 !important;
+  display:block !important;
+  width:100% !important;
+  height:100% !important;
+  max-width:none !important;
+  object-fit:contain !important;
+  object-position:center center !important;
+  margin:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  pointer-events:none;
+  user-select:none;
+}
+
+.avatar-layer-hidden{
+  display:none !important;
+}
+
+.avatar-klein-caption{
+  margin:0 0 10px 0;
+}
+
+.avatar-editor-page .avatar-editor-wrap{
+  display:grid;
+  grid-template-columns:300px 1fr;
+  gap:16px;
+  align-items:start;
+}
+
+.avatar-editor-panel{
+  position:sticky;
+  top:12px;
+  text-align:center;
+}
+
+.avatar-editor-controls{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+
+.avatar-editor-field{
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:10px;
+  background:rgba(255,255,255,.66);
+}
+
+.avatar-editor-field label{
+  display:block;
+  font-weight:800;
+  margin-bottom:6px;
+}
+
+.avatar-editor-field select{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:9px 10px;
+  background:var(--panel2);
+  color:var(--text);
+}
+
+.avatar-editor-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:14px;
+}
+
+body.dark .avatar-editor-field{
+  background:#162236;
+  border-color:#30415f;
+}
+
+body.dark .avatar-editor-field select{
+  background:#1d2a40;
+  color:#e8f0ff;
+  border-color:#3a4c6c;
+}
+
+@media (max-width:780px){
+  .avatar-editor-page .avatar-editor-wrap{ grid-template-columns:1fr; }
+  .avatar-editor-panel{ position:static; }
+  .avatar-editor-controls{ grid-template-columns:1fr; }
+}
+
+/* Dream Music */
+.dream-music-side-card { text-align: left; }
+.dream-music-list { display: grid; gap: 7px; margin-top: 8px; }
+.dream-music-item {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 8px;
+  border: 1px solid #c8d7ea;
+  border-radius: 11px;
+  background: #f8fbff;
+  color: #183153;
+  text-decoration: none;
+  min-width: 0;
+}
+.dream-music-item:hover { background: #eef6ff; text-decoration: none; }
+.dream-music-number {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(74,163,255,.18);
+  color: #23527c;
+  font-size: 12px;
+  font-weight: 800;
+}
+.dream-music-info { display: block; min-width: 0; line-height: 1.18; }
+.dream-music-artist,
+.dream-music-song {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.dream-music-artist { font-size: 11px; color: #667a92; font-weight: 700; }
+.dream-music-song { font-size: 13px; color: #183153; font-weight: 900; margin-top: 2px; }
+.dream-music-play { color: #4a7fb8; font-size: 12px; text-align: right; }
+.dream-music-caption { margin-top: 8px; color: #667a92; }
+
+.dream-music-page h1 { margin: 4px 0 8px 0; font-size: 28px; }
+.dream-music-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; flex-wrap: wrap; }
+.dream-music-head p { margin: 0; color: #52657d; max-width: 760px; }
+.dream-music-form { display: grid; gap: 12px; margin-top: 14px; }
+.dream-music-edit-row {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #c8d7ea;
+  border-radius: 14px;
+  background: #f8fbff;
+}
+.dream-music-edit-number {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(74,163,255,.18);
+  color: #23527c;
+  font-weight: 900;
+}
+.dream-music-edit-fields { display: grid; gap: 6px; min-width: 0; }
+.dream-music-edit-fields label { font-size: 12px; font-weight: 800; color: #52657d; }
+.dream-music-edit-fields input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #c8d7ea;
+  border-radius: 10px;
+  padding: 9px 10px;
+  background: #fff;
+  color: #183153;
+  font: inherit;
+}
+.dream-music-help {
+  padding: 10px 12px;
+  border: 1px dashed #c8d7ea;
+  border-radius: 12px;
+  background: #fff;
+  color: #52657d;
+  font-size: 13px;
+}
+.notice.success { border:1px solid #a8e4bc; background:#effff4; color:#185c2b; border-radius:12px; padding:10px 12px; margin:12px 0; }
+
+body.dark .dream-music-item,
+body.dark .dream-music-edit-row,
+body.dark .dream-music-help { background: #162236; border-color: #30415f; color: #e8f0ff; }
+body.dark .dream-music-item:hover { background: #243653; }
+body.dark .dream-music-song,
+body.dark .dream-music-page h1 { color: #e8f0ff; }
+body.dark .dream-music-artist,
+body.dark .dream-music-caption,
+body.dark .dream-music-head p,
+body.dark .dream-music-edit-fields label,
+body.dark .dream-music-help { color: #b8c7df; }
+body.dark .dream-music-edit-fields input { background:#1d2a40; color:#e8f0ff; border-color:#3a4c6c; }
+
+/* Me descobrindo no perfil - texto claro no cartão lateral */
+.me-descobrindo-side-card,
+.me-descobrindo-side-card .h,
+.me-descobrindo-side-card .small,
+.me-descobrindo-side-card .me-result-title,
+.me-descobrindo-side-card .me-result-text,
+.me-descobrindo-side-card .me-result-text-side,
+.me-descobrindo-side-card .me-result-text div,
+.me-descobrindo-side-card .me-percent-top,
+.me-descobrindo-side-card .me-percent-top span,
+.me-descobrindo-side-card .me-percent-top b,
+.me-descobrindo-side-card .me-percent-line span,
+.me-descobrindo-side-card .me-percent-line b {
+  color: #ffffff;
+}
+body.dark .me-descobrindo-side-card,
+body.dark .me-descobrindo-side-card .h,
+body.dark .me-descobrindo-side-card .small,
+body.dark .me-descobrindo-side-card .me-result-title,
+body.dark .me-descobrindo-side-card .me-result-text,
+body.dark .me-descobrindo-side-card .me-result-text-side,
+body.dark .me-descobrindo-side-card .me-result-text div,
+body.dark .me-descobrindo-side-card .me-percent-top,
+body.dark .me-descobrindo-side-card .me-percent-top span,
+body.dark .me-descobrindo-side-card .me-percent-top b,
+body.dark .me-descobrindo-side-card .me-percent-line span,
+body.dark .me-descobrindo-side-card .me-percent-line b {
+  color: #ffffff;
+}
