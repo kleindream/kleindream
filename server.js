@@ -127,7 +127,7 @@ async function getUserById(id) {
       id, email, username, full_name, bio, city, state,
       profile_photo, birth_date, marital_status, favorite_team,
       profession, hobbies, favorite_music, favorite_movie, favorite_game,
-      time_of, personality, looking_for, mood, daily_phrase,
+      time_of, personality, personality_result, looking_for, mood, daily_phrase,
       invisible_visits, notify_profile_visits, role, is_suspended, created_at
     FROM users
     WHERE id=?
@@ -152,6 +152,165 @@ function photoSrc(value) {
   if (!v) return '/default-avatar.png';
   if (/^https?:\/\//i.test(v) || v.startsWith('/')) return v;
   return `/uploads/${v.replace(/^\/+/, '')}`;
+}
+
+
+const ME_DESCOBRINDO_QUESTIONS = [
+  {
+    id: "q1",
+    text: "Quando algo te magoa, você costuma:",
+    options: [
+      { value: "emocional", label: "Sentir profundamente e precisar de um tempo para assimilar." },
+      { value: "racional", label: "Tentar entender o motivo antes de reagir." },
+      { value: "criativo", label: "Se distrair criando, imaginando ou fazendo outra coisa." }
+    ]
+  },
+  {
+    id: "q2",
+    text: "Em um grupo de pessoas, você tende a:",
+    options: [
+      { value: "emocional", label: "Observar o clima e perceber como todos estão se sentindo." },
+      { value: "racional", label: "Organizar as ideias e ajudar a conversa a ter direção." },
+      { value: "criativo", label: "Trazer uma ideia diferente ou quebrar o gelo." }
+    ]
+  },
+  {
+    id: "q3",
+    text: "O que mais pesa para você?",
+    options: [
+      { value: "emocional", label: "Perder vínculos importantes." },
+      { value: "racional", label: "Tomar uma decisão errada por impulso." },
+      { value: "criativo", label: "Sentir que não viveu tudo que poderia viver." }
+    ]
+  },
+  {
+    id: "q4",
+    text: "Quando está sozinho(a), você costuma:",
+    options: [
+      { value: "emocional", label: "Refletir sobre lembranças, pessoas e sentimentos." },
+      { value: "racional", label: "Organizar pensamentos, planos e prioridades." },
+      { value: "criativo", label: "Imaginar possibilidades, histórias ou ideias novas." }
+    ]
+  },
+  {
+    id: "q5",
+    text: "Qual palavra combina mais com você?",
+    options: [
+      { value: "emocional", label: "Sensível." },
+      { value: "racional", label: "Prático(a)." },
+      { value: "criativo", label: "Original." }
+    ]
+  },
+  {
+    id: "q6",
+    text: "Quando alguém te critica, você:",
+    options: [
+      { value: "emocional", label: "Sente primeiro, pensa depois." },
+      { value: "racional", label: "Filtra a crítica e vê se existe algo útil ali." },
+      { value: "criativo", label: "Segue seu estilo, mas pode transformar aquilo em inspiração." }
+    ]
+  },
+  {
+    id: "q7",
+    text: "Em uma situação difícil, sua força aparece quando você:",
+    options: [
+      { value: "emocional", label: "Busca apoio, acolhe e também quer ser acolhido(a)." },
+      { value: "racional", label: "Divide o problema em partes e resolve uma por vez." },
+      { value: "criativo", label: "Improvisa uma saída que ninguém tinha pensado." }
+    ]
+  },
+  {
+    id: "q8",
+    text: "O que mais te guia no dia a dia?",
+    options: [
+      { value: "emocional", label: "Sentimentos e conexões verdadeiras." },
+      { value: "racional", label: "Razão, estratégia e consequência." },
+      { value: "criativo", label: "Curiosidade, imaginação e vontade de experimentar." }
+    ]
+  },
+  {
+    id: "q9",
+    text: "Você prefere:",
+    options: [
+      { value: "emocional", label: "Conversas profundas e sinceras." },
+      { value: "racional", label: "Discussões inteligentes e bem pensadas." },
+      { value: "criativo", label: "Momentos leves, espontâneos e diferentes." }
+    ]
+  },
+  {
+    id: "q10",
+    text: "Sua maior qualidade costuma ser:",
+    options: [
+      { value: "emocional", label: "Empatia." },
+      { value: "racional", label: "Clareza." },
+      { value: "criativo", label: "Originalidade." }
+    ]
+  }
+];
+
+const ME_DESCOBRINDO_PROFILES = {
+  emocional: {
+    key: "emocional",
+    emoji: "💙",
+    title: "Coração Intenso",
+    badge: "Sensível",
+    description: "Você sente a vida com profundidade, valoriza conexões verdadeiras e percebe detalhes emocionais que muita gente deixa passar.",
+    advice: "Sua força está em acolher, criar vínculos e enxergar humanidade nas pequenas coisas. Só cuide para não carregar sozinho(a) sentimentos que também podem ser divididos."
+  },
+  racional: {
+    key: "racional",
+    emoji: "🧠",
+    title: "Mente Estratégica",
+    badge: "Estratégico(a)",
+    description: "Você observa, analisa e prefere agir com clareza. Antes de decidir, costuma montar o cenário inteiro na cabeça.",
+    advice: "Sua força está em pensar com calma, evitar impulsos e encontrar soluções práticas. Só não esqueça que algumas respostas também nascem do coração."
+  },
+  criativo: {
+    key: "criativo",
+    emoji: "🎨",
+    title: "Alma Criativa",
+    badge: "Criativo(a)",
+    description: "Você enxerga possibilidades onde outras pessoas veem rotina. Sua imaginação transforma situações comuns em algo com identidade própria.",
+    advice: "Sua força está em inventar, adaptar e dar vida ao que parecia parado. Só cuide para não abandonar boas ideias antes de dar tempo delas florescerem."
+  }
+};
+
+function calculateMeDescobrindoResult(body = {}) {
+  const scores = { emocional: 0, racional: 0, criativo: 0 };
+  for (const question of ME_DESCOBRINDO_QUESTIONS) {
+    const value = String(body[question.id] || "").trim();
+    if (Object.prototype.hasOwnProperty.call(scores, value)) scores[value] += 1;
+  }
+  const total = Object.values(scores).reduce((sum, n) => sum + n, 0) || ME_DESCOBRINDO_QUESTIONS.length;
+  const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+  const dominantKey = sorted[0][0];
+  const secondaryKey = sorted[1][0];
+  const dominant = ME_DESCOBRINDO_PROFILES[dominantKey];
+  const secondary = ME_DESCOBRINDO_PROFILES[secondaryKey];
+  const percentages = Object.fromEntries(Object.entries(scores).map(([key, value]) => [key, Math.round((value * 100) / total)]));
+
+  return {
+    taken_at: new Date().toISOString(),
+    total,
+    scores,
+    percentages,
+    dominant_key: dominantKey,
+    secondary_key: secondaryKey,
+    title: dominant.title,
+    emoji: dominant.emoji,
+    badge: dominant.badge,
+    description: dominant.description,
+    advice: dominant.advice,
+    secondary_title: secondary.title,
+    share_text: `Acabei de me descobrir na Klein Dream: ${dominant.emoji} ${dominant.title}`,
+    disclaimer: "Este teste é uma brincadeira de autoconhecimento e não substitui avaliação psicológica, médica ou profissional."
+  };
+}
+
+function parseMeDescobrindoResult(value) {
+  if (!value) return null;
+  if (typeof value === "object") return value;
+  try { return JSON.parse(String(value)); } catch (_) { return null; }
 }
 
 function isBuiltinAvatar(value) {
@@ -1200,6 +1359,42 @@ app.get("/fans/:username", requireAuth, async (req, res) => {
   res.render("fans", { user, fans });
 });
 
+
+// ===== ME DESCOBRINDO =====
+app.get("/me-descobrindo", requireAuth, async (req, res) => {
+  const me = await getUserById(req.session.userId);
+  const currentResult = parseMeDescobrindoResult(me && me.personality_result);
+  res.render("me_descobrindo", {
+    questions: ME_DESCOBRINDO_QUESTIONS,
+    profiles: ME_DESCOBRINDO_PROFILES,
+    currentResult,
+    error: null
+  });
+});
+
+app.post("/me-descobrindo", requireAuth, limiterWrite, async (req, res) => {
+  const answered = ME_DESCOBRINDO_QUESTIONS.filter(q => String(req.body[q.id] || "").trim()).length;
+  if (answered < ME_DESCOBRINDO_QUESTIONS.length) {
+    return res.status(400).render("me_descobrindo", {
+      questions: ME_DESCOBRINDO_QUESTIONS,
+      profiles: ME_DESCOBRINDO_PROFILES,
+      currentResult: null,
+      error: "Responda todas as perguntas para descobrir seu resultado."
+    });
+  }
+
+  const result = calculateMeDescobrindoResult(req.body);
+  await db.run("UPDATE users SET personality_result=? WHERE id=?", [JSON.stringify(result), req.session.userId]);
+  req.flash("success", `Seu resultado foi salvo: ${result.emoji} ${result.title}.`);
+  res.redirect(`/u/${req.session.username}`);
+});
+
+app.post("/me-descobrindo/clear", requireAuth, limiterWrite, async (req, res) => {
+  await db.run("UPDATE users SET personality_result=NULL WHERE id=?", [req.session.userId]);
+  req.flash("info", "Resultado do Me descobrindo removido do perfil.");
+  res.redirect(`/u/${req.session.username}`);
+});
+
 // ===== PERFIL =====
 app.get("/u/:username", requireAuth, async (req, res) => {
   const meId = req.session.userId;
@@ -1208,7 +1403,7 @@ app.get("/u/:username", requireAuth, async (req, res) => {
       id, username, full_name, bio, city, state,
       profile_photo, birth_date, marital_status, favorite_team,
       profession, hobbies, favorite_music, favorite_movie, favorite_game,
-      time_of, personality, looking_for, mood, daily_phrase,
+      time_of, personality, personality_result, looking_for, mood, daily_phrase,
       invisible_visits, notify_profile_visits, role, is_suspended, created_at,
       CASE WHEN EXISTS (
         SELECT 1 FROM presence p
@@ -1441,6 +1636,8 @@ app.get("/u/:username", requireAuth, async (req, res) => {
   `, [user.id, MAX_PAINT_DRAWINGS_PER_USER]);
   for (const drawing of drawings) drawing.created_at = formatDateBR(drawing.created_at);
 
+  const personalityResult = parseMeDescobrindoResult(user.personality_result);
+
   res.render("profile", {
     user, isMe,
     friend: !!friend, reqOut, reqIn,
@@ -1449,7 +1646,7 @@ app.get("/u/:username", requireAuth, async (req, res) => {
     totalVisits, visitors, canSeeVisitors,
     isBirthdayToday: isBirthdayToday(user.birth_date), memberSince,
     sign, vibeFrase, ratings, myRating, canRateProfile,
-    profilePoll, giftSummary, recentGifts, dreams, drawings,
+    profilePoll, giftSummary, recentGifts, dreams, drawings, personalityResult,
     maxPaintDrawings: MAX_PAINT_DRAWINGS_PER_USER
   });
 });
