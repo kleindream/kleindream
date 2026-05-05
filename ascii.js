@@ -12,6 +12,7 @@ const letras = {
 
 function gerarASCII() {
   const texto = document.getElementById("ascii-input").value.toUpperCase();
+
   let linhas = ["", "", "", "", ""];
 
   for (let char of texto) {
@@ -22,6 +23,7 @@ function gerarASCII() {
     }
   }
 
+  // ✅ CORREÇÃO AQUI (quebra de linha correta)
   document.getElementById("ascii-output").textContent = linhas.join("\n");
 }
 
@@ -37,14 +39,19 @@ function limparASCII() {
   document.getElementById("ascii-output").textContent = "";
 }
 
-// 🔥 CORREÇÃO AQUI (fonte monoespaçada automática)
+// ✅ Ajuste automático de fonte estilo DOS
 document.addEventListener("DOMContentLoaded", function () {
   const el = document.getElementById("ascii-output");
+
   if (el) {
     el.style.fontFamily = '"Courier New", Courier, monospace';
     el.style.whiteSpace = "pre";
     el.style.fontSize = "13px";
     el.style.lineHeight = "1.05";
     el.style.letterSpacing = "0";
+    el.style.color = "#00ff00";
+    el.style.background = "#000";
+    el.style.padding = "10px";
+    el.style.borderRadius = "6px";
   }
 });
