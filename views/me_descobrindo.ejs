@@ -1,0 +1,47 @@
+<%- include("layout", { title: "Me descobrindo", body: `
+  <div class="card me-descobrindo-page">
+    <div class="me-discover-head">
+      <div>
+        <div class="small">Klein Dream • autoconhecimento leve</div>
+        <h1>🌸 Me descobrindo</h1>
+        <p>Responda 10 perguntas e descubra qual lado aparece mais em você: coração, mente ou criatividade.</p>
+      </div>
+      ${currentResult ? `
+        <div class="me-discover-current">
+          <div class="small">Seu resultado atual</div>
+          <b>${escapeHtml(currentResult.emoji || '✨')} ${escapeHtml(currentResult.title || '')}</b>
+          <span>${escapeHtml(currentResult.badge || '')}</span>
+        </div>
+      ` : ``}
+    </div>
+
+    ${error ? `<div class="notice error">${escapeHtml(error)}</div>` : ``}
+
+    <div class="me-discover-note">
+      Este teste é uma brincadeira de autoconhecimento e não substitui avaliação psicológica, médica ou profissional.
+    </div>
+
+    <form method="post" action="/me-descobrindo" class="me-discover-form">
+      ${questions.map((q, idx) => `
+        <div class="me-question-card">
+          <div class="me-question-title"><span>${idx + 1}</span> ${escapeHtml(q.text)}</div>
+          <div class="me-options">
+            ${q.options.map((opt) => `
+              <label class="me-option">
+                <input type="radio" name="${escapeHtml(q.id)}" value="${escapeHtml(opt.value)}" required />
+                <span>${escapeHtml(opt.label)}</span>
+              </label>
+            `).join('')}
+          </div>
+        </div>
+      `).join('')}
+
+      <div class="me-discover-actions">
+        <button class="btn" type="submit">Ver meu resultado</button>
+        <a class="btn secondary" href="/u/${escapeHtml(me.username)}">Voltar ao perfil</a>
+      </div>
+    </form>
+  </div>
+` }) %>
+
+<% function escapeHtml(str){ return String(str == null ? '' : str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); } %>
