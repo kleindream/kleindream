@@ -1,0 +1,85 @@
+<%- include("layout", { title: "Meu Avatar Klein", body: `
+  <div class="avatar-editor-page">
+    <div class="card">
+      <h1>🎨 Meu Avatar Klein</h1>
+      <p class="small">Monte um avatar 2D leve, no estilo clássico das redes sociais antigas. Ele fica salvo no seu perfil e pode ser editado quando quiser.</p>
+    </div>
+
+    <div class="avatar-editor-wrap" style="margin-top:14px;">
+      <div class="card avatar-editor-panel">
+        <div class="h">Prévia</div>
+        <div class="avatar-klein-preview" id="avatarKleinPreview">
+          <img data-layer="fundo" src="/avatar-klein/fundos/fundo${Number(avatarConfig.fundo || 1)}.svg" alt="" />
+          <img data-layer="rosto" src="/avatar-klein/rostos/rosto${Number(avatarConfig.rosto || 1)}.svg" alt="" />
+          <img data-layer="roupa" src="/avatar-klein/roupas/roupa${Number(avatarConfig.roupa || 1)}.svg" alt="" />
+          <img data-layer="barba" src="${Number(avatarConfig.barba || 0) ? `/avatar-klein/barbas/barba${Number(avatarConfig.barba)}.svg` : ''}" class="${Number(avatarConfig.barba || 0) ? '' : 'avatar-layer-hidden'}" alt="" />
+          <img data-layer="cabelo" src="/avatar-klein/cabelos/cabelo${Number(avatarConfig.cabelo || 1)}.svg" alt="" />
+          <img data-layer="olhos" src="/avatar-klein/olhos/olhos${Number(avatarConfig.olhos || 1)}.svg" alt="" />
+          <img data-layer="boca" src="/avatar-klein/bocas/boca${Number(avatarConfig.boca || 1)}.svg" alt="" />
+          <img data-layer="oculos" src="${Number(avatarConfig.oculos || 0) ? `/avatar-klein/oculos/oculos${Number(avatarConfig.oculos)}.svg` : ''}" class="${Number(avatarConfig.oculos || 0) ? '' : 'avatar-layer-hidden'}" alt="" />
+        </div>
+        <div class="small">Dica: óculos e barba podem ficar em “nenhum”.</div>
+      </div>
+
+      <div class="card">
+        <div class="h">Escolha as peças</div>
+        <form method="post" action="/meu-avatar" id="avatarKleinForm">
+          <div class="avatar-editor-controls">
+            ${[
+              ['fundo', 'Fundo', 'fundos', Number(avatarOptions.fundo || 8), 1],
+              ['rosto', 'Rosto / pele', 'rostos', Number(avatarOptions.rosto || 6), 1],
+              ['cabelo', 'Cabelo', 'cabelos', Number(avatarOptions.cabelo || 8), 1],
+              ['olhos', 'Olhos', 'olhos', Number(avatarOptions.olhos || 8), 1],
+              ['boca', 'Boca / expressão', 'bocas', Number(avatarOptions.boca || 8), 1],
+              ['roupa', 'Roupa', 'roupas', Number(avatarOptions.roupa || 7), 1],
+              ['oculos', 'Óculos', 'oculos', Number(avatarOptions.oculos || 5), 0],
+              ['barba', 'Barba / bigode', 'barbas', Number(avatarOptions.barba || 5), 0]
+            ].map(([key, label, folder, max, min]) => `
+              <div class="avatar-editor-field">
+                <label for="avatar_${key}">${label}</label>
+                <select id="avatar_${key}" name="${key}" data-layer="${key}" data-folder="${folder}" data-prefix="${key === 'oculos' ? 'oculos' : key}" data-min="${min}">
+                  ${min === 0 ? `<option value="0" ${Number(avatarConfig[key] || 0) === 0 ? 'selected' : ''}>Nenhum</option>` : ``}
+                  ${Array.from({ length: max }, (_, idx) => idx + 1).map(n => `<option value="${n}" ${Number(avatarConfig[key] || min) === n ? 'selected' : ''}>Opção ${n}</option>`).join('')}
+                </select>
+              </div>
+            `).join('')}
+          </div>
+
+          <div class="avatar-editor-actions">
+            <button class="btn" type="submit">Salvar avatar</button>
+            <a class="btn secondary" href="/u/${encodeURIComponent(user.username)}">Voltar ao perfil</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const form = document.getElementById('avatarKleinForm');
+      const preview = document.getElementById('avatarKleinPreview');
+      if (!form || !preview) return;
+
+      const prefixByKey = {
+        fundo: 'fundo', rosto: 'rosto', cabelo: 'cabelo', olhos: 'olhos', boca: 'boca', roupa: 'roupa', oculos: 'oculos', barba: 'barba'
+      };
+
+      form.querySelectorAll('select[data-layer]').forEach(select => {
+        select.addEventListener('change', () => {
+          const key = select.dataset.layer;
+          const folder = select.dataset.folder;
+          const value = Number(select.value || 0);
+          const img = preview.querySelector('img[data-layer="' + key + '"]');
+          if (!img) return;
+          if (value <= 0) {
+            img.removeAttribute('src');
+            img.classList.add('avatar-layer-hidden');
+            return;
+          }
+          img.src = '/avatar-klein/' + folder + '/' + prefixByKey[key] + value + '.svg';
+          img.classList.remove('avatar-layer-hidden');
+        });
+      });
+    })();
+  </script>
+` }) %>
