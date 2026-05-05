@@ -1498,3 +1498,31 @@ body.dark .dream-item {
   background: #162236; border-color: #30415f;
 }
 body.dark .dream-text { color: #e8f0ff; }
+
+/* Me descobrindo */
+.me-descobrindo-page h1{ margin:4px 0 8px 0; font-size:28px; }
+.me-discover-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+.me-discover-head p{ margin:0; color:var(--muted); max-width:720px; }
+.me-discover-current{ border:1px solid var(--line); border-radius:14px; background:rgba(74,163,255,.08); padding:12px 14px; min-width:210px; }
+.me-discover-current b{ display:block; font-size:16px; margin:3px 0; }
+.me-discover-current span{ color:var(--muted); font-size:13px; }
+.me-discover-note{ margin:14px 0; padding:10px 12px; border:1px dashed var(--line); border-radius:12px; color:var(--muted); background:rgba(255,255,255,.45); }
+.me-discover-form{ display:grid; gap:12px; }
+.me-question-card{ border:1px solid var(--line); border-radius:14px; background:rgba(255,255,255,.72); padding:14px; }
+.me-question-title{ font-weight:800; margin-bottom:10px; color:var(--text); }
+.me-question-title span{ display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:999px; background:var(--accent); color:#fff; margin-right:6px; font-size:13px; }
+.me-options{ display:grid; gap:8px; }
+.me-option{ display:flex; gap:8px; align-items:flex-start; padding:9px 10px; border:1px solid var(--line); border-radius:12px; background:#fff; cursor:pointer; }
+.me-option:hover{ background:rgba(74,163,255,.08); }
+.me-option input{ margin-top:3px; }
+.me-discover-actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.me-result-top{ display:flex; gap:12px; align-items:center; margin-bottom:12px; }
+.me-result-emoji{ width:52px; height:52px; border-radius:18px; display:flex; align-items:center; justify-content:center; font-size:28px; background:linear-gradient(135deg, rgba(74,163,255,.20), rgba(255,120,190,.16)); border:1px solid var(--line); }
+.me-result-title{ font-size:20px; font-weight:900; }
+.me-percent-grid{ display:grid; gap:10px; margin:12px 0; }
+.me-percent-top{ display:flex; justify-content:space-between; gap:10px; font-size:13px; margin-bottom:4px; }
+.me-percent-bar{ height:9px; border-radius:999px; background:rgba(0,0,0,.08); overflow:hidden; border:1px solid var(--line); }
+.me-percent-bar div{ height:100%; border-radius:999px; background:linear-gradient(90deg, var(--accent), #ff78be); }
+.me-result-text{ margin:10px 0; }
+.notice.error{ border:1px solid #ffb1b1; background:#fff0f0; color:#8a1c1c; border-radius:12px; padding:10px 12px; margin:12px 0; }
+@media (max-width: 640px){ .me-descobrindo-page h1{ font-size:24px; } .me-option{ font-size:14px; } }
