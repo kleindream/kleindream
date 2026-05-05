@@ -1630,3 +1630,9 @@ body.dark .avatar-editor-field select{ background:#1d2a40; color:#e8f0ff; border
 body.dark .me-result-text-side, body.dark .me-result-text-side .small, body.dark .profile-highlight.me-result-text{ color:#f4f8ff; }
 .me-result-text-side, .profile-highlight.me-result-text{ color:var(--text); }
 @media (max-width: 780px){ .avatar-editor-page .avatar-editor-wrap{ grid-template-columns:1fr; } .avatar-editor-panel{ position:static; } .avatar-editor-controls{ grid-template-columns:1fr; } }
+
+/* Avatar Klein - override sincronizado com public/style.css */
+.avatar-klein-mini{ width:138px !important; height:138px !important; max-width:100%; border-radius:18px; }
+.avatar-klein-mini,.avatar-klein-preview{ position:relative !important; display:block; overflow:hidden !important; isolation:isolate; }
+.avatar-klein-mini img,.avatar-klein-preview img{ position:absolute !important; inset:0 !important; display:block !important; width:100% !important; height:100% !important; max-width:none !important; object-fit:contain !important; object-position:center center !important; margin:0 !important; padding:0 !important; border:0 !important; border-radius:0 !important; background:transparent !important; box-shadow:none !important; pointer-events:none; user-select:none; }
+.avatar-layer-hidden{ display:none !important; }
