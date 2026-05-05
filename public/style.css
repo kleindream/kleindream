@@ -1613,3 +1613,127 @@ body.dark .me-discover-head p {
 .avatar-layer-hidden {
   display: none !important;
 }
+
+/* Avatar Klein - correção definitiva das camadas no perfil e na edição */
+.avatar-klein-card{
+  text-align:center;
+}
+
+.avatar-klein-mini,
+.avatar-klein-preview{
+  position:relative !important;
+  display:block;
+  overflow:hidden !important;
+  margin:8px auto 10px;
+  background:#dbeafe;
+  border:1px solid rgba(255,255,255,.16);
+  box-shadow:0 10px 22px rgba(0,0,0,.16);
+  isolation:isolate;
+}
+
+.avatar-klein-mini{
+  width:138px !important;
+  height:138px !important;
+  max-width:100%;
+  border-radius:18px;
+}
+
+.avatar-klein-preview{
+  width:260px !important;
+  height:260px !important;
+  max-width:100%;
+  border-radius:30px;
+}
+
+.avatar-klein-mini img,
+.avatar-klein-preview img{
+  position:absolute !important;
+  inset:0 !important;
+  display:block !important;
+  width:100% !important;
+  height:100% !important;
+  max-width:none !important;
+  object-fit:contain !important;
+  object-position:center center !important;
+  margin:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  pointer-events:none;
+  user-select:none;
+}
+
+.avatar-layer-hidden{
+  display:none !important;
+}
+
+.avatar-klein-caption{
+  margin:0 0 10px 0;
+}
+
+.avatar-editor-page .avatar-editor-wrap{
+  display:grid;
+  grid-template-columns:300px 1fr;
+  gap:16px;
+  align-items:start;
+}
+
+.avatar-editor-panel{
+  position:sticky;
+  top:12px;
+  text-align:center;
+}
+
+.avatar-editor-controls{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+
+.avatar-editor-field{
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:10px;
+  background:rgba(255,255,255,.66);
+}
+
+.avatar-editor-field label{
+  display:block;
+  font-weight:800;
+  margin-bottom:6px;
+}
+
+.avatar-editor-field select{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:9px 10px;
+  background:var(--panel2);
+  color:var(--text);
+}
+
+.avatar-editor-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:14px;
+}
+
+body.dark .avatar-editor-field{
+  background:#162236;
+  border-color:#30415f;
+}
+
+body.dark .avatar-editor-field select{
+  background:#1d2a40;
+  color:#e8f0ff;
+  border-color:#3a4c6c;
+}
+
+@media (max-width:780px){
+  .avatar-editor-page .avatar-editor-wrap{ grid-template-columns:1fr; }
+  .avatar-editor-panel{ position:static; }
+  .avatar-editor-controls{ grid-template-columns:1fr; }
+}
