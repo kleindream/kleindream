@@ -7,23 +7,23 @@ const letras = {
   G: [" GGG ", "G    ", "G  GG", "G   G", " GGG "],
   I: ["III", " I ", " I ", "III"],
   O: [" OOO ", "O   O", "O   O", " OOO "],
-  default: ["?"]
+  default: ["????"]
 };
 
 function gerarASCII() {
   const texto = document.getElementById("ascii-input").value.toUpperCase();
 
-  let linhas = ["", "", "", "", ""];
+  let linhas = [];
 
   for (let char of texto) {
     let letra = letras[char] || letras.default;
 
     for (let i = 0; i < letra.length; i++) {
+      if (!linhas[i]) linhas[i] = "";
       linhas[i] += letra[i] + "  ";
     }
   }
 
-  // ✅ CORREÇÃO AQUI (quebra de linha correta)
   document.getElementById("ascii-output").textContent = linhas.join("\n");
 }
 
@@ -39,7 +39,7 @@ function limparASCII() {
   document.getElementById("ascii-output").textContent = "";
 }
 
-// ✅ Ajuste automático de fonte estilo DOS
+// 🎯 Visual estilo DOS corrigido
 document.addEventListener("DOMContentLoaded", function () {
   const el = document.getElementById("ascii-output");
 
