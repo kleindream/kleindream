@@ -32,6 +32,96 @@ const BUILTIN_AVATARS = [
   { path: '/avatars/avatar-sun.svg', label: 'Estrelinha' }
 ];
 
+const KLEIN_AVATAR_OPTIONS = {
+  pele: [
+    { value: 'clara', label: 'Clara', color: '#f2c7a7' },
+    { value: 'media', label: 'Média', color: '#d89a6a' },
+    { value: 'bronze', label: 'Bronze', color: '#b9784d' },
+    { value: 'escura', label: 'Escura', color: '#74412b' },
+    { value: 'rosada', label: 'Rosada', color: '#f0b6ad' }
+  ],
+  fundo: [
+    { value: 'ceu', label: 'Céu azul', cls: 'bg-ceu' },
+    { value: 'noite', label: 'Noite', cls: 'bg-noite' },
+    { value: 'orkut', label: 'Azul clássico', cls: 'bg-orkut' },
+    { value: 'rosa', label: 'Rosa retrô', cls: 'bg-rosa' },
+    { value: 'verde', label: 'Verde suave', cls: 'bg-verde' },
+    { value: 'xadrez', label: 'Xadrez 2000', cls: 'bg-xadrez' },
+    { value: 'pixel', label: 'Pixel', cls: 'bg-pixel' },
+    { value: 'sol', label: 'Solzinho', cls: 'bg-sol' }
+  ],
+  cabelo: [
+    { value: 'curto', label: 'Curto' },
+    { value: 'social', label: 'Social' },
+    { value: 'franja', label: 'Franja' },
+    { value: 'longo', label: 'Longo' },
+    { value: 'cacheado', label: 'Cacheado' },
+    { value: 'careca', label: 'Sem cabelo' },
+    { value: 'moicano', label: 'Moicano leve' },
+    { value: 'topete', label: 'Topete' }
+  ],
+  corCabelo: [
+    { value: 'preto', label: 'Preto', color: '#151515' },
+    { value: 'castanho', label: 'Castanho', color: '#5a3523' },
+    { value: 'loiro', label: 'Loiro', color: '#c99b37' },
+    { value: 'ruivo', label: 'Ruivo', color: '#a94720' },
+    { value: 'grisalho', label: 'Grisalho', color: '#8e8e8e' },
+    { value: 'azul', label: 'Azul fantasia', color: '#2264c7' }
+  ],
+  olhos: [
+    { value: 'normal', label: 'Normal' },
+    { value: 'feliz', label: 'Feliz' },
+    { value: 'serio', label: 'Sério' },
+    { value: 'sono', label: 'Sono' },
+    { value: 'anime', label: 'Anime' },
+    { value: 'piscando', label: 'Piscando' }
+  ],
+  boca: [
+    { value: 'sorriso', label: 'Sorriso' },
+    { value: 'seria', label: 'Séria' },
+    { value: 'timida', label: 'Tímida' },
+    { value: 'brava', label: 'Brava' },
+    { value: 'pensativa', label: 'Pensativa' },
+    { value: 'nostalgica', label: 'Nostálgica' }
+  ],
+  oculos: [
+    { value: 'nenhum', label: 'Sem óculos' },
+    { value: 'quadrado', label: 'Quadrado' },
+    { value: 'redondo', label: 'Redondo' },
+    { value: 'escuro', label: 'Escuro' },
+    { value: 'retro', label: 'Retrô' }
+  ],
+  barba: [
+    { value: 'nenhuma', label: 'Sem barba' },
+    { value: 'cavanhaque', label: 'Cavanhaque' },
+    { value: 'bigode', label: 'Bigode' },
+    { value: 'barba', label: 'Barba curta' },
+    { value: 'sombra', label: 'Sombra' }
+  ],
+  roupa: [
+    { value: 'azul', label: 'Camisa azul' },
+    { value: 'xadrez', label: 'Xadrez' },
+    { value: 'preta', label: 'Camiseta preta' },
+    { value: 'rosa', label: 'Blusa rosa' },
+    { value: 'verde', label: 'Camisa verde' },
+    { value: 'jaqueta', label: 'Jaqueta retrô' },
+    { value: 'social', label: 'Social' },
+    { value: 'gamer', label: 'Gamer' }
+  ],
+  acessorio: [
+    { value: 'nenhum', label: 'Sem acessório' },
+    { value: 'fone', label: 'Fone' },
+    { value: 'estrela', label: 'Estrela' },
+    { value: 'disquete', label: 'Disquete' },
+    { value: 'coracao', label: 'Coração' }
+  ]
+};
+
+const DEFAULT_KLEIN_AVATAR = {
+  pele: 'clara', fundo: 'ceu', cabelo: 'curto', corCabelo: 'preto', olhos: 'normal',
+  boca: 'sorriso', oculos: 'nenhum', barba: 'nenhuma', roupa: 'azul', acessorio: 'nenhum'
+};
+
 // Supabase Storage (for profile photos & albums)
 // Set these env vars in Render/Vercel:
 //   SUPABASE_URL
@@ -127,7 +217,7 @@ async function getUserById(id) {
       id, email, username, full_name, bio, city, state,
       profile_photo, birth_date, marital_status, favorite_team,
       profession, hobbies, favorite_music, favorite_movie, favorite_game,
-      time_of, personality, personality_result, looking_for, mood, daily_phrase,
+      time_of, personality, personality_result, avatar_config, looking_for, mood, daily_phrase,
       invisible_visits, notify_profile_visits, role, is_suspended, created_at
     FROM users
     WHERE id=?
@@ -313,6 +403,66 @@ function parseMeDescobrindoResult(value) {
   try { return JSON.parse(String(value)); } catch (_) { return null; }
 }
 
+function parseKleinAvatarConfig(value) {
+  let raw = value;
+  if (!raw) raw = {};
+  if (typeof raw === "string") {
+    try { raw = JSON.parse(raw); } catch (_) { raw = {}; }
+  }
+  return sanitizeKleinAvatarConfig(raw || {});
+}
+
+function optionValues(key) {
+  return new Set((KLEIN_AVATAR_OPTIONS[key] || []).map(o => o.value));
+}
+
+function sanitizeKleinAvatarConfig(input) {
+  const cfg = { ...DEFAULT_KLEIN_AVATAR };
+  for (const key of Object.keys(DEFAULT_KLEIN_AVATAR)) {
+    const value = String(input && input[key] || '').trim();
+    if (optionValues(key).has(value)) cfg[key] = value;
+  }
+  return cfg;
+}
+
+function getAvatarOption(key, value) {
+  return (KLEIN_AVATAR_OPTIONS[key] || []).find(o => o.value === value) || (KLEIN_AVATAR_OPTIONS[key] || [])[0] || {};
+}
+
+function ensureKleinAvatarColumn() {
+  return db.run("ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_config TEXT").catch(err => {
+    console.error("Erro ao garantir coluna avatar_config:", err);
+  });
+}
+
+function renderKleinAvatar(config, extraClass = '') {
+  const cfg = parseKleinAvatarConfig(config);
+  const pele = getAvatarOption('pele', cfg.pele).color || '#f2c7a7';
+  const cabelo = getAvatarOption('corCabelo', cfg.corCabelo).color || '#151515';
+  const fundo = getAvatarOption('fundo', cfg.fundo).cls || 'bg-ceu';
+  const accMap = { fone: '🎧', estrela: '⭐', disquete: '💾', coracao: '💙' };
+  const acc = accMap[cfg.acessorio] || '';
+  return `
+    <div class="klein-avatar ${fundo} cabelo-${cfg.cabelo} olhos-${cfg.olhos} boca-${cfg.boca} oculos-${cfg.oculos} barba-${cfg.barba} roupa-${cfg.roupa} ${extraClass}" style="--skin:${pele};--hair:${cabelo};">
+      <div class="ka-accessory">${acc}</div>
+      <div class="ka-neck"></div>
+      <div class="ka-shirt"><span></span></div>
+      <div class="ka-head">
+        <div class="ka-hair ka-hair-main"></div>
+        <div class="ka-ear left"></div><div class="ka-ear right"></div>
+        <div class="ka-face">
+          <div class="ka-brow left"></div><div class="ka-brow right"></div>
+          <div class="ka-eye left"></div><div class="ka-eye right"></div>
+          <div class="ka-glasses"><span></span></div>
+          <div class="ka-nose"></div>
+          <div class="ka-moustache"></div>
+          <div class="ka-mouth"></div>
+          <div class="ka-beard"></div>
+        </div>
+      </div>
+    </div>`;
+}
+
 async function ensureMeDescobrindoColumn() {
   // Defesa extra para produção: evita Internal Server Error se o banco antigo ainda não tiver a coluna.
   try {
@@ -455,6 +605,8 @@ app.use(async (req, res, next) => {
   };
   res.locals.photoSrc = photoSrc;
   res.locals.builtinAvatars = BUILTIN_AVATARS;
+  res.locals.kleinAvatarOptions = KLEIN_AVATAR_OPTIONS;
+  res.locals.renderKleinAvatar = renderKleinAvatar;
   res.locals.me = null;
   res.locals.notifCount = 0;
 
@@ -464,6 +616,7 @@ app.use(async (req, res, next) => {
         res.locals.me = await getUserById(req.session.userId);
         if (res.locals.me) {
           res.locals.me.personality_result = parseMeDescobrindoResult(res.locals.me.personality_result);
+          res.locals.me.avatar_config = parseKleinAvatarConfig(res.locals.me.avatar_config);
         }
       } catch (userErr) {
         // Se a coluna nova ainda não existir em banco antigo, corrige e tenta seguir sem derrubar o login.
@@ -473,6 +626,7 @@ app.use(async (req, res, next) => {
           res.locals.me = await getUserById(req.session.userId);
           if (res.locals.me) {
             res.locals.me.personality_result = parseMeDescobrindoResult(res.locals.me.personality_result);
+          res.locals.me.avatar_config = parseKleinAvatarConfig(res.locals.me.avatar_config);
           }
         } catch (retryErr) {
           console.error("Erro ao recarregar usuário atual após correção:", retryErr);
@@ -1444,6 +1598,35 @@ app.post("/me-descobrindo/clear", requireAuth, limiterWrite, async (req, res, ne
   }
 });
 
+
+// ===== MEU AVATAR KLEIN =====
+app.get("/meu-avatar", requireAuth, async (req, res, next) => {
+  try {
+    await ensureKleinAvatarColumn();
+    const me = res.locals.me || await getUserById(req.session.userId);
+    res.render("meu_avatar", {
+      avatarConfig: parseKleinAvatarConfig(me && me.avatar_config),
+      avatarOptions: KLEIN_AVATAR_OPTIONS,
+      renderKleinAvatar
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post("/meu-avatar", requireAuth, limiterWrite, async (req, res, next) => {
+  try {
+    await ensureKleinAvatarColumn();
+    const cfg = sanitizeKleinAvatarConfig(req.body || {});
+    await db.run("UPDATE users SET avatar_config=? WHERE id=?", [JSON.stringify(cfg), req.session.userId]);
+    req.flash("success", "Seu Avatar Klein foi salvo no perfil.");
+    const username = req.session.username || (res.locals.me && res.locals.me.username);
+    res.redirect(username ? `/u/${username}` : "/home");
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ===== PERFIL =====
 app.get("/u/:username", requireAuth, async (req, res) => {
   const meId = req.session.userId;
@@ -1452,7 +1635,7 @@ app.get("/u/:username", requireAuth, async (req, res) => {
       id, username, full_name, bio, city, state,
       profile_photo, birth_date, marital_status, favorite_team,
       profession, hobbies, favorite_music, favorite_movie, favorite_game,
-      time_of, personality, personality_result, looking_for, mood, daily_phrase,
+      time_of, personality, personality_result, avatar_config, looking_for, mood, daily_phrase,
       invisible_visits, notify_profile_visits, role, is_suspended, created_at,
       CASE WHEN EXISTS (
         SELECT 1 FROM presence p
@@ -1686,6 +1869,7 @@ app.get("/u/:username", requireAuth, async (req, res) => {
   for (const drawing of drawings) drawing.created_at = formatDateBR(drawing.created_at);
 
   const personalityResult = parseMeDescobrindoResult(user.personality_result);
+  const avatarConfig = parseKleinAvatarConfig(user.avatar_config);
 
   res.render("profile", {
     user, isMe,
@@ -1695,7 +1879,7 @@ app.get("/u/:username", requireAuth, async (req, res) => {
     totalVisits, visitors, canSeeVisitors,
     isBirthdayToday: isBirthdayToday(user.birth_date), memberSince,
     sign, vibeFrase, ratings, myRating, canRateProfile,
-    profilePoll, giftSummary, recentGifts, dreams, drawings, personalityResult,
+    profilePoll, giftSummary, recentGifts, dreams, drawings, personalityResult, avatarConfig, avatarOptions: KLEIN_AVATAR_OPTIONS, renderKleinAvatar,
     maxPaintDrawings: MAX_PAINT_DRAWINGS_PER_USER
   });
 });
