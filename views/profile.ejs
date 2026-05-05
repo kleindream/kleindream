@@ -85,10 +85,13 @@
           </div>
 
           <div class="me-result-text me-result-text-side">
-            <div>${escapeHtml(personalityResult.description || '')}</div>
-            ${personalityResult.advice ? `<div class="small" style="margin-top:8px;">${escapeHtml(personalityResult.advice)}</div>` : ``}
-          </div>
-          <div class="small">${escapeHtml(personalityResult.disclaimer || 'Teste recreativo, sem valor diagnóstico.')}</div>
+<div class="me-result-text me-result-text-side" style="color:#fff;">
+  <div>${escapeHtml(personalityResult.description || '')}</div>
+  ${personalityResult.advice ? `<div class="small" style="margin-top:8px;color:#fff;">${escapeHtml(personalityResult.advice)}</div>` : ``}
+</div>
+<div class="small" style="color:#fff;">
+  ${escapeHtml(personalityResult.disclaimer || 'Teste recreativo, sem valor diagnóstico.')}
+</div>
 
           ${isMe ? `
             <div class="me-discover-actions" style="margin-top:10px;">
