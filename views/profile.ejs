@@ -60,6 +60,50 @@
         </div>
       </div>
 
+      <div class="card profile-side-card me-descobrindo-side-card">
+        <div class="h">🌸 Me descobrindo</div>
+        ${personalityResult ? `
+          <div class="me-result-top me-result-top-side">
+            <div class="me-result-emoji">${escapeHtml(personalityResult.emoji || '✨')}</div>
+            <div>
+              <div class="me-result-title">${escapeHtml(personalityResult.title || 'Resultado salvo')}</div>
+              <div class="small">Badge: ${escapeHtml(personalityResult.badge || 'Autoconhecimento')}</div>
+            </div>
+          </div>
+
+          <div class="me-percent-grid me-percent-grid-side">
+            ${[
+              ['emocional', '💙 Emocional'],
+              ['racional', '🧠 Racional'],
+              ['criativo', '🎨 Criativo']
+            ].map(([key, label]) => `
+              <div class="me-percent-line">
+                <div class="me-percent-top"><span>${label}</span><b>${Number(personalityResult.percentages?.[key] || 0)}%</b></div>
+                <div class="me-percent-bar"><div style="width:${Number(personalityResult.percentages?.[key] || 0)}%"></div></div>
+              </div>
+            `).join('')}
+          </div>
+
+          <div class="me-result-text me-result-text-side">
+            <div>${escapeHtml(personalityResult.description || '')}</div>
+            ${personalityResult.advice ? `<div class="small" style="margin-top:8px;">${escapeHtml(personalityResult.advice)}</div>` : ``}
+          </div>
+          <div class="small">${escapeHtml(personalityResult.disclaimer || 'Teste recreativo, sem valor diagnóstico.')}</div>
+
+          ${isMe ? `
+            <div class="me-discover-actions" style="margin-top:10px;">
+              <a class="btn" href="/me-descobrindo">Refazer teste</a>
+              <form method="post" action="/me-descobrindo/clear" onsubmit="return confirm('Remover o resultado do seu perfil?');" class="inline">
+                <button class="btn secondary" type="submit">Remover</button>
+              </form>
+            </div>
+          ` : ``}
+        ` : `
+          <div class="small" style="margin-bottom:8px;">Descubra seu estilo: coração, mente ou criatividade.</div>
+          ${isMe ? `<a class="btn" href="/me-descobrindo">Começar teste</a>` : `<div class="small">Este perfil ainda não fez o teste.</div>`}
+        `}
+      </div>
+
       ${canRateProfile ? `
         <div class="card profile-side-card rate-box-card">
           <div class="h">🗳️ Avaliar usuário</div>
@@ -226,49 +270,7 @@
       ` : ``}
 
 
-      <div class="card profile-dreams-card me-descobrindo-card">
-        <div class="h">🌸 Me descobrindo</div>
-        ${personalityResult ? `
-          <div class="me-result-top">
-            <div class="me-result-emoji">${escapeHtml(personalityResult.emoji || '✨')}</div>
-            <div>
-              <div class="me-result-title">${escapeHtml(personalityResult.title || 'Resultado salvo')}</div>
-              <div class="small">Badge: ${escapeHtml(personalityResult.badge || 'Autoconhecimento')}</div>
-            </div>
-          </div>
 
-          <div class="me-percent-grid">
-            ${[
-              ['emocional', '💙 Emocional'],
-              ['racional', '🧠 Racional'],
-              ['criativo', '🎨 Criativo']
-            ].map(([key, label]) => `
-              <div class="me-percent-line">
-                <div class="me-percent-top"><span>${label}</span><b>${Number(personalityResult.percentages?.[key] || 0)}%</b></div>
-                <div class="me-percent-bar"><div style="width:${Number(personalityResult.percentages?.[key] || 0)}%"></div></div>
-              </div>
-            `).join('')}
-          </div>
-
-          <div class="profile-highlight me-result-text">
-            <div>${escapeHtml(personalityResult.description || '')}</div>
-            ${personalityResult.advice ? `<div class="small" style="margin-top:8px;">${escapeHtml(personalityResult.advice)}</div>` : ``}
-          </div>
-          <div class="small">${escapeHtml(personalityResult.disclaimer || 'Teste recreativo, sem valor diagnóstico.')}</div>
-
-          ${isMe ? `
-            <div class="me-discover-actions" style="margin-top:10px;">
-              <a class="btn" href="/me-descobrindo">Refazer teste</a>
-              <form method="post" action="/me-descobrindo/clear" onsubmit="return confirm('Remover o resultado do seu perfil?');" class="inline">
-                <button class="btn secondary" type="submit">Remover</button>
-              </form>
-            </div>
-          ` : ``}
-        ` : `
-          <div class="small" style="margin-bottom:8px;">Um teste leve de personalidade para descobrir seu estilo: coração, mente ou criatividade.</div>
-          ${isMe ? `<a class="btn" href="/me-descobrindo">Começar teste</a>` : `<div class="small">Este perfil ainda não fez o teste.</div>`}
-        `}
-      </div>
 
       <div class="card profile-dreams-card">
         <div class="h">🎨 Paint Brush</div>
