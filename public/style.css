@@ -1840,23 +1840,32 @@ body.dark .dream-music-edit-fields label,
 body.dark .dream-music-help { color: #b8c7df; }
 body.dark .dream-music-edit-fields input { background:#1d2a40; color:#e8f0ff; border-color:#3a4c6c; }
 
-/* Me descobrindo no perfil - texto principal sempre legível */
+/* Me descobrindo no perfil - texto claro no cartão lateral */
 .me-descobrindo-side-card,
+.me-descobrindo-side-card .h,
+.me-descobrindo-side-card .small,
 .me-descobrindo-side-card .me-result-title,
 .me-descobrindo-side-card .me-result-text,
 .me-descobrindo-side-card .me-result-text-side,
 .me-descobrindo-side-card .me-result-text div,
 .me-descobrindo-side-card .me-percent-top,
-.me-descobrindo-side-card .small {
-  color: #183153;
+.me-descobrindo-side-card .me-percent-top span,
+.me-descobrindo-side-card .me-percent-top b,
+.me-descobrindo-side-card .me-percent-line span,
+.me-descobrindo-side-card .me-percent-line b {
+  color: #ffffff;
 }
-.me-descobrindo-side-card .small { color: #52657d; }
 body.dark .me-descobrindo-side-card,
+body.dark .me-descobrindo-side-card .h,
+body.dark .me-descobrindo-side-card .small,
 body.dark .me-descobrindo-side-card .me-result-title,
 body.dark .me-descobrindo-side-card .me-result-text,
 body.dark .me-descobrindo-side-card .me-result-text-side,
 body.dark .me-descobrindo-side-card .me-result-text div,
-body.dark .me-descobrindo-side-card .me-percent-top {
-  color: #e8f0ff;
+body.dark .me-descobrindo-side-card .me-percent-top,
+body.dark .me-descobrindo-side-card .me-percent-top span,
+body.dark .me-descobrindo-side-card .me-percent-top b,
+body.dark .me-descobrindo-side-card .me-percent-line span,
+body.dark .me-descobrindo-side-card .me-percent-line b {
+  color: #ffffff;
 }
-body.dark .me-descobrindo-side-card .small { color: #b8c7df; }
