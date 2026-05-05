@@ -1,0 +1,57 @@
+<%- include("layout", { title: "Meu Avatar Klein", body: `
+  <div class="card meu-avatar-page">
+    <div class="meu-avatar-head">
+      <div>
+        <div class="small">Klein Dream • identidade visual retrô</div>
+        <h1>🎭 Meu Avatar Klein</h1>
+        <p>Monte um avatar 2D leve para aparecer no seu perfil. Ele foi pensado para funcionar bem até em celular e computador mais fraco.</p>
+      </div>
+      <div class="meu-avatar-live">
+        ${renderKleinAvatar(avatarConfig, 'avatar-editor-preview')}
+      </div>
+    </div>
+
+    <form method="post" action="/meu-avatar" class="avatar-editor-form" id="avatarEditorForm">
+      ${Object.entries(avatarOptions).map(([key, options]) => `
+        <div class="avatar-field">
+          <label for="av-${key}">${avatarLabel(key)}</label>
+          <select id="av-${key}" name="${key}">
+            ${options.map(opt => `<option value="${escapeHtml(opt.value)}" ${avatarConfig[key] === opt.value ? 'selected' : ''}>${escapeHtml(opt.label)}</option>`).join('')}
+          </select>
+        </div>
+      `).join('')}
+
+      <div class="me-discover-actions avatar-actions">
+        <button class="btn" type="submit">Salvar avatar</button>
+        <a class="btn secondary" href="/u/${escapeHtml(me.username)}">Voltar ao perfil</a>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    (function(){
+      var form = document.getElementById('avatarEditorForm');
+      if(!form) return;
+      var preview = document.querySelector('.meu-avatar-live .klein-avatar');
+      var maps = ${JSON.stringify(avatarOptions)};
+      function getSelected(name){ var el = form.querySelector('[name="'+name+'"]'); return el ? el.value : ''; }
+      function findOpt(key, value){ return (maps[key] || []).find(function(o){ return o.value === value; }) || {}; }
+      function updatePreview(){
+        if(!preview) return;
+        var className = 'klein-avatar avatar-editor-preview ' +
+          (findOpt('fundo', getSelected('fundo')).cls || 'bg-ceu') + ' ' +
+          'cabelo-' + getSelected('cabelo') + ' olhos-' + getSelected('olhos') + ' boca-' + getSelected('boca') + ' ' +
+          'oculos-' + getSelected('oculos') + ' barba-' + getSelected('barba') + ' roupa-' + getSelected('roupa');
+        preview.className = className;
+        preview.style.setProperty('--skin', findOpt('pele', getSelected('pele')).color || '#f2c7a7');
+        preview.style.setProperty('--hair', findOpt('corCabelo', getSelected('corCabelo')).color || '#151515');
+        var acc = { fone:'🎧', estrela:'⭐', disquete:'💾', coracao:'💙' }[getSelected('acessorio')] || '';
+        var accEl = preview.querySelector('.ka-accessory'); if(accEl) accEl.textContent = acc;
+      }
+      form.addEventListener('change', updatePreview);
+    })();
+  </script>
+` }) %>
+
+<% function escapeHtml(str){ return String(str == null ? '' : str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); } %>
+<% function avatarLabel(key){ return ({ pele:'Tom de pele', fundo:'Fundo', cabelo:'Cabelo', corCabelo:'Cor do cabelo', olhos:'Olhos', boca:'Expressão', oculos:'Óculos', barba:'Barba / bigode', roupa:'Roupa', acessorio:'Acessório' }[key] || key); } %>

@@ -19,6 +19,7 @@
           <a href="/testimonials/${user.username}">💬 Depoimentos</a>
           <a href="/photos/${user.username}">📷 Fotos</a>
           ${isMe ? `<a href="/paint">🎨 Paint Brush</a>` : ``}
+          ${isMe ? `<a href="/meu-avatar">🎭 Meu Avatar Klein</a>` : ``}
           <a href="/fans/${user.username}">⭐ Fãs</a>
           ${isMe ? `<a href="/me/visitors">👁 Visitantes</a>` : ``}
           ${isMe ? `<a href="/profile/edit">⚙️ Editar perfil</a>` : ``}
@@ -446,6 +447,15 @@
             `}
           ` : `<div class="small">Este perfil ainda não criou uma enquete.</div>`}
         `}
+      </div>
+
+      <div class="card profile-side-card right-side-card klein-avatar-card">
+        <div class="h">🎭 Meu Avatar Klein</div>
+        <div class="avatar-card-wrap">
+          ${renderKleinAvatar(avatarConfig, 'avatar-profile-side')}
+        </div>
+        <div class="small" style="margin-top:8px;">Um avatar 2D leve, com jeitinho de rede social clássica.</div>
+        ${isMe ? `<div style="margin-top:10px;"><a class="btn secondary" href="/meu-avatar">Editar avatar</a></div>` : ``}
       </div>
 
       <div class="card profile-side-card right-side-card profile-gifts-card">
