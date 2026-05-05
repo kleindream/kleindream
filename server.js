@@ -709,10 +709,6 @@ app.get("/termos", (req, res) => {
   res.sendFile(path.join(__dirname, "views", "termos.html"));
 });
 
-app.get('/evento', (req, res) => {
-  res.render('evento'); // renderiza views/evento.ejs
-});
-
 app.get("/logo1.png", (req, res) => {
   res.sendFile(path.join(__dirname, "views", "logo1.png"));
 });
