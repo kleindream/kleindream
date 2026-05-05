@@ -104,6 +104,28 @@
         `}
       </div>
 
+      <div class="card profile-side-card dream-music-side-card">
+        <div class="h">🎧 Dream Music</div>
+        ${dreamMusic && dreamMusic.length ? `
+          <div class="dream-music-list">
+            ${dreamMusic.slice(0, 5).map((song, idx) => `
+              <a class="dream-music-item" href="${escapeHtml(song.youtube_url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(song.artist)} - ${escapeHtml(song.song_name)}">
+                <span class="dream-music-number">${idx + 1}</span>
+                <span class="dream-music-info">
+                  <span class="dream-music-artist">${escapeHtml(song.artist)}</span>
+                  <span class="dream-music-song">${escapeHtml(song.song_name)}</span>
+                </span>
+                <span class="dream-music-play">▶</span>
+              </a>
+            `).join('')}
+          </div>
+          <div class="small dream-music-caption">Clique para ouvir no YouTube.</div>
+        ` : `
+          <div class="small">${isMe ? 'Monte seu Top 5 musical e deixe seu perfil com mais personalidade.' : 'Este perfil ainda não montou o Dream Music.'}</div>
+        `}
+        ${isMe ? `<div style="margin-top:10px;"><a class="btn" href="/dream-music">Editar Dream Music</a></div>` : ``}
+      </div>
+
       ${canRateProfile ? `
         <div class="card profile-side-card rate-box-card">
           <div class="h">🗳️ Avaliar usuário</div>

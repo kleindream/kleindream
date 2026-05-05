@@ -1,0 +1,48 @@
+<%- include("layout", { title: "Dream Music", body: `
+  <div class="card dream-music-page">
+    <div class="dream-music-head">
+      <div>
+        <div class="small">Klein Dream • sua trilha sonora</div>
+        <h1>🎧 Dream Music</h1>
+        <p>Monte seu Top 5 com músicas do YouTube. No perfil, o artista fica em uma linha e a música na outra para não estourar o layout.</p>
+      </div>
+      <a class="btn secondary" href="/u/${escapeHtml(me.username)}">Ver meu perfil</a>
+    </div>
+
+    ${error ? `<div class="notice error">${escapeHtml(error)}</div>` : ``}
+    ${ok ? `<div class="notice success">${escapeHtml(ok)}</div>` : ``}
+
+    <form method="post" action="/dream-music" class="dream-music-form">
+      ${Array.from({ length: maxItems || 5 }).map((_, index) => {
+        const n = index + 1;
+        const song = (songs || []).find(s => Number(s.position) === n) || {};
+        return `
+          <div class="dream-music-edit-row">
+            <div class="dream-music-edit-number">${n}</div>
+            <div class="dream-music-edit-fields">
+              <label>Artista / banda</label>
+              <input type="text" name="artist_${n}" maxlength="90" value="${escapeHtml(song.artist || '')}" placeholder="Ex.: Linkin Park" />
+
+              <label>Nome da música</label>
+              <input type="text" name="song_name_${n}" maxlength="110" value="${escapeHtml(song.song_name || '')}" placeholder="Ex.: Numb" />
+
+              <label>Link do YouTube</label>
+              <input type="url" name="youtube_url_${n}" maxlength="500" value="${escapeHtml(song.youtube_url || '')}" placeholder="https://www.youtube.com/watch?v=..." />
+            </div>
+          </div>
+        `;
+      }).join('')}
+
+      <div class="dream-music-help">
+        Dica: deixe linhas vazias se quiser mostrar menos de 5 músicas. A Klein Dream não hospeda músicas; ela só guarda o nome e o link do YouTube.
+      </div>
+
+      <div class="me-discover-actions">
+        <button class="btn" type="submit">Salvar Dream Music</button>
+        <a class="btn secondary" href="/u/${escapeHtml(me.username)}">Cancelar</a>
+      </div>
+    </form>
+  </div>
+` }) %>
+
+<% function escapeHtml(str){ return String(str == null ? '' : str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); } %>
