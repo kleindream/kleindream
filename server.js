@@ -372,6 +372,25 @@ function formatMemberSince(value) {
 
 const MAX_PAINT_DRAWINGS_PER_USER = 3;
 const MAX_PAINT_IMAGE_DATA_LENGTH = 2_500_000;
+const MAX_DREAM_MUSIC_ITEMS = 5;
+
+function normalizeDreamMusicUrl(value) {
+  const url = String(value || '').trim();
+  if (!url) return '';
+  if (!/^https?:\/\//i.test(url)) return '';
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace(/^www\./i, '').toLowerCase();
+    if (!['youtube.com', 'm.youtube.com', 'music.youtube.com', 'youtu.be'].includes(host)) return '';
+    return url.slice(0, 500);
+  } catch (_) {
+    return '';
+  }
+}
+
+function cleanDreamMusicText(value, max = 120) {
+  return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
+}
 
 
 const AVATAR_KLEIN_OPTIONS = {
@@ -1510,6 +1529,76 @@ app.post("/meu-avatar", requireAuth, limiterWrite, async (req, res, next) => {
   }
 });
 
+// ===== DREAM MUSIC =====
+app.get("/dream-music", requireAuth, async (req, res, next) => {
+  try {
+    const songs = await db.all(`
+      SELECT position, artist, song_name, youtube_url
+      FROM dream_music
+      WHERE user_id=?
+      ORDER BY position ASC
+    `, [req.session.userId]);
+
+    res.render("dream_music", {
+      songs,
+      maxItems: MAX_DREAM_MUSIC_ITEMS,
+      error: null,
+      ok: null
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post("/dream-music", requireAuth, limiterWrite, async (req, res, next) => {
+  try {
+    const meId = req.session.userId;
+    const items = [];
+
+    for (let i = 1; i <= MAX_DREAM_MUSIC_ITEMS; i++) {
+      const artist = cleanDreamMusicText(req.body[`artist_${i}`], 90);
+      const songName = cleanDreamMusicText(req.body[`song_name_${i}`], 110);
+      const youtubeUrl = normalizeDreamMusicUrl(req.body[`youtube_url_${i}`]);
+
+      if (!artist && !songName && !String(req.body[`youtube_url_${i}`] || '').trim()) continue;
+
+      if (!artist || !songName || !youtubeUrl) {
+        const current = [];
+        for (let j = 1; j <= MAX_DREAM_MUSIC_ITEMS; j++) {
+          current.push({
+            position: j,
+            artist: cleanDreamMusicText(req.body[`artist_${j}`], 90),
+            song_name: cleanDreamMusicText(req.body[`song_name_${j}`], 110),
+            youtube_url: String(req.body[`youtube_url_${j}`] || '').trim()
+          });
+        }
+        return res.render("dream_music", {
+          songs: current,
+          maxItems: MAX_DREAM_MUSIC_ITEMS,
+          error: "Preencha artista, música e um link válido do YouTube nos itens usados.",
+          ok: null
+        });
+      }
+
+      items.push({ position: i, artist, songName, youtubeUrl });
+    }
+
+    await db.run("DELETE FROM dream_music WHERE user_id=?", [meId]);
+    for (const item of items) {
+      await db.run(`
+        INSERT INTO dream_music (user_id, position, artist, song_name, youtube_url)
+        VALUES (?, ?, ?, ?, ?)
+      `, [meId, item.position, item.artist, item.songName, item.youtubeUrl]);
+    }
+
+    req.flash("success", "Dream Music atualizado no seu perfil.");
+    const username = req.session.username || (res.locals.me && res.locals.me.username);
+    res.redirect(username ? `/u/${username}` : "/home");
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ===== PERFIL =====
 app.get("/u/:username", requireAuth, async (req, res) => {
   const meId = req.session.userId;
@@ -1751,6 +1840,14 @@ app.get("/u/:username", requireAuth, async (req, res) => {
   `, [user.id, MAX_PAINT_DRAWINGS_PER_USER]);
   for (const drawing of drawings) drawing.created_at = formatDateBR(drawing.created_at);
 
+  const dreamMusic = await db.all(`
+    SELECT position, artist, song_name, youtube_url
+    FROM dream_music
+    WHERE user_id=?
+    ORDER BY position ASC
+    LIMIT ?
+  `, [user.id, MAX_DREAM_MUSIC_ITEMS]);
+
   const personalityResult = parseMeDescobrindoResult(user.personality_result);
   const avatarKleinConfig = normalizeAvatarKleinConfig(user.avatar_config);
 
@@ -1762,7 +1859,7 @@ app.get("/u/:username", requireAuth, async (req, res) => {
     totalVisits, visitors, canSeeVisitors,
     isBirthdayToday: isBirthdayToday(user.birth_date), memberSince,
     sign, vibeFrase, ratings, myRating, canRateProfile,
-    profilePoll, giftSummary, recentGifts, dreams, drawings, personalityResult, avatarKleinConfig,
+    profilePoll, giftSummary, recentGifts, dreams, drawings, dreamMusic, personalityResult, avatarKleinConfig,
     maxPaintDrawings: MAX_PAINT_DRAWINGS_PER_USER
   });
 });
