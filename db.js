@@ -128,12 +128,16 @@ async function init() {
       favorite_movie TEXT,
       favorite_game  TEXT,
       personality    TEXT,
+      personality_result TEXT,
       looking_for    TEXT,
       mood           TEXT,
       daily_phrase   TEXT,
 
       created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+
+    -- Mantém bancos antigos compatíveis mesmo se uma migration anterior falhar ou já tiver sido marcada como aplicada.
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS personality_result TEXT;
 
     CREATE TABLE IF NOT EXISTS friend_requests (
       id            SERIAL PRIMARY KEY,
@@ -301,6 +305,7 @@ async function init() {
     -- User privacy/settings
     ALTER TABLE users ADD COLUMN IF NOT EXISTS invisible_visits INTEGER NOT NULL DEFAULT 0;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS notify_profile_visits INTEGER NOT NULL DEFAULT 1;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS personality_result TEXT;
 
     CREATE INDEX IF NOT EXISTS idx_scraps_to_user ON scraps(to_user_id, created_at);
     CREATE INDEX IF NOT EXISTS idx_testimonials_to_user ON testimonials(to_user_id, status, created_at);
