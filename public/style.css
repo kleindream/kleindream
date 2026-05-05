@@ -1736,11 +1736,127 @@ body.dark .avatar-editor-field select{
   .avatar-editor-page .avatar-editor-wrap{ grid-template-columns:1fr; }
   .avatar-editor-panel{ position:static; }
   .avatar-editor-controls{ grid-template-columns:1fr; }
-.avatar-klein-mini {
-  overflow: hidden;
-  border-radius: 50%;
 }
 
-.avatar-klein-mini img {
-  transform: scale(1.05);
+/* Dream Music */
+.dream-music-side-card { text-align: left; }
+.dream-music-list { display: grid; gap: 7px; margin-top: 8px; }
+.dream-music-item {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 8px;
+  border: 1px solid #c8d7ea;
+  border-radius: 11px;
+  background: #f8fbff;
+  color: #183153;
+  text-decoration: none;
+  min-width: 0;
 }
+.dream-music-item:hover { background: #eef6ff; text-decoration: none; }
+.dream-music-number {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(74,163,255,.18);
+  color: #23527c;
+  font-size: 12px;
+  font-weight: 800;
+}
+.dream-music-info { display: block; min-width: 0; line-height: 1.18; }
+.dream-music-artist,
+.dream-music-song {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.dream-music-artist { font-size: 11px; color: #667a92; font-weight: 700; }
+.dream-music-song { font-size: 13px; color: #183153; font-weight: 900; margin-top: 2px; }
+.dream-music-play { color: #4a7fb8; font-size: 12px; text-align: right; }
+.dream-music-caption { margin-top: 8px; color: #667a92; }
+
+.dream-music-page h1 { margin: 4px 0 8px 0; font-size: 28px; }
+.dream-music-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; flex-wrap: wrap; }
+.dream-music-head p { margin: 0; color: #52657d; max-width: 760px; }
+.dream-music-form { display: grid; gap: 12px; margin-top: 14px; }
+.dream-music-edit-row {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #c8d7ea;
+  border-radius: 14px;
+  background: #f8fbff;
+}
+.dream-music-edit-number {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(74,163,255,.18);
+  color: #23527c;
+  font-weight: 900;
+}
+.dream-music-edit-fields { display: grid; gap: 6px; min-width: 0; }
+.dream-music-edit-fields label { font-size: 12px; font-weight: 800; color: #52657d; }
+.dream-music-edit-fields input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #c8d7ea;
+  border-radius: 10px;
+  padding: 9px 10px;
+  background: #fff;
+  color: #183153;
+  font: inherit;
+}
+.dream-music-help {
+  padding: 10px 12px;
+  border: 1px dashed #c8d7ea;
+  border-radius: 12px;
+  background: #fff;
+  color: #52657d;
+  font-size: 13px;
+}
+.notice.success { border:1px solid #a8e4bc; background:#effff4; color:#185c2b; border-radius:12px; padding:10px 12px; margin:12px 0; }
+
+body.dark .dream-music-item,
+body.dark .dream-music-edit-row,
+body.dark .dream-music-help { background: #162236; border-color: #30415f; color: #e8f0ff; }
+body.dark .dream-music-item:hover { background: #243653; }
+body.dark .dream-music-song,
+body.dark .dream-music-page h1 { color: #e8f0ff; }
+body.dark .dream-music-artist,
+body.dark .dream-music-caption,
+body.dark .dream-music-head p,
+body.dark .dream-music-edit-fields label,
+body.dark .dream-music-help { color: #b8c7df; }
+body.dark .dream-music-edit-fields input { background:#1d2a40; color:#e8f0ff; border-color:#3a4c6c; }
+
+/* Me descobrindo no perfil - texto principal sempre legível */
+.me-descobrindo-side-card,
+.me-descobrindo-side-card .me-result-title,
+.me-descobrindo-side-card .me-result-text,
+.me-descobrindo-side-card .me-result-text-side,
+.me-descobrindo-side-card .me-result-text div,
+.me-descobrindo-side-card .me-percent-top,
+.me-descobrindo-side-card .small {
+  color: #183153;
+}
+.me-descobrindo-side-card .small { color: #52657d; }
+body.dark .me-descobrindo-side-card,
+body.dark .me-descobrindo-side-card .me-result-title,
+body.dark .me-descobrindo-side-card .me-result-text,
+body.dark .me-descobrindo-side-card .me-result-text-side,
+body.dark .me-descobrindo-side-card .me-result-text div,
+body.dark .me-descobrindo-side-card .me-percent-top {
+  color: #e8f0ff;
+}
+body.dark .me-descobrindo-side-card .small { color: #b8c7df; }
