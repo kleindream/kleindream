@@ -1737,3 +1737,7 @@ body.dark .avatar-editor-field select{
   .avatar-editor-panel{ position:static; }
   .avatar-editor-controls{ grid-template-columns:1fr; }
 }
+.avatar-klein-mini {
+  overflow: hidden;
+  border-radius: 50%; /* ou 12px se quiser quadrado */
+}
