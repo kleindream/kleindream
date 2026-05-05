@@ -313,6 +313,15 @@ function parseMeDescobrindoResult(value) {
   try { return JSON.parse(String(value)); } catch (_) { return null; }
 }
 
+async function ensureMeDescobrindoColumn() {
+  // Defesa extra para produção: evita Internal Server Error se o banco antigo ainda não tiver a coluna.
+  try {
+    await db.run("ALTER TABLE users ADD COLUMN IF NOT EXISTS personality_result TEXT");
+  } catch (err) {
+    console.error("Erro ao garantir coluna personality_result:", err);
+  }
+}
+
 function isBuiltinAvatar(value) {
   return BUILTIN_AVATARS.some(a => a.path === value);
 }
@@ -439,8 +448,6 @@ app.use((req, res, next) => {
 });
 
 app.use(async (req, res, next) => {
-  try {
-  res.locals.me = req.session.userId ? await getUserById(req.session.userId) : null;
   res.locals.flash = {
     success: req.flash('success'),
     error: req.flash('error'),
@@ -448,14 +455,38 @@ app.use(async (req, res, next) => {
   };
   res.locals.photoSrc = photoSrc;
   res.locals.builtinAvatars = BUILTIN_AVATARS;
-  if (req.session.userId) {
-    await touchPresence(req.session.userId);
-    const notifs = await db.all("SELECT * FROM notifications WHERE user_id=? AND is_read=0 ORDER BY created_at DESC LIMIT 20", [req.session.userId]);
-    res.locals.notifCount = notifs.length;
-  } else {
-    res.locals.notifCount = 0;
+  res.locals.me = null;
+  res.locals.notifCount = 0;
+
+  try {
+    if (req.session.userId) {
+      try {
+        res.locals.me = await getUserById(req.session.userId);
+        if (res.locals.me) {
+          res.locals.me.personality_result = parseMeDescobrindoResult(res.locals.me.personality_result);
+        }
+      } catch (userErr) {
+        // Se a coluna nova ainda não existir em banco antigo, corrige e tenta seguir sem derrubar o login.
+        console.error("Erro ao carregar usuário atual:", userErr);
+        await ensureMeDescobrindoColumn();
+        try {
+          res.locals.me = await getUserById(req.session.userId);
+          if (res.locals.me) {
+            res.locals.me.personality_result = parseMeDescobrindoResult(res.locals.me.personality_result);
+          }
+        } catch (retryErr) {
+          console.error("Erro ao recarregar usuário atual após correção:", retryErr);
+          res.locals.me = null;
+        }
+      }
+
+      await touchPresence(req.session.userId);
+      const notifs = await db.all("SELECT * FROM notifications WHERE user_id=? AND is_read=0 ORDER BY created_at DESC LIMIT 20", [req.session.userId]);
+      res.locals.notifCount = notifs.length;
+    }
+  } catch (err) {
+    return next(err);
   }
-  } catch (err) { return next(err); }
   next();
 });
 
@@ -646,6 +677,7 @@ app.post("/register", limiterAuth, async (req, res) => {
   const info = await db.run("INSERT INTO users (email, username, password_hash, full_name) VALUES (?,?,?,?) RETURNING id", [email, username, hash, full_name || null]);
 
   req.session.userId = info.rows[0].id;
+  req.session.username = username;
   req.flash("success", "Conta criada! Bem-vindo(a) ao KleinDream 💙");
   res.redirect("/home");
 });
@@ -1361,38 +1393,55 @@ app.get("/fans/:username", requireAuth, async (req, res) => {
 
 
 // ===== ME DESCOBRINDO =====
-app.get("/me-descobrindo", requireAuth, async (req, res) => {
-  const me = await getUserById(req.session.userId);
-  const currentResult = parseMeDescobrindoResult(me && me.personality_result);
-  res.render("me_descobrindo", {
-    questions: ME_DESCOBRINDO_QUESTIONS,
-    profiles: ME_DESCOBRINDO_PROFILES,
-    currentResult,
-    error: null
-  });
-});
-
-app.post("/me-descobrindo", requireAuth, limiterWrite, async (req, res) => {
-  const answered = ME_DESCOBRINDO_QUESTIONS.filter(q => String(req.body[q.id] || "").trim()).length;
-  if (answered < ME_DESCOBRINDO_QUESTIONS.length) {
-    return res.status(400).render("me_descobrindo", {
+app.get("/me-descobrindo", requireAuth, async (req, res, next) => {
+  try {
+    await ensureMeDescobrindoColumn();
+    const me = res.locals.me || await getUserById(req.session.userId);
+    const currentResult = parseMeDescobrindoResult(me && me.personality_result);
+    res.render("me_descobrindo", {
       questions: ME_DESCOBRINDO_QUESTIONS,
       profiles: ME_DESCOBRINDO_PROFILES,
-      currentResult: null,
-      error: "Responda todas as perguntas para descobrir seu resultado."
+      currentResult,
+      error: null
     });
+  } catch (err) {
+    next(err);
   }
-
-  const result = calculateMeDescobrindoResult(req.body);
-  await db.run("UPDATE users SET personality_result=? WHERE id=?", [JSON.stringify(result), req.session.userId]);
-  req.flash("success", `Seu resultado foi salvo: ${result.emoji} ${result.title}.`);
-  res.redirect(`/u/${req.session.username}`);
 });
 
-app.post("/me-descobrindo/clear", requireAuth, limiterWrite, async (req, res) => {
-  await db.run("UPDATE users SET personality_result=NULL WHERE id=?", [req.session.userId]);
-  req.flash("info", "Resultado do Me descobrindo removido do perfil.");
-  res.redirect(`/u/${req.session.username}`);
+app.post("/me-descobrindo", requireAuth, limiterWrite, async (req, res, next) => {
+  try {
+    await ensureMeDescobrindoColumn();
+    const answered = ME_DESCOBRINDO_QUESTIONS.filter(q => String(req.body[q.id] || "").trim()).length;
+    if (answered < ME_DESCOBRINDO_QUESTIONS.length) {
+      return res.status(400).render("me_descobrindo", {
+        questions: ME_DESCOBRINDO_QUESTIONS,
+        profiles: ME_DESCOBRINDO_PROFILES,
+        currentResult: null,
+        error: "Responda todas as perguntas para descobrir seu resultado."
+      });
+    }
+
+    const result = calculateMeDescobrindoResult(req.body);
+    await db.run("UPDATE users SET personality_result=? WHERE id=?", [JSON.stringify(result), req.session.userId]);
+    req.flash("success", `Seu resultado foi salvo: ${result.emoji} ${result.title}.`);
+    const username = req.session.username || (res.locals.me && res.locals.me.username);
+    res.redirect(username ? `/u/${username}` : "/home");
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post("/me-descobrindo/clear", requireAuth, limiterWrite, async (req, res, next) => {
+  try {
+    await ensureMeDescobrindoColumn();
+    await db.run("UPDATE users SET personality_result=NULL WHERE id=?", [req.session.userId]);
+    req.flash("info", "Resultado do Me descobrindo removido do perfil.");
+    const username = req.session.username || (res.locals.me && res.locals.me.username);
+    res.redirect(username ? `/u/${username}` : "/home");
+  } catch (err) {
+    next(err);
+  }
 });
 
 // ===== PERFIL =====
@@ -2973,6 +3022,7 @@ app.use((err, req, res, next) => {
 async function main() {
   await init();
   await migrate();
+  await ensureMeDescobrindoColumn();
 
   const server = http.createServer(app);
 
