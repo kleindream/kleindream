@@ -1,0 +1,492 @@
+<%- include("layout", { title: user.username, body: `
+  <div class="profile-page orkut-profile-layout">
+    <aside class="profile-sidebar profile-sidebar-left">
+      <div class="card profile-side-card">
+        <div class="profile-side-user">
+          <div class="profile-side-photo">
+            ${ user.profile_photo ? `<img src="${photoSrc(user.profile_photo)}" alt="Foto de perfil" class="kd-zoom" />` : `<div class="profile-photo-ph">Sem foto</div>` }
+          </div>
+          <div>
+            <div class="profile-side-name">${user.username}${isBirthdayToday ? ' 🎂' : ''}</div>
+            <div class="small">${user.full_name || ""}</div>
+          </div>
+        </div>
+
+        <div class="profile-side-links-title">Menu do perfil</div>
+        <div class="profile-side-links">
+          <a href="/u/${user.username}">👤 Perfil</a>
+          <a href="/scraps/${user.username}">📝 Recados</a>
+          <a href="/testimonials/${user.username}">💬 Depoimentos</a>
+          <a href="/photos/${user.username}">📷 Fotos</a>
+          ${isMe ? `<a href="/paint">🎨 Paint Brush</a>` : ``}
+          <a href="/fans/${user.username}">⭐ Fãs</a>
+          ${isMe ? `<a href="/me/visitors">👁 Visitantes</a>` : ``}
+          ${isMe ? `<a href="/profile/edit">⚙️ Editar perfil</a>` : ``}
+          <a href="javascript:history.back()">⬅ Voltar</a>
+        </div>
+      </div>
+      <div class="card profile-side-card vibe-card">
+        <div class="h">✨ Vibe do dia</div>
+        ${sign ? `
+          <div class="small" style="margin-bottom:6px;"><b>${escapeHtml(sign)}</b></div>
+          <div>${escapeHtml(vibeFrase || 'Hoje é um bom dia para sorrir mais.')}</div>
+        ` : `
+          <div class="small">Adicione sua data de nascimento para ver sua vibe do dia.</div>
+        `}
+      </div>
+
+      <div class="card profile-side-card user-rating-card">
+        <div class="h">⭐ Cartão de usuário</div>
+        <div class="small" style="margin-bottom:8px;">Como os amigos veem este perfil${ratings && Number(ratings.votes_count || 0) > 0 ? ` • ${Number(ratings.votes_count)} voto${Number(ratings.votes_count) === 1 ? '' : 's'}` : ''}</div>
+
+        <div class="rating-item">
+          <div class="rating-row"><span>Bonito</span><b>${Number(ratings?.beauty || 0)}%</b></div>
+          <div class="rating-bar"><div style="width:${Number(ratings?.beauty || 0)}%"></div></div>
+        </div>
+
+        <div class="rating-item">
+          <div class="rating-row"><span>Simpático</span><b>${Number(ratings?.friendly || 0)}%</b></div>
+          <div class="rating-bar"><div style="width:${Number(ratings?.friendly || 0)}%"></div></div>
+        </div>
+
+        <div class="rating-item">
+          <div class="rating-row"><span>Alegre</span><b>${Number(ratings?.happy || 0)}%</b></div>
+          <div class="rating-bar"><div style="width:${Number(ratings?.happy || 0)}%"></div></div>
+        </div>
+
+        <div class="rating-item" style="margin-bottom:0;">
+          <div class="rating-row"><span>Inteligente</span><b>${Number(ratings?.smart || 0)}%</b></div>
+          <div class="rating-bar"><div style="width:${Number(ratings?.smart || 0)}%"></div></div>
+        </div>
+      </div>
+
+      ${canRateProfile ? `
+        <div class="card profile-side-card rate-box-card">
+          <div class="h">🗳️ Avaliar usuário</div>
+          <form method="post" action="/rate-user" class="rate-user-form">
+            <input type="hidden" name="user_id" value="${user.id}" />
+
+            <label>Bonito</label>
+            <select name="beauty">
+              ${[1,2,3,4,5].map(n => `<option value="${n}" ${Number(myRating?.beauty || 0) === n ? 'selected' : ''}>${n}</option>`).join('')}
+            </select>
+
+            <label>Simpático</label>
+            <select name="friendly">
+              ${[1,2,3,4,5].map(n => `<option value="${n}" ${Number(myRating?.friendly || 0) === n ? 'selected' : ''}>${n}</option>`).join('')}
+            </select>
+
+            <label>Alegre</label>
+            <select name="happy">
+              ${[1,2,3,4,5].map(n => `<option value="${n}" ${Number(myRating?.happy || 0) === n ? 'selected' : ''}>${n}</option>`).join('')}
+            </select>
+
+            <label>Inteligente</label>
+            <select name="smart">
+              ${[1,2,3,4,5].map(n => `<option value="${n}" ${Number(myRating?.smart || 0) === n ? 'selected' : ''}>${n}</option>`).join('')}
+            </select>
+
+            <button class="btn" type="submit">Salvar avaliação</button>
+          </form>
+        </div>
+      ` : (!isMe ? `
+        <div class="card profile-side-card rate-box-card">
+          <div class="h">🗳️ Avaliar usuário</div>
+          <div class="small">Somente amigos podem avaliar este perfil.</div>
+        </div>
+      ` : ``)}
+
+    </aside>
+
+    <div class="profile-main-column">
+      <div class="card profile-hero">
+        <div class="profile-hero-top">
+          <div class="profile-photo profile-hero-photo">
+            ${ user.profile_photo ? `<img src="${photoSrc(user.profile_photo)}" alt="Foto de perfil" class="kd-zoom" />` : `<div class="profile-photo-ph">Sem foto</div>` }
+          </div>
+
+          <div class="profile-meta">
+            <div class="profile-name">
+              <div class="profile-username">${user.username}${isBirthdayToday ? ' 🎂' : ''}</div>
+              <div class="small"><span class="kd-live-dot ${Number(user.is_online||0) === 1 ? 'on' : 'off'}"></span> ${Number(user.is_online||0) === 1 ? 'Online agora' : 'Offline'}</div>
+              <div class="small">${user.full_name || ""}</div>
+            </div>
+
+            <div class="profile-actions">
+              ${isMe ? `
+                <a class="btn" href="/profile/edit">Editar perfil</a>
+              ` : `
+                ${friend ? `<span class="badge">Vocês são amigos</span>` : ``}
+
+                ${(!friend && !reqOut && !reqIn) ? `
+                  <form method="post" action="/friends/request/${user.id}" class="inline">
+                    <button class="btn" type="submit">Adicionar como amigo</button>
+                  </form>
+                ` : ``}
+
+                ${reqOut ? `<span class="badge">Pedido enviado</span>` : ``}
+                ${reqIn ? `<span class="badge">Você tem um pedido dele(a)</span>` : ``}
+                <button class="btn secondary js-open-private-chat" type="button" data-chat-user="${escapeHtml(user.username)}">💬 Chat rápido</button>
+              `}
+            </div>
+
+            <div class="profile-stats">
+              ${user.mood ? `<div class="stat"><div class="k">Humor</div><div class="v">${escapeHtml(user.mood)}</div></div>` : ``}
+            </div>
+          </div>
+        </div>
+
+        ${isBirthdayToday ? `
+          <div class="profile-birthday-banner">
+            <div class="h" style="margin:0 0 4px 0;">🎉 Hoje é aniversário deste usuário!</div>
+            <div class="kd-mini-muted">Passe nos recados e deixe uma mensagem especial.</div>
+          </div>
+        ` : ``}
+
+        <div class="profile-hero-body">
+          <div class="profile-kv">
+            <div class="small">Cidade</div><div>${escapeHtml(user.city || "-")}</div>
+            <div class="small">Estado</div><div>${escapeHtml(user.state || "-")}</div>
+            <div class="small">Nascimento</div><div>${escapeHtml(user.birth_date || "-")}</div>
+            <div class="small">Estado civil</div><div>${escapeHtml(user.marital_status || "-")}</div>
+            <div class="small">Time</div><div>${escapeHtml(user.favorite_team || "-")}</div>
+            <div class="small">Profissão</div><div>${escapeHtml(user.profession || "-")}</div>
+            <div class="small">Procura</div><div>${escapeHtml(user.looking_for || "-")}</div>
+            <div class="small">Membro desde</div><div>${escapeHtml(memberSince || "-")}</div>
+          </div>
+
+          ${user.daily_phrase ? `
+            <div class="profile-highlight">
+              <div class="small">Frase do dia</div>
+              <div>${escapeHtml(user.daily_phrase)}</div>
+            </div>
+          ` : ``}
+
+          <div class="profile-about">
+            <div class="small">Sobre</div>
+            <div>${escapeHtml(user.bio || "—")}</div>
+          </div>
+
+          <div class="profile-highlight">
+            <div class="h">⭐ Fãs</div>
+            <div class="small" style="margin-bottom:8px;">${fansCount} pessoa${fansCount === 1 ? '' : 's'} ${fansCount === 1 ? 'é fã' : 'são fãs'} deste perfil.</div>
+            ${!isMe ? `
+              <form method="post" action="/fan/${user.username}" class="inline" style="margin-bottom:10px;">
+                <button class="btn" type="submit">${isFan ? 'Deixar de ser fã' : 'Virar fã'}</button>
+              </form>
+            ` : ``}
+            ${recentFans.length ? `
+              <div class="thumb-grid">
+                ${recentFans.map(f => `
+                  <a class="thumb-card" href="/u/${f.username}" title="${escapeHtml(f.username)}">
+                    ${f.profile_photo ? `<img class="thumb-avatar kd-zoom" src="${photoSrc(f.profile_photo)}" alt="${escapeHtml(f.username)}" />` : `<div class="thumb-avatar ph">?</div>`}
+                    <div class="thumb-name">${escapeHtml(f.username)}</div>
+                  </a>
+                `).join('')}
+              </div>
+            ` : `<div class="small">Ainda não há fãs por aqui.</div>`}
+            <div style="margin-top:10px;"><a class="btn secondary" href="/fans/${user.username}">Ver todos os fãs</a></div>
+          </div>
+
+          ${(user.hobbies || user.favorite_music || user.favorite_movie || user.favorite_game || user.personality) ? `
+            <div class="profile-highlight">
+              <div class="h">Gostos</div>
+              <div class="profile-kv">
+                <div class="small">Hobbies</div><div>${escapeHtml(user.hobbies || "-")}</div>
+                <div class="small">Música</div><div>${escapeHtml(user.favorite_music || "-")}</div>
+                <div class="small">Filme</div><div>${escapeHtml(user.favorite_movie || "-")}</div>
+                <div class="small">Jogo</div><div>${escapeHtml(user.favorite_game || "-")}</div>
+                <div class="small">Personalidade</div><div>${escapeHtml(user.personality || "-")}</div>
+              </div>
+            </div>
+          ` : ``}
+        </div>
+      </div>
+
+      ${isMe ? `
+        <div class="card">
+          <div class="h">Últimos visitantes</div>
+          ${canSeeVisitors ? `
+            ${visitors.length ? visitors.map(v => `
+              <div class="visitor-item">
+                ${ v.profile_photo ? `<img src="${photoSrc(v.profile_photo)}" alt="Foto" />` : `<div class="visitor-ph">?</div>` }
+                <div>
+                  <div><a href="/u/${v.username}"><b>${v.username}</b></a></div>
+                  <div class="small">${v.created_at}</div>
+                </div>
+              </div>
+            `).join("") : `<div class="small">Nenhuma visita ainda.</div>`}
+            <hr/>
+            <a class="btn secondary" href="/me/visitors">Ver histórico</a>
+          ` : `
+            <div class="small">Você está com <b>Modo Invisível</b> ativado. Visitas não são registradas, e por regra você não vê a lista.</div>
+            <div style="margin-top:8px;"><a class="btn secondary" href="/profile/edit">Ajustar privacidade</a></div>
+          `}
+        </div>
+      ` : ``}
+
+
+      <div class="card profile-dreams-card me-descobrindo-card">
+        <div class="h">🌸 Me descobrindo</div>
+        ${personalityResult ? `
+          <div class="me-result-top">
+            <div class="me-result-emoji">${escapeHtml(personalityResult.emoji || '✨')}</div>
+            <div>
+              <div class="me-result-title">${escapeHtml(personalityResult.title || 'Resultado salvo')}</div>
+              <div class="small">Badge: ${escapeHtml(personalityResult.badge || 'Autoconhecimento')}</div>
+            </div>
+          </div>
+
+          <div class="me-percent-grid">
+            ${[
+              ['emocional', '💙 Emocional'],
+              ['racional', '🧠 Racional'],
+              ['criativo', '🎨 Criativo']
+            ].map(([key, label]) => `
+              <div class="me-percent-line">
+                <div class="me-percent-top"><span>${label}</span><b>${Number(personalityResult.percentages?.[key] || 0)}%</b></div>
+                <div class="me-percent-bar"><div style="width:${Number(personalityResult.percentages?.[key] || 0)}%"></div></div>
+              </div>
+            `).join('')}
+          </div>
+
+          <div class="profile-highlight me-result-text">
+            <div>${escapeHtml(personalityResult.description || '')}</div>
+            ${personalityResult.advice ? `<div class="small" style="margin-top:8px;">${escapeHtml(personalityResult.advice)}</div>` : ``}
+          </div>
+          <div class="small">${escapeHtml(personalityResult.disclaimer || 'Teste recreativo, sem valor diagnóstico.')}</div>
+
+          ${isMe ? `
+            <div class="me-discover-actions" style="margin-top:10px;">
+              <a class="btn" href="/me-descobrindo">Refazer teste</a>
+              <form method="post" action="/me-descobrindo/clear" onsubmit="return confirm('Remover o resultado do seu perfil?');" class="inline">
+                <button class="btn secondary" type="submit">Remover</button>
+              </form>
+            </div>
+          ` : ``}
+        ` : `
+          <div class="small" style="margin-bottom:8px;">Um teste leve de personalidade para descobrir seu estilo: coração, mente ou criatividade.</div>
+          ${isMe ? `<a class="btn" href="/me-descobrindo">Começar teste</a>` : `<div class="small">Este perfil ainda não fez o teste.</div>`}
+        `}
+      </div>
+
+      <div class="card profile-dreams-card">
+        <div class="h">🎨 Paint Brush</div>
+        <div class="small" style="margin-bottom:8px;">${isMe ? `Você pode salvar até ${maxPaintDrawings} desenhos no seu perfil.` : `Os desenhos retrô deste perfil aparecem aqui.`}</div>
+        ${isMe ? `<div style="margin-bottom:10px;"><a class="btn" href="/paint">Abrir Paint Brush</a></div>` : ``}
+
+        ${drawings && drawings.length ? `
+          <div class="thumb-grid">
+            ${drawings.map(d => `
+              <div class="thumb-card" style="width:100%;max-width:none;">
+                <img class="kd-zoom" src="${d.image_data}" alt="${escapeHtml(d.title)}" style="width:100%;height:auto;border-radius:10px;background:#fff;border:1px solid var(--line);" />
+                <div class="thumb-name" style="margin-top:8px;">${escapeHtml(d.title)}</div>
+                <div class="small">${d.created_at}</div>
+                ${isMe ? `
+                  <form method="post" action="/paint/${d.id}/delete" onsubmit="return confirm('Apagar este desenho?');" style="margin-top:8px;">
+                    <button class="btn secondary" type="submit" style="padding:4px 10px;font-size:12px;">Apagar</button>
+                  </form>
+                ` : ``}
+              </div>
+            `).join("")}
+          </div>
+        ` : `<div class="small">${isMe ? 'Seus desenhos aparecerão aqui.' : 'Este perfil ainda não publicou desenhos.'}</div>`}
+      </div>
+
+      <div class="card profile-dreams-card">
+        <div class="h">🌙 Meus Sonhos</div>
+        ${isMe ? `
+          <div class="small" style="margin-bottom:8px;">Um cantinho simples para registrar sonhos da noite ou sonhos de vida.</div>
+          <form method="post" action="/dreams" class="dream-form">
+            <textarea name="content" maxlength="1200" placeholder="Escreva aqui um sonho, ideia ou lembrança..." required></textarea>
+            <button class="btn" type="submit">Salvar sonho</button>
+          </form>
+        ` : ``}
+
+        ${dreams && dreams.length ? `
+          <div class="dream-feed">
+            ${dreams.map(d => `
+              <div class="dream-item">
+                <div class="small" style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;">
+                  <span>${d.created_at}</span>
+                  ${isMe ? `
+                    <form method="post" action="/dreams/${d.id}/delete" onsubmit="return confirm('Tem certeza que deseja apagar este sonho?');" style="margin:0;">
+                      <input type="hidden" name="username" value="${user.username}">
+                      <button class="btn secondary" type="submit" style="padding:4px 10px;font-size:12px;">Apagar</button>
+                    </form>
+                  ` : ``}
+                </div>
+                <div class="dream-text preserve-lines">${escapeHtml(d.content)}</div>
+              </div>
+            `).join("")}
+          </div>
+        ` : `<div class="small">${isMe ? 'Seus sonhos aparecerão aqui.' : 'Este perfil ainda não compartilhou sonhos.'}</div>`}
+      </div>
+
+      <div class="card profile-activity">
+        <div class="section">
+          <div class="h">Recados (últimos)</div>
+          ${scraps.length ? scraps.map(s => `
+            <div class="item">
+              <div class="small">de <a href="/u/${s.from_username}"><b>${s.from_username}</b></a> • ${s.created_at}</div>
+              <div>${escapeHtml(s.content)}</div>
+            </div>
+          `).join("") : `<div class="small">Sem recados.</div>`}
+          <div style="margin-top:10px;"><a class="btn secondary" href="/scraps/${user.username}">Ver todos</a></div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="section">
+          <div class="h">Depoimentos (aprovados)</div>
+          ${testimonials.length ? testimonials.map(t => `
+            <div class="item">
+              <div class="small">de <a href="/u/${t.from_username}"><b>${t.from_username}</b></a> • ${t.created_at}</div>
+              <div>${escapeHtml(t.content)}</div>
+            </div>
+          `).join("") : `<div class="small">Sem depoimentos aprovados.</div>`}
+          <div style="margin-top:10px;"><a class="btn secondary" href="/testimonials/${user.username}">Ver</a></div>
+        </div>
+      </div>
+    </div>
+
+    <aside class="profile-sidebar profile-sidebar-right">
+      <div class="card profile-side-card right-side-card">
+        <div class="h">Amigos (${friendsCount})</div>
+        ${profileFriends.length ? `
+          <div class="orkut-thumb-grid friends-grid">
+            ${profileFriends.map(f => `
+              <a class="orkut-thumb-card" href="/u/${f.username}" title="${escapeHtml(f.username)}">
+                ${f.profile_photo ? `<img class="orkut-thumb-avatar kd-zoom" src="${photoSrc(f.profile_photo)}" alt="${escapeHtml(f.username)}" />` : `<div class="orkut-thumb-avatar ph">?</div>`}
+                <div class="orkut-thumb-name">${escapeHtml(f.username)}</div>
+              </a>
+            `).join('')}
+          </div>
+        ` : `<div class="small">Nenhum amigo para mostrar ainda.</div>`}
+        <div style="margin-top:10px;"><a class="btn secondary" href="/friends">Ver amigos</a></div>
+      </div>
+
+      <div class="card profile-side-card right-side-card">
+        <div class="h">Grupos (${groupsCount})</div>
+        ${profileGroups.length ? `
+          <div class="orkut-thumb-grid groups-grid">
+            ${profileGroups.map(g => `
+              <a class="orkut-thumb-card group" href="/groups/${g.id}" title="${escapeHtml(g.name)}">
+                <div class="orkut-group-icon">👥</div>
+                <div class="orkut-thumb-name">${escapeHtml(g.name)}</div>
+                <div class="orkut-thumb-meta">${escapeHtml(g.category || 'Sem categoria')}</div>
+              </a>
+            `).join('')}
+          </div>
+        ` : `<div class="small">Este perfil ainda não entrou em grupos.</div>`}
+        <div style="margin-top:10px;"><a class="btn secondary" href="/groups">Ver grupos</a></div>
+      </div>
+
+      <div class="card profile-side-card right-side-card profile-poll-card">
+        <div class="h">📊 Minha enquete</div>
+        ${isMe ? `
+          ${profilePoll ? `
+            <div class="small" style="margin-bottom:8px;">Peça para seus amigos visitarem seu perfil e votarem.</div>
+            <div class="poll-question">${escapeHtml(profilePoll.question)}</div>
+            <div class="small" style="margin:6px 0 10px 0;">${profilePoll.totalVotes} voto${profilePoll.totalVotes === 1 ? '' : 's'}</div>
+            <div class="profile-poll-options-view">
+              ${profilePoll.options.map(option => `
+                <div class="profile-poll-result-line">
+                  <div class="profile-poll-result-top"><span>${escapeHtml(option.option_text)}</span><b>${option.percent}%</b></div>
+                  <div class="profile-poll-bar"><div style="width:${option.percent}%"></div></div>
+                </div>
+              `).join('')}
+            </div>
+            <form method="post" action="/profile-poll/close" style="margin-top:10px;">
+              <input type="hidden" name="poll_id" value="${profilePoll.id}" />
+              <button class="btn secondary" type="submit">Encerrar enquete</button>
+            </form>
+          ` : `
+            <div class="small" style="margin-bottom:8px;">Crie uma pergunta para os seus amigos responderem.</div>
+            <form method="post" action="/profile-poll/create" class="profile-poll-form">
+              <input type="hidden" name="owner_id" value="${user.id}" />
+              <input type="text" name="question" placeholder="Ex.: Qual minha melhor qualidade?" maxlength="140" required />
+              <input type="text" name="option1" placeholder="Opção 1" maxlength="80" required />
+              <input type="text" name="option2" placeholder="Opção 2" maxlength="80" required />
+              <input type="text" name="option3" placeholder="Opção 3 (opcional)" maxlength="80" />
+              <input type="text" name="option4" placeholder="Opção 4 (opcional)" maxlength="80" />
+              <button class="btn" type="submit">Criar enquete</button>
+            </form>
+          `}
+        ` : `
+          ${profilePoll ? `
+            <div class="poll-question">${escapeHtml(profilePoll.question)}</div>
+            <div class="small" style="margin:6px 0 10px 0;">Vote e ajude este perfil a se conhecer melhor.</div>
+            ${profilePoll.canVote ? `
+              <form method="post" action="/profile-poll/vote" class="profile-poll-vote-form">
+                <input type="hidden" name="poll_id" value="${profilePoll.id}" />
+                <input type="hidden" name="username" value="${escapeHtml(user.username)}" />
+                ${profilePoll.options.map(option => `
+                  <label class="profile-poll-choice">
+                    <input type="radio" name="option_id" value="${option.id}" ${profilePoll.myVoteOptionId === option.id ? 'checked' : ''} />
+                    <span>${escapeHtml(option.option_text)}</span>
+                  </label>
+                  <div class="profile-poll-bar"><div style="width:${option.percent}%"></div></div>
+                  <div class="small profile-poll-meta">${option.percent}% • ${option.votes} voto${option.votes === 1 ? '' : 's'}</div>
+                `).join('')}
+                <button class="btn" type="submit" style="margin-top:8px;">Salvar voto</button>
+              </form>
+            ` : `
+              <div class="small">Somente amigos podem votar nesta enquete.</div>
+              <div class="profile-poll-options-view">
+                ${profilePoll.options.map(option => `
+                  <div class="profile-poll-result-line">
+                    <div class="profile-poll-result-top"><span>${escapeHtml(option.option_text)}</span><b>${option.percent}%</b></div>
+                    <div class="profile-poll-bar"><div style="width:${option.percent}%"></div></div>
+                  </div>
+                `).join('')}
+              </div>
+            `}
+          ` : `<div class="small">Este perfil ainda não criou uma enquete.</div>`}
+        `}
+      </div>
+
+      <div class="card profile-side-card right-side-card profile-gifts-card">
+        <div class="h">🎁 Presentes rápidos</div>
+        ${!isMe ? `
+          ${friend ? `
+            <div class="small" style="margin-bottom:8px;">Envie um mimo rápido para este amigo.</div>
+            <form method="post" action="/profile-gift/send" class="profile-gifts-form">
+              <input type="hidden" name="to_user_id" value="${user.id}" />
+              <button class="gift-btn" type="submit" name="gift_key" value="piscar">😉<span>Piscar</span></button>
+              <button class="gift-btn" type="submit" name="gift_key" value="coracao">💖<span>Coração</span></button>
+              <button class="gift-btn" type="submit" name="gift_key" value="flor">🌹<span>Flor</span></button>
+              <button class="gift-btn" type="submit" name="gift_key" value="abraco">🤗<span>Abraço</span></button>
+              <button class="gift-btn" type="submit" name="gift_key" value="joinha">👍<span>Joinha</span></button>
+            </form>
+          ` : `<div class="small">Somente amigos podem enviar presentes rápidos.</div>`}
+        ` : `
+          <div class="small" style="margin-bottom:8px;">Veja como os amigos têm interagido com seu perfil.</div>
+        `}
+
+        <div class="gift-summary-grid">
+          <div class="gift-pill">😉 ${Number(giftSummary?.piscar || 0)}</div>
+          <div class="gift-pill">💖 ${Number(giftSummary?.coracao || 0)}</div>
+          <div class="gift-pill">🌹 ${Number(giftSummary?.flor || 0)}</div>
+          <div class="gift-pill">🤗 ${Number(giftSummary?.abraco || 0)}</div>
+          <div class="gift-pill">👍 ${Number(giftSummary?.joinha || 0)}</div>
+        </div>
+
+        ${recentGifts && recentGifts.length ? `
+          <div class="gift-feed">
+            ${recentGifts.map(g => `
+              <div class="gift-feed-item">
+                <div><b>${escapeHtml(g.from_username)}</b> enviou ${giftLabel(g.gift_key)}</div>
+                <div class="small">${g.created_at}</div>
+              </div>
+            `).join('')}
+          </div>
+        ` : `<div class="small">Ainda não há presentes por aqui.</div>`}
+      </div>
+    </aside>
+  </div>
+` }) %>
+
+<% function giftLabel(key){ return ({ piscar:'uma piscadinha 😉', coracao:'um coração 💖', flor:'uma flor 🌹', abraco:'um abraço 🤗', joinha:'um joinha 👍' }[key] || 'um presente'); } %>
+
+<% function escapeHtml(str){ return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); } %>
