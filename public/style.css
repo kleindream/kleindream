@@ -1526,3 +1526,86 @@ body.dark .dream-text { color: #e8f0ff; }
 .me-result-text{ margin:10px 0; }
 .notice.error{ border:1px solid #ffb1b1; background:#fff0f0; color:#8a1c1c; border-radius:12px; padding:10px 12px; margin:12px 0; }
 @media (max-width: 640px){ .me-descobrindo-page h1{ font-size:24px; } .me-option{ font-size:14px; } }
+
+/* Correção de contraste do formulário Me descobrindo */
+.me-descobrindo-page,
+.me-descobrindo-page p,
+.me-question-card,
+.me-question-title,
+.me-option,
+.me-option span,
+.me-discover-note,
+.me-result-text {
+  color: #183153;
+}
+
+.me-question-card {
+  background: #f8fbff;
+  border-color: #c8d7ea;
+}
+
+.me-option {
+  background: #ffffff;
+  color: #183153;
+  border-color: #c8d7ea;
+}
+
+.me-option:hover {
+  background: #eef6ff;
+  color: #183153;
+}
+
+.me-option input {
+  accent-color: #3b82f6;
+}
+
+.me-discover-note {
+  background: #ffffff;
+  border-color: #c8d7ea;
+}
+
+.me-discover-current {
+  background: #eef6ff;
+  color: #183153;
+  border-color: #c8d7ea;
+}
+
+.me-discover-current span,
+.me-discover-head p {
+  color: #52657d;
+}
+
+body.dark .me-descobrindo-page,
+body.dark .me-descobrindo-page p,
+body.dark .me-question-card,
+body.dark .me-question-title,
+body.dark .me-option,
+body.dark .me-option span,
+body.dark .me-discover-note,
+body.dark .me-result-text,
+body.dark .me-discover-current {
+  color: #e8f0ff;
+}
+
+body.dark .me-question-card,
+body.dark .me-discover-note,
+body.dark .me-discover-current {
+  background: #162236;
+  border-color: #30415f;
+}
+
+body.dark .me-option {
+  background: #1d2a40;
+  color: #e8f0ff;
+  border-color: #3a4c6c;
+}
+
+body.dark .me-option:hover {
+  background: #243653;
+  color: #ffffff;
+}
+
+body.dark .me-discover-current span,
+body.dark .me-discover-head p {
+  color: #b8c7df;
+}
