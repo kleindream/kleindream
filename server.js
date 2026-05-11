@@ -2083,6 +2083,8 @@ app.post("/profile/edit", limiterActions, requireAuth, upload.single("profile_ph
     birth_date, marital_status, favorite_team, profession,
     hobbies, favorite_music, favorite_movie, favorite_game,
     time_of,
+    favorite_console, favorite_windows, nostalgic_memory, favorite_messenger,
+    things_love, things_dislike, biggest_dream, admire_people,
     personality, looking_for, mood, daily_phrase,
     invisible_visits, notify_profile_visits,
     photo_mode, selected_avatar
@@ -2093,11 +2095,15 @@ app.post("/profile/edit", limiterActions, requireAuth, upload.single("profile_ph
       birth_date=?, marital_status=?, favorite_team=?, profession=?,
       hobbies=?, favorite_music=?, favorite_movie=?, favorite_game=?,
       time_of=?,
+      favorite_console=?, favorite_windows=?, nostalgic_memory=?, favorite_messenger=?,
+      things_love=?, things_dislike=?, biggest_dream=?, admire_people=?,
       personality=?, looking_for=?, mood=?, daily_phrase=?,
       invisible_visits=?, notify_profile_visits=?
     WHERE id=?`, [full_name || null, bio || null, city || null, state || null,
       birth_date || null, marital_status || null, favorite_team || null, profession || null,
       hobbies || null, favorite_music || null, favorite_movie || null, favorite_game || null, time_of || null,
+      favorite_console || null, favorite_windows || null, nostalgic_memory || null, favorite_messenger || null,
+      things_love || null, things_dislike || null, biggest_dream || null, admire_people || null,
       personality || null, looking_for || null, mood || null, daily_phrase || null,
       (invisible_visits ? 1 : 0), (notify_profile_visits ? 1 : 0),
       meId]);
