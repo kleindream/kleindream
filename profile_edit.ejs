@@ -1,0 +1,172 @@
+<%- include("layout", { title: "Editar perfil", body: `
+  <div class="card">
+    <div class="h">Editar perfil</div>
+
+    ${error ? `<div class="card" style="border-color:#6b2033;background:#2a0a12;">${error}</div>` : ""}
+    ${ok ? `<div class="card" style="border-color:#1e5f2b;background:#0b2411;">${ok}</div>` : ""}
+
+    <form method="post" action="/profile/edit" enctype="multipart/form-data">
+<style>
+.kd-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.kd-tab-btn{background:#17365d;color:#fff;border:none;padding:10px 14px;border-radius:10px;cursor:pointer}
+.kd-tab-content{display:none}
+.kd-tab-content.active{display:block}
+</style>
+<div class="kd-tabs">
+<button type="button" class="kd-tab-btn" onclick="showKdTab('perfil')">👤 Perfil</button>
+<button type="button" class="kd-tab-btn" onclick="showKdTab('tempo')">💾 Nosso Tempo</button>
+<button type="button" class="kd-tab-btn" onclick="showKdTab('mais')">💙 Mais sobre mim</button>
+</div>
+
+<div id="tab-perfil" class="kd-tab-content active">
+
+      <div class="card" style="margin-top:10px;">
+        <div class="h" style="margin-bottom:8px;">Foto ou avatar</div>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+          <div>
+            <img src="${photoSrc(me.profile_photo)}" class="avatar kd-zoom" alt="Foto de perfil" style="width:96px;height:96px;border-radius:14px;object-fit:cover;" />
+          </div>
+          <div style="flex:1;min-width:220px;">
+            <div class="small" style="margin-bottom:6px;opacity:.9;">Você pode usar uma foto real ou escolher um avatar retrô da Klein Dream.</div>
+            <div class="mode-switch">
+              <label><input type="radio" name="photo_mode" value="keep" ${(currentPhotoMode === 'keep') ? 'checked' : ''} /> Manter atual</label>
+              <label><input type="radio" name="photo_mode" value="upload" ${(currentPhotoMode === 'upload') ? 'checked' : ''} /> Usar minha foto</label>
+              <label><input type="radio" name="photo_mode" value="avatar" ${(currentPhotoMode === 'avatar') ? 'checked' : ''} /> Usar avatar</label>
+            </div>
+            <div style="margin-top:10px;">
+              <label class="small">Enviar nova foto</label>
+              <input type="file" name="profile_photo" accept="image/*" />
+            </div>
+          </div>
+        </div>
+
+        <div class="small" style="margin-top:12px;opacity:.9;">Galeria de avatares retrô</div>
+        <div class="avatar-choice-grid">
+          ${(avatars || []).map(a => `
+            <label class="avatar-choice">
+              <input type="radio" name="selected_avatar" value="${a.path}" ${(me.profile_photo === a.path) ? 'checked' : ''} />
+              <img src="${a.path}" alt="${escapeHtml(a.label)}" />
+              <span class="small">${escapeHtml(a.label)}</span>
+            </label>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="h" style="margin-top:12px;">Básico</div>
+
+      <label class="small">Nome completo</label>
+      <input name="full_name" value="${me.full_name || ""}" />
+
+      <br/><br/>
+      <label class="small">Cidade</label>
+      <input name="city" value="${me.city || ""}" />
+
+      <br/><br/>
+      <label class="small">Estado</label>
+      <input name="state" value="${me.state || ""}" />
+
+      <br/><br/>
+      <label class="small">Bio</label>
+      <textarea name="bio" rows="4" placeholder="Escreva algo sobre você...">${me.bio || ""}</textarea>
+
+      <div class="h" style="margin-top:12px;">Detalhes</div>
+
+      <label class="small">Data de nascimento</label>
+      <input type="date" name="birth_date" value="${me.birth_date || ""}" />
+
+      <br/><br/>
+      <label class="small">Estado civil</label>
+      <input name="marital_status" value="${me.marital_status || ""}" placeholder="Ex: solteiro(a), casado(a)..." />
+
+      <br/><br/>
+      <label class="small">Time do coração</label>
+      <input name="favorite_team" value="${me.favorite_team || ""}" />
+
+      <br/><br/>
+      <label class="small">Profissão</label>
+      <input name="profession" value="${me.profession || ""}" />
+
+      <br/><br/>
+      <label class="small">Hobbies</label>
+      <input name="hobbies" value="${me.hobbies || ""}" />
+
+      <div class="h" style="margin-top:12px;">Gostos</div>
+
+      <label class="small">Música favorita</label>
+      <input name="favorite_music" value="${me.favorite_music || ""}" />
+
+      <br/><br/>
+      <label class="small">Filme favorito</label>
+      <input name="favorite_movie" value="${me.favorite_movie || ""}" />
+
+      <br/><br/>
+      <label class="small">Eu sou do tempo de…</label>
+      <input name="time_of" value="${me.time_of || ""}" placeholder="ex: internet discada, lan house, MSN, VHS, Mega Drive…" />
+      <div class="small" style="opacity:.9;margin-bottom:8px;">Uma lembrança simples que te define. Vai aparecer em “Nosso Tempo”.</div>
+
+      <label class="small">Jogo favorito</label>
+      <input name="favorite_game" value="${me.favorite_game || ""}" />
+
+      </div><div id="tab-tempo" class="kd-tab-content"><div class="h" style="margin-top:12px;">💾 Nosso Tempo</div>
+
+<label class="small">Console favorito</label><input name="favorite_console" value="${me.favorite_console || ""}" />
+<br/><br/>
+<label class="small">Windows favorito</label><input name="favorite_windows" value="${me.favorite_windows || ""}" />
+<br/><br/>
+<label class="small">Comunicador favorito</label><input name="favorite_messenger" value="${me.favorite_messenger || ""}" placeholder="MSN, ICQ, mIRC..." />
+<br/><br/>
+<label class="small">Melhor lembrança da internet</label><textarea name="nostalgic_memory" rows="3">${me.nostalgic_memory || ""}</textarea>
+</div><div id="tab-mais" class="kd-tab-content"><div class="h" style="margin-top:12px;">💙 Mais sobre mim</div>
+<label class="small">Coisas que amo</label><input name="things_love" value="${me.things_love || ""}" />
+<br/><br/>
+<label class="small">Coisas que não gosto</label><input name="things_dislike" value="${me.things_dislike || ""}" />
+<br/><br/>
+<label class="small">Meu maior sonho</label><input name="biggest_dream" value="${me.biggest_dream || ""}" />
+<br/><br/>
+<label class="small">O que admiro nas pessoas</label><input name="admire_people" value="${me.admire_people || ""}" />
+</div><div id="tab-perfil-extra" class="kd-tab-content active"><div class="h" style="margin-top:12px;">Jeito de ser</div>
+
+      <label class="small">Personalidade</label>
+      <input name="personality" value="${me.personality || ""}" placeholder="Ex: tímido(a), extrovertido(a)..." />
+
+      <br/><br/>
+      <label class="small">Procurando</label>
+      <input name="looking_for" value="${me.looking_for || ""}" placeholder="Ex: amizades, namoro, conversas..." />
+
+      <br/><br/>
+      <label class="small">Humor</label>
+      <input name="mood" value="${me.mood || ""}" placeholder="Ex: feliz, pensativo(a)..." />
+
+      <br/><br/>
+      <label class="small">Frase do dia</label>
+      <input name="daily_phrase" value="${me.daily_phrase || ""}" placeholder="Ex: 'Enquanto o agora existe...'" />
+
+      <hr/>
+      <div class="h" style="margin:6px 0 10px 0;">Privacidade</div>
+
+      <label style="display:flex;gap:10px;align-items:center;">
+        <input type="checkbox" name="invisible_visits" ${me.invisible_visits ? "checked" : ""} />
+        <span>Modo invisível ao visitar perfis (não registra suas visitas)</span>
+      </label>
+      <div class="small" style="margin:6px 0 10px 0;">
+        Regra justa: enquanto estiver invisível, você não consegue ver sua lista de visitantes.
+      </div>
+
+      <label style="display:flex;gap:10px;align-items:center;">
+        <input type="checkbox" name="notify_profile_visits" ${me.notify_profile_visits === 0 ? "" : "checked"} />
+        <span>Receber notificação quando alguém visitar meu perfil</span>
+      </label>
+
+      <br/><br/>
+      </div><script>function showKdTab(tab){document.querySelectorAll(".kd-tab-content").forEach(e=>e.classList.remove("active"));if(tab==="perfil"){document.getElementById("tab-perfil").classList.add("active");document.getElementById("tab-perfil-extra").classList.add("active");}else{document.getElementById("tab-"+tab).classList.add("active");}}</script><button class="button" type="submit">Salvar alterações</button>
+      <a class="button" href="/u/${me.username}" style="margin-left:8px;">Voltar</a>
+    </form>
+    <div class="card" style="margin-top:16px;border-color:#6b2033;background:#2a0a12;">
+      <div class="h">Zona perigosa</div>
+      <p style="margin-top:8px;opacity:.95;">Excluir sua conta é irreversível.</p>
+      <a class="btn danger" href="/account/delete">Excluir minha conta</a>
+    </div>
+
+  </div>
+` }) %>
+<% function escapeHtml(str){ return String(str ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); } %>
