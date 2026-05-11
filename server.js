@@ -127,7 +127,9 @@ async function getUserById(id) {
       id, email, username, full_name, bio, city, state,
       profile_photo, birth_date, marital_status, favorite_team,
       profession, hobbies, favorite_music, favorite_movie, favorite_game,
-      time_of, personality, personality_result, looking_for, mood, daily_phrase,
+      time_of, favorite_console, favorite_windows, nostalgic_memory, favorite_messenger,
+      things_love, things_dislike, biggest_dream, admire_people,
+      personality, personality_result, looking_for, mood, daily_phrase,
       avatar_config, invisible_visits, notify_profile_visits, role, is_suspended, created_at
     FROM users
     WHERE id=?
@@ -1607,7 +1609,9 @@ app.get("/u/:username", requireAuth, async (req, res) => {
       id, username, full_name, bio, city, state,
       profile_photo, birth_date, marital_status, favorite_team,
       profession, hobbies, favorite_music, favorite_movie, favorite_game,
-      time_of, personality, personality_result, looking_for, mood, daily_phrase,
+      time_of, favorite_console, favorite_windows, nostalgic_memory, favorite_messenger,
+      things_love, things_dislike, biggest_dream, admire_people,
+      personality, personality_result, looking_for, mood, daily_phrase,
       avatar_config, invisible_visits, notify_profile_visits, role, is_suspended, created_at,
       CASE WHEN EXISTS (
         SELECT 1 FROM presence p
