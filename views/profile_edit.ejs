@@ -6,6 +6,20 @@
     ${ok ? `<div class="card" style="border-color:#1e5f2b;background:#0b2411;">${ok}</div>` : ""}
 
     <form method="post" action="/profile/edit" enctype="multipart/form-data">
+<style>
+.kd-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.kd-tab-btn{background:#17365d;color:#fff;border:none;padding:10px 14px;border-radius:10px;cursor:pointer}
+.kd-tab-content{display:none}
+.kd-tab-content.active{display:block}
+</style>
+<div class="kd-tabs">
+<button type="button" class="kd-tab-btn" onclick="showKdTab('perfil')">👤 Perfil</button>
+<button type="button" class="kd-tab-btn" onclick="showKdTab('tempo')">💾 Nosso Tempo</button>
+<button type="button" class="kd-tab-btn" onclick="showKdTab('mais')">💙 Mais sobre mim</button>
+</div>
+
+<div id="tab-perfil" class="kd-tab-content active">
+
       <div class="card" style="margin-top:10px;">
         <div class="h" style="margin-bottom:8px;">Foto ou avatar</div>
         <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
@@ -93,7 +107,24 @@
       <label class="small">Jogo favorito</label>
       <input name="favorite_game" value="${me.favorite_game || ""}" />
 
-      <div class="h" style="margin-top:12px;">Jeito de ser</div>
+      </div><div id="tab-tempo" class="kd-tab-content"><div class="h" style="margin-top:12px;">💾 Nosso Tempo</div>
+
+<label class="small">Console favorito</label><input name="favorite_console" value="${me.favorite_console || ""}" />
+<br/><br/>
+<label class="small">Windows favorito</label><input name="favorite_windows" value="${me.favorite_windows || ""}" />
+<br/><br/>
+<label class="small">Comunicador favorito</label><input name="favorite_messenger" value="${me.favorite_messenger || ""}" placeholder="MSN, ICQ, mIRC..." />
+<br/><br/>
+<label class="small">Melhor lembrança da internet</label><textarea name="nostalgic_memory" rows="3">${me.nostalgic_memory || ""}</textarea>
+</div><div id="tab-mais" class="kd-tab-content"><div class="h" style="margin-top:12px;">💙 Mais sobre mim</div>
+<label class="small">Coisas que amo</label><input name="things_love" value="${me.things_love || ""}" />
+<br/><br/>
+<label class="small">Coisas que não gosto</label><input name="things_dislike" value="${me.things_dislike || ""}" />
+<br/><br/>
+<label class="small">Meu maior sonho</label><input name="biggest_dream" value="${me.biggest_dream || ""}" />
+<br/><br/>
+<label class="small">O que admiro nas pessoas</label><input name="admire_people" value="${me.admire_people || ""}" />
+</div><div id="tab-perfil-extra" class="kd-tab-content active"><div class="h" style="margin-top:12px;">Jeito de ser</div>
 
       <label class="small">Personalidade</label>
       <input name="personality" value="${me.personality || ""}" placeholder="Ex: tímido(a), extrovertido(a)..." />
@@ -127,7 +158,7 @@
       </label>
 
       <br/><br/>
-      <button class="button" type="submit">Salvar alterações</button>
+      </div><script>function showKdTab(tab){document.querySelectorAll(".kd-tab-content").forEach(e=>e.classList.remove("active"));if(tab==="perfil"){document.getElementById("tab-perfil").classList.add("active");document.getElementById("tab-perfil-extra").classList.add("active");}else{document.getElementById("tab-"+tab).classList.add("active");}}</script><button class="button" type="submit">Salvar alterações</button>
       <a class="button" href="/u/${me.username}" style="margin-left:8px;">Voltar</a>
     </form>
     <div class="card" style="margin-top:16px;border-color:#6b2033;background:#2a0a12;">

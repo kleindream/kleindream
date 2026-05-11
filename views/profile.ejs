@@ -266,6 +266,33 @@
               </div>
             </div>
           ` : ``}
+
+          ${(user.favorite_console || user.favorite_windows || user.favorite_messenger || user.nostalgic_memory) ? `
+            <div class="profile-highlight">
+              <div class="h">💾 Nosso Tempo</div>
+              <div class="profile-kv">
+                <div class="small">Console favorito</div><div>${escapeHtml(user.favorite_console || "-")}</div>
+                <div class="small">Windows favorito</div><div>${escapeHtml(user.favorite_windows || "-")}</div>
+                <div class="small">Comunicador favorito</div><div>${escapeHtml(user.favorite_messenger || "-")}</div>
+              </div>
+              <div style="margin-top:10px;">
+                <div class="small">Melhor lembrança da internet</div>
+                <div>${escapeHtml(user.nostalgic_memory || "-")}</div>
+              </div>
+            </div>
+          ` : ``}
+
+          ${(user.things_love || user.things_dislike || user.biggest_dream || user.admire_people) ? `
+            <div class="profile-highlight">
+              <div class="h">💙 Mais sobre mim</div>
+              <div class="profile-kv">
+                <div class="small">Coisas que amo</div><div>${escapeHtml(user.things_love || "-")}</div>
+                <div class="small">Coisas que não gosto</div><div>${escapeHtml(user.things_dislike || "-")}</div>
+                <div class="small">Meu maior sonho</div><div>${escapeHtml(user.biggest_dream || "-")}</div>
+                <div class="small">O que admiro nas pessoas</div><div>${escapeHtml(user.admire_people || "-")}</div>
+              </div>
+            </div>
+          ` : ``}
         </div>
       </div>
 
