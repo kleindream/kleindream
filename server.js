@@ -735,7 +735,7 @@ app.post("/register", limiterAuth, async (req, res) => {
   req.session.userId = info.rows[0].id;
   req.session.username = username;
   req.flash("success", "Conta criada! Bem-vindo(a) ao KleinDream 💙");
-  res.redirect("/home");
+  res.redirect("/profile/edit");
 });
 
 app.get("/login", async (req, res) => res.render("login", { error: null }));
