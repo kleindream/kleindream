@@ -4,7 +4,7 @@
       <div class="card mascot-chip home-hero-card">
         <img src="/img/sr-disquete.png" alt="Sr. Disquete" class="kd-zoom" />
         <div>
-          <div class="h" style="font-size:1.55rem;font-weight:900;color:var(--accent);">💾 Bem-vindo de volta, ${(me && (me.full_name || me.username)) ? escapeHtml(me.full_name || me.username) : ""}!</div>
+          <div class="h" style="font-size:1.55rem;font-weight:900;color:var(--accent);">&#128190; Bem-vindo de volta, ${(me && (me.full_name || me.username)) ? escapeHtml(me.full_name || me.username) : ""}!</div>
           <p style="font-size:1rem;line-height:1.6;margin:6px 0 0 0;">
             Aqui o perfil continua sendo importante. Sem algoritmo empurrando barulho: só gente,
             recados, comunidades e lembranças boas.
@@ -14,7 +14,6 @@
             <a class="button secondary" href="/profile/edit">Editar perfil</a>
             <a class="button secondary" href="/mural">Mural</a>
             <a class="button secondary" href="/search">Procurar gente</a>
-            <button id="kdPwaInstallHero" class="button secondary kd-pwa-btn" type="button" hidden>Instalar app</button>
           </div>
         </div>
       </div>
@@ -49,8 +48,8 @@
 
       <div class="card home-block-card">
         <div class="home-section-head">
-          <div class="h" style="font-size:1.35rem;font-weight:900;color:var(--accent);">🟢 Online agora</div>
-          <span class="small">quem está circulando pela rede</span>
+          <div class="h" style="font-size:1.35rem;font-weight:900;color:var(--accent);">&#128994; Online agora</div>
+          <span class="small">quem está navegando pela rede</span>
         </div>
         ${((onlineMembers||[]).length === 0)
           ? `<div class="kd-mini-muted">No momento a rede está quietinha. Quando alguém mexer por aqui, aparece nesta lista.</div>`
@@ -63,7 +62,7 @@
                     <div class="orkut-thumb-name">${escapeHtml(user.full_name || user.username)}</div>
                     <div class="orkut-thumb-meta">@${escapeHtml(user.username)}</div>
                   </a>
-                  ${user.username !== me.username ? `<button class="btn secondary mini js-open-private-chat" type="button" data-chat-user="${escapeHtml(user.username)}">💬 Conversar</button>` : `<span class="badge">Você</span>`}
+                  ${user.username !== me.username ? `<button class="btn secondary mini js-open-private-chat" type="button" data-chat-user="${escapeHtml(user.username)}">&#128172; Conversar</button>` : `<span class="badge">Você</span>`}
                 </div>
               `).join("")}
             </div>
@@ -92,7 +91,7 @@
 
       <div class="card home-block-card">
         <div class="home-section-head">
-          <div class="h" style="font-size:1.35rem;font-weight:900;color:var(--accent);">Comunidades em destaque</div>
+          <div class="h" style="font-size:1.35rem;font-weight:900;color:var(--accent);">Grupos em destaque</div>
           <a class="small" href="/groups">ver todas</a>
         </div>
         ${((featuredGroups||[]).length === 0)
@@ -101,7 +100,7 @@
             <div class="orkut-thumb-grid home-group-grid">
               ${(featuredGroups||[]).map(g => `
                 <a class="orkut-thumb-card group" href="/groups/${g.id}" title="${escapeHtml(g.name)}">
-                  <div class="orkut-group-icon">👥</div>
+                  <div class="orkut-group-icon">&#128101;</div>
                   <div class="orkut-thumb-name">${escapeHtml(g.name)}</div>
                   <div class="orkut-thumb-meta">${escapeHtml(g.category || "Sem categoria")}</div>
                   <div class="orkut-thumb-meta">${Number(g.members_count || 0)} membro${Number(g.members_count || 0) === 1 ? '' : 's'}</div>
@@ -174,46 +173,16 @@
       <div class="card home-side-card" style="background:var(--panel2);">
         <div class="h" style="font-size:1.3rem;font-weight:900;color:var(--accent);">Ações rápidas</div>
         <div class="home-side-links">
-          <a href="/messages">📩 Inbox ${((unreadMessages||[]).length ? `<span>${(unreadMessages||[]).length}</span>` : ``)}</a>
-          <a href="/games">🎮 Jogos</a>
-          <a href="/games/caderno">📓 Caderno</a>
-          <a href="/paint">🎨 Paint Brush</a>
-          <a href="/groups">👥 Grupos</a>
-          <a href="/radio">🎧 Rádio</a>
-          <a href="/fans/${me.username}">⭐ Fãs</a>
-          <a href="/me/visitors">👁 Visitantes</a>
-          <a href="/nosso-tempo">🕰️ Nosso Tempo</a>
+          <a href="/messages">&#128233; Inbox ${((unreadMessages||[]).length ? `<span>${(unreadMessages||[]).length}</span>` : ``)}</a>
+          <a href="/games">&#127918; Jogos</a>
+          <a href="/games/caderno">&#128211; Caderno de perguntas</a>
+          <a href="/paint">&#127912; Paint Brush</a>
+          <a href="/groups">&#128101; Grupos</a>
+          <a href="/radio">&#127911; Rádio</a>
+          <a href="/fans/${me.username}">&#11088; Fãs</a><u></u>
+          <a href="/me/visitors">&#128065; Visitantes</a>
+          <a href="/nosso-tempo">&#128368;&#65039; Nosso Tempo</a>
         </div>
-      </div>
-
-      <div class="card home-side-card">
-        <div class="h" style="font-size:1.3rem;font-weight:900;color:var(--accent);">Jogos da Klein Dream</div>
-        <div class="home-game-links">
-          <a class="home-game-link" href="/games/memory">🧠 Memória</a>
-          <a class="home-game-link" href="/games/quiz">❓ Quiz</a>
-          <a class="home-game-link" href="/games/velha">⭕ Jogo da velha</a>
-          <a class="home-game-link" href="/games/snake">🐍 Snake</a>
-          <a class="home-game-link" href="/games/rps">✊ Pedra, papel e tesoura</a>
-          <a class="home-game-link" href="/games/kleincity">🏙️ Klein City</a>
-          <a class="home-game-link" href="/games/caderno">📓 Caderno</a>
-          <a class="home-game-link" href="/paint">🎨 Paint Brush</a>
-        </div>
-      </div>
-
-      <div class="card home-side-card">
-        <div class="h" style="font-size:1.3rem;font-weight:900;color:var(--accent);">Ranking de jogos</div>
-        ${((gameLeaders||[]).length === 0)
-          ? `<div class="kd-mini-muted">Ainda não há pontuações registradas.</div>`
-          : `
-            <ol class="home-ranking-list">
-              ${(gameLeaders||[]).map(p => `
-                <li>
-                  <div><b>${escapeHtml(p.username)}</b></div>
-                  <div class="small">${escapeHtml(p.game)} · ${Number(p.points || 0)} pts</div>
-                </li>
-              `).join("")}
-            </ol>
-          `}
       </div>
 
       <div class="card home-side-card">
@@ -236,7 +205,7 @@
       </div>
 
       <div class="card home-side-card">
-        <div class="h" style="font-size:1.3rem;font-weight:900;color:var(--accent);">🎂 Aniversários</div>
+        <div class="h" style="font-size:1.3rem;font-weight:900;color:var(--accent);">&#127874; Aniversários</div>
         ${((todayBirthdays||[]).length === 0 && (upcomingBirthdays||[]).length === 0)
           ? `<div class="kd-mini-muted">Ainda não há aniversários cadastrados para aparecer aqui.</div>`
           : `
@@ -248,7 +217,7 @@
                     <img src="${photoSrc(u.profile_photo)}" alt="${escapeHtml(u.username)}" />
                     <div>
                       <a href="/u/${u.username}"><b>${escapeHtml(u.full_name || u.username)}</b></a>
-                      <div class="small">Faz aniversário hoje 🎉</div>
+                      <div class="small">Faz aniversário hoje &#127881;</div>
                     </div>
                   </div>
                 `).join("")}
