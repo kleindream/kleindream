@@ -17,28 +17,8 @@ const { getSign, getFrase } = require("./utils/horoscopo");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Render usa proxy reverso; isso ajuda sessão/cookies HTTPS.
+// Render usa proxy reverso. Não faz redirecionamento de domínio aqui.
 app.set("trust proxy", 1);
-
-// Domínio oficial da Klein Dream: SEM www.
-// Não depende de variável de ambiente para não puxar PUBLIC_SITE_URL errado.
-const KLEIN_CANONICAL_ORIGIN = "https://kleindream.com.br";
-const IS_PRODUCTION = process.env.NODE_ENV === "production" || process.env.RENDER === "true";
-
-function kdUrl(path = "/") {
-  const cleanPath = String(path || "/").startsWith("/") ? String(path || "/") : `/${path}`;
-  return `${KLEIN_CANONICAL_ORIGIN}${cleanPath}`;
-}
-
-// Se alguém cair no www, manda para o domínio certo.
-// Só verifica o host; não força HTTPS, para evitar loop no Render.
-app.use((req, res, next) => {
-  const host = String(req.headers.host || "").split(":")[0].toLowerCase();
-  if (host === "www.kleindream.com.br") {
-    return res.redirect(302, kdUrl(req.originalUrl || "/"));
-  }
-  return next();
-});
 
 const BUILTIN_AVATARS = [
   { path: '/avatars/avatar-retro-boy.svg', label: 'Retro Boy' },
@@ -139,13 +119,10 @@ const sessionMiddleware = session({
   resave: false,
   saveUninitialized: false,
   proxy: true,
-  name: "kleindream.sid",
   cookie: {
     httpOnly: true,
     sameSite: "lax",
-    secure: IS_PRODUCTION,
-    domain: IS_PRODUCTION ? ".kleindream.com.br" : undefined,
-    maxAge: 1000 * 60 * 60 * 24 * 30
+    secure: process.env.NODE_ENV === "production"
   }
 });
 app.use(sessionMiddleware);
@@ -769,13 +746,12 @@ app.post("/register", limiterAuth, async (req, res) => {
   req.session.userId = info.rows[0].id;
   req.session.username = username;
   req.flash("success", "Conta criada! Bem-vindo(a) ao KleinDream 💙");
-
   req.session.save((err) => {
     if (err) {
       console.error("Erro ao salvar sessão no cadastro:", err);
-      return res.status(500).send("Erro ao iniciar sessão. Tente novamente.");
+      return res.render("register", { error: "Conta criada, mas houve erro ao iniciar sessão. Tente entrar pelo login." });
     }
-    return res.redirect(kdUrl("/profile/edit"));
+    return res.redirect("/profile/edit");
   });
 });
 
@@ -792,18 +768,17 @@ app.post("/login", limiterAuth, async (req, res) => {
   req.session.userId = user.id;
   req.session.username = user.username;
   req.flash("success", "Bem-vindo(a) de volta!");
-
   req.session.save((err) => {
     if (err) {
       console.error("Erro ao salvar sessão no login:", err);
-      return res.status(500).send("Erro ao iniciar sessão. Tente novamente.");
+      return res.render("login", { error: "Erro ao entrar. Tente novamente." });
     }
-    return res.redirect(kdUrl("/home"));
+    return res.redirect("/home");
   });
 });
 
 app.post("/logout", async (req, res) => {
-  req.session.destroy(() => res.redirect(kdUrl('/home')));
+  req.session.destroy(() => res.redirect('/home'));
 });
 
 
