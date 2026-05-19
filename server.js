@@ -17,31 +17,8 @@ const { getSign, getFrase } = require("./utils/horoscopo");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Render usa proxy reverso. Isso ajuda cookies/sessões e HTTPS a funcionarem corretamente.
+// Render usa proxy reverso; ajuda o Express a entender HTTPS corretamente.
 app.set("trust proxy", 1);
-
-// Domínio canônico da Klein Dream: sem "www".
-// Se um navegador estiver em www.kleindream.com.br, os redirects relativos manteriam o www.
-// Por isso, em produção, forçamos o retorno para https://kleindream.com.br.
-const CANONICAL_HOST = "kleindream.com.br";
-const CANONICAL_ORIGIN = process.env.PUBLIC_SITE_URL || `https://${CANONICAL_HOST}`;
-
-function canonicalUrl(path = "/") {
-  const cleanPath = String(path || "/").startsWith("/") ? String(path || "/") : `/${path}`;
-  return `${CANONICAL_ORIGIN}${cleanPath}`;
-}
-
-function redirectCanonical(res, path = "/") {
-  return res.redirect(canonicalUrl(path));
-}
-
-app.use((req, res, next) => {
-  const host = String(req.headers.host || "").toLowerCase();
-  if (host === `www.${CANONICAL_HOST}`) {
-    return res.redirect(301, canonicalUrl(req.originalUrl || "/"));
-  }
-  next();
-});
 
 const BUILTIN_AVATARS = [
   { path: '/avatars/avatar-retro-boy.svg', label: 'Retro Boy' },
@@ -140,13 +117,7 @@ const sessionMiddleware = session({
     store: new PgSession({ pool, tableName: "session", createTableIfMissing: true }),
     secret: process.env.SESSION_SECRET || "kleindream_dev_secret",
     resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: "auto",
-      maxAge: 1000 * 60 * 60 * 24 * 30
-    }
+    saveUninitialized: false
   });
 app.use(sessionMiddleware);
 app.use(flash());
@@ -495,7 +466,7 @@ async function requireAdmin(req, res, next) {
     const me = await getCurrentUserWithRole(req);
     if (!me || !isAdminRole(me.role)) {
       req.flash("error", "Acesso restrito ao painel.");
-      return redirectCanonical(res, "/home");
+      return res.redirect("/home");
     }
     req.adminUser = me;
     next();
@@ -770,8 +741,6 @@ app.post("/register", limiterAuth, async (req, res) => {
   req.session.username = username;
   req.flash("success", "Conta criada! Bem-vindo(a) ao KleinDream 💙");
 
-  // Salva a sessão antes do redirect. Isso evita o Chrome ficar preso/deslogado
-  // quando o store de sessão ainda não terminou de gravar.
   req.session.save((err) => {
     if (err) {
       console.error("Erro ao salvar sessão no cadastro:", err);
@@ -795,8 +764,6 @@ app.post("/login", limiterAuth, async (req, res) => {
   req.session.username = user.username;
   req.flash("success", "Bem-vindo(a) de volta!");
 
-  // Salva a sessão antes do redirect. Em Chrome/Render isso evita a tela ficar
-  // girando ou voltar deslogada por cookie/sessão ainda não gravados.
   req.session.save((err) => {
     if (err) {
       console.error("Erro ao salvar sessão no login:", err);
@@ -807,7 +774,7 @@ app.post("/login", limiterAuth, async (req, res) => {
 });
 
 app.post("/logout", async (req, res) => {
-  req.session.destroy(() => redirectCanonical(res, '/home'));
+  req.session.destroy(() => res.redirect('/home'));
 });
 
 
