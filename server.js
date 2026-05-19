@@ -17,7 +17,7 @@ const { getSign, getFrase } = require("./utils/horoscopo");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Render usa proxy reverso. Não faz redirecionamento de domínio aqui.
+// Render/Cloudflare/HTTPS proxy: ajuda o Express a entender o protocolo real no Chrome.
 app.set("trust proxy", 1);
 
 const BUILTIN_AVATARS = [
@@ -115,6 +115,7 @@ const limiterWrite = rateLimit({
 app.use(express.static(path.join(__dirname, "public")));
 const sessionMiddleware = session({
   store: new PgSession({ pool, tableName: "session", createTableIfMissing: true }),
+  name: "kleindream.sid",
   secret: process.env.SESSION_SECRET || "kleindream_dev_secret",
   resave: false,
   saveUninitialized: false,
@@ -122,11 +123,23 @@ const sessionMiddleware = session({
   cookie: {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production"
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 1000 * 60 * 60 * 24 * 30
   }
 });
 app.use(sessionMiddleware);
 app.use(flash());
+
+// Páginas de conta e páginas logadas não devem ser guardadas por cache/PWA.
+// Isso evita o Chrome reutilizar /login ou /home antigos após autenticação.
+app.use((req, res, next) => {
+  if (req.path === "/login" || req.path === "/register" || req.path === "/logout" || req.path === "/home" || req.path.startsWith("/profile") || req.path.startsWith("/u/")) {
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
+    res.set("Pragma", "no-cache");
+    res.set("Expires", "0");
+  }
+  next();
+});
 
 // Helpers
 async function getUserById(id) {
@@ -746,13 +759,7 @@ app.post("/register", limiterAuth, async (req, res) => {
   req.session.userId = info.rows[0].id;
   req.session.username = username;
   req.flash("success", "Conta criada! Bem-vindo(a) ao KleinDream 💙");
-  req.session.save((err) => {
-    if (err) {
-      console.error("Erro ao salvar sessão no cadastro:", err);
-      return res.render("register", { error: "Conta criada, mas houve erro ao iniciar sessão. Tente entrar pelo login." });
-    }
-    return res.redirect("/profile/edit");
-  });
+  res.redirect("/profile/edit");
 });
 
 app.get("/login", async (req, res) => res.render("login", { error: null }));
@@ -766,15 +773,9 @@ app.post("/login", limiterAuth, async (req, res) => {
   if (!ok) return res.render("login", { error: "Senha incorreta." });
 
   req.session.userId = user.id;
-  req.session.username = user.username;
+    req.session.username = user.username;
   req.flash("success", "Bem-vindo(a) de volta!");
-  req.session.save((err) => {
-    if (err) {
-      console.error("Erro ao salvar sessão no login:", err);
-      return res.render("login", { error: "Erro ao entrar. Tente novamente." });
-    }
-    return res.redirect("/home");
-  });
+  res.redirect("/home");
 });
 
 app.post("/logout", async (req, res) => {
