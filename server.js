@@ -17,6 +17,32 @@ const { getSign, getFrase } = require("./utils/horoscopo");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Render usa proxy reverso. Isso ajuda cookies/sessões e HTTPS a funcionarem corretamente.
+app.set("trust proxy", 1);
+
+// Domínio canônico da Klein Dream: sem "www".
+// Se um navegador estiver em www.kleindream.com.br, os redirects relativos manteriam o www.
+// Por isso, em produção, forçamos o retorno para https://kleindream.com.br.
+const CANONICAL_HOST = "kleindream.com.br";
+const CANONICAL_ORIGIN = process.env.PUBLIC_SITE_URL || `https://${CANONICAL_HOST}`;
+
+function canonicalUrl(path = "/") {
+  const cleanPath = String(path || "/").startsWith("/") ? String(path || "/") : `/${path}`;
+  return `${CANONICAL_ORIGIN}${cleanPath}`;
+}
+
+function redirectCanonical(res, path = "/") {
+  return res.redirect(canonicalUrl(path));
+}
+
+app.use((req, res, next) => {
+  const host = String(req.headers.host || "").toLowerCase();
+  if (host === `www.${CANONICAL_HOST}`) {
+    return res.redirect(301, canonicalUrl(req.originalUrl || "/"));
+  }
+  next();
+});
+
 const BUILTIN_AVATARS = [
   { path: '/avatars/avatar-retro-boy.svg', label: 'Retro Boy' },
   { path: '/avatars/avatar-retro-girl.svg', label: 'Retro Girl' },
@@ -114,7 +140,13 @@ const sessionMiddleware = session({
     store: new PgSession({ pool, tableName: "session", createTableIfMissing: true }),
     secret: process.env.SESSION_SECRET || "kleindream_dev_secret",
     resave: false,
-    saveUninitialized: false
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 1000 * 60 * 60 * 24 * 30
+    }
   });
 app.use(sessionMiddleware);
 app.use(flash());
@@ -463,7 +495,7 @@ async function requireAdmin(req, res, next) {
     const me = await getCurrentUserWithRole(req);
     if (!me || !isAdminRole(me.role)) {
       req.flash("error", "Acesso restrito ao painel.");
-      return res.redirect("/home");
+      return redirectCanonical(res, "/home");
     }
     req.adminUser = me;
     next();
@@ -737,7 +769,7 @@ app.post("/register", limiterAuth, async (req, res) => {
   req.session.userId = info.rows[0].id;
   req.session.username = username;
   req.flash("success", "Conta criada! Bem-vindo(a) ao KleinDream 💙");
-  res.redirect("/profile/edit");
+  redirectCanonical(res, "/profile/edit");
 });
 
 app.get("/login", async (req, res) => res.render("login", { error: null }));
@@ -753,11 +785,11 @@ app.post("/login", limiterAuth, async (req, res) => {
   req.session.userId = user.id;
     req.session.username = user.username;
   req.flash("success", "Bem-vindo(a) de volta!");
-  res.redirect("/home");
+  redirectCanonical(res, "/home");
 });
 
 app.post("/logout", async (req, res) => {
-  req.session.destroy(() => res.redirect('/home'));
+  req.session.destroy(() => redirectCanonical(res, '/home'));
 });
 
 
