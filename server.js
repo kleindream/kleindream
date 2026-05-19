@@ -20,6 +20,17 @@ const PORT = process.env.PORT || 3000;
 // Render usa proxy reverso; ajuda o Express a entender HTTPS corretamente.
 app.set("trust proxy", 1);
 
+// Domínio principal da Klein Dream: SEM www.
+// Importante: não usamos redirect global aqui para evitar loop no Render.
+// Usamos este destino só depois de login/cadastro.
+const CANONICAL_ORIGIN = process.env.PUBLIC_SITE_URL || "https://kleindream.com.br";
+const IS_PRODUCTION = process.env.NODE_ENV === "production" || process.env.RENDER === "true";
+
+function canonicalPath(path = "/") {
+  const cleanPath = String(path || "/").startsWith("/") ? String(path || "/") : `/${path}`;
+  return `${CANONICAL_ORIGIN}${cleanPath}`;
+}
+
 const BUILTIN_AVATARS = [
   { path: '/avatars/avatar-retro-boy.svg', label: 'Retro Boy' },
   { path: '/avatars/avatar-retro-girl.svg', label: 'Retro Girl' },
@@ -114,11 +125,22 @@ const limiterWrite = rateLimit({
 
 app.use(express.static(path.join(__dirname, "public")));
 const sessionMiddleware = session({
-    store: new PgSession({ pool, tableName: "session", createTableIfMissing: true }),
-    secret: process.env.SESSION_SECRET || "kleindream_dev_secret",
-    resave: false,
-    saveUninitialized: false
-  });
+  store: new PgSession({ pool, tableName: "session", createTableIfMissing: true }),
+  secret: process.env.SESSION_SECRET || "kleindream_dev_secret",
+  resave: false,
+  saveUninitialized: false,
+  proxy: true,
+  name: "kleindream.sid",
+  cookie: {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: IS_PRODUCTION,
+    // Permite que uma sessão criada em www.kleindream.com.br também valha em kleindream.com.br.
+    // Se algum dia testar pelo endereço onrender.com/local, basta definir COOKIE_DOMAIN vazio/remover esta linha.
+    domain: process.env.COOKIE_DOMAIN || (IS_PRODUCTION ? ".kleindream.com.br" : undefined),
+    maxAge: 1000 * 60 * 60 * 24 * 30
+  }
+});
 app.use(sessionMiddleware);
 app.use(flash());
 
@@ -746,7 +768,7 @@ app.post("/register", limiterAuth, async (req, res) => {
       console.error("Erro ao salvar sessão no cadastro:", err);
       return res.status(500).send("Erro ao iniciar sessão. Tente novamente.");
     }
-    return res.redirect("/profile/edit");
+    return res.redirect(canonicalPath("/profile/edit"));
   });
 });
 
@@ -769,7 +791,7 @@ app.post("/login", limiterAuth, async (req, res) => {
       console.error("Erro ao salvar sessão no login:", err);
       return res.status(500).send("Erro ao iniciar sessão. Tente novamente.");
     }
-    return res.redirect("/home");
+    return res.redirect(canonicalPath("/home"));
   });
 });
 
