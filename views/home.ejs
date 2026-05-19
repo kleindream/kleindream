@@ -176,13 +176,42 @@
           <a href="/messages">&#128233; Inbox ${((unreadMessages||[]).length ? `<span>${(unreadMessages||[]).length}</span>` : ``)}</a>
           <a href="/games">&#127918; Jogos</a>
           <a href="/games/caderno">&#128211; Caderno de perguntas</a>
-          <a href="/paint">&#127912; Paint Brush</a>
+          <a href="/paint">&#127912; Paint Brush 95</a>
           <a href="/groups">&#128101; Grupos</a>
           <a href="/radio">&#127911; Rádio</a>
           <a href="/fans/${me.username}">&#11088; Fãs</a><u></u>
           <a href="/me/visitors">&#128065; Visitantes</a>
           <a href="/nosso-tempo">&#128368;&#65039; Nosso Tempo</a>
         </div>
+      </div>
+      <div class="card home-side-card">
+        <div class="h" style="font-size:1.3rem;font-weight:900;color:var(--accent);">Jogos da Klein Dream</div>
+        <div class="home-game-links">
+          <a class="home-game-link" href="/games/memory">🧠 Memória</a>
+          <a class="home-game-link" href="/games/quiz">❓ Quiz</a>
+          <a class="home-game-link" href="/games/velha">⭕ Jogo da velha</a>
+          <a class="home-game-link" href="/games/snake">🐍 Snake</a>
+          <a class="home-game-link" href="/games/rps">✊ Pedra, papel e tesoura</a>
+          <a class="home-game-link" href="/games/kleincity">🏙️ Klein City</a>
+          <a class="home-game-link" href="/games/caderno">📓 Caderno</a>
+          <a class="home-game-link" href="/paint">🎨 Paint Brush</a>
+        </div>
+      </div>
+
+      <div class="card home-side-card">
+        <div class="h" style="font-size:1.3rem;font-weight:900;color:var(--accent);">Ranking de jogos</div>
+        ${((gameLeaders||[]).length === 0)
+          ? `<div class="kd-mini-muted">Ainda não há pontuações registradas.</div>`
+          : `
+            <ol class="home-ranking-list">
+              ${(gameLeaders||[]).map(p => `
+                <li>
+                  <div><b>${escapeHtml(p.username)}</b></div>
+                  <div class="small">${escapeHtml(p.game)} · ${Number(p.points || 0)} pts</div>
+                </li>
+              `).join("")}
+            </ol>
+          `}
       </div>
 
       <div class="card home-side-card">
