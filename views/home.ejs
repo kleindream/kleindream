@@ -109,6 +109,339 @@
             </div>
           `}
       </div>
+
+      <div class="card home-block-card">
+        <div class="home-section-head">
+          <div class="h" style="font-size:1.35rem;font-weight:900;color:var(--accent);">Recados recentes pra você</div>
+          <a class="small" href="/scraps/${me.username}">abrir recados</a>
+        </div>
+        ${((latestScraps||[]).length === 0)
+          ? `
+            <div style="color:var(--muted);">Ainda não chegaram recados. Que tal mandar o primeiro?</div>
+            <div style="margin-top:8px;"><a class="button secondary" href="/search">Procurar pessoas</a></div>
+          `
+          : `
+            <ul class="list">
+              ${(latestScraps||[]).slice(0,10).map(s => `
+                <li style="margin-bottom:8px;">
+                  <div>
+                    <a href="/u/${s.from_username}"><b>${escapeHtml(s.from_username)}</b></a>
+                    <span style="color:var(--faint);"> disse:</span>
+                  </div>
+                  <div style="color:var(--text);white-space:pre-wrap;">${escapeHtml(s.content)}</div>
+                </li>
+              `).join("")}
+            </ul>
+          `}
+      </div>
+
+      <div class="grid" style="margin-top:12px;">
+        <div>
+          <div class="card home-mini-card">
+            <div class="h" style="font-size:1.15rem;font-weight:900;color:var(--accent);">Pedidos de amizade</div>
+
+            ${((incomingRequests||[]).length === 0)
+              ? `<div style="color:var(--muted);">Nenhum pedido por enquanto.</div>`
+              : `
+                <ul class="list">
+                  ${(incomingRequests||[]).slice(0,8).map(r => `
+                    <li><a href="/u/${r.username}"><b>${escapeHtml(r.full_name || r.username)}</b></a> <span style="color:var(--faint);">pediu amizade</span></li>
+                  `).join("")}
+                </ul>
+                <div style="margin-top:8px;"><a class="button secondary" href="/friends">Gerenciar</a></div>
+              `}
+          </div>
+        </div>
+        <div>
+          <div class="card home-mini-card">
+            <div class="h" style="font-size:1.15rem;font-weight:900;color:var(--accent);">Depoimentos pendentes</div>
+            ${((pendingTestimonials||[]).length === 0)
+              ? `<div style="color:var(--muted);">Nada pendente. Seu perfil está em dia.</div>`
+              : `
+                <ul class="list">
+                  ${(pendingTestimonials||[]).slice(0,8).map(t => `
+                    <li><a href="/u/${t.username}"><b>${escapeHtml(t.full_name || t.username)}</b></a> <span style="color:var(--faint);">deixou um depoimento</span></li>
+                  `).join("")}
+                </ul>
+                <div style="margin-top:8px;"><a class="button secondary" href="/testimonials/${me.username}">Revisar</a></div>
+              `}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card home-side-card" style="background:var(--panel2);">
+        <div class="h" style="font-size:1.3rem;font-weight:900;color:var(--accent);">Ações rápidas</div>
+        <div class="home-side-links">
+          <a href="/messages">&#128233; Inbox ${((unreadMessages||[]).length ? `<span>${(unreadMessages||[]).length}</span>` : ``)}</a>
+          <a href="/games">&#127918; Jogos</a>
+          <a href="/games/caderno">&#128211; Caderno de perguntas</a>
+          <a href="/paint">&#127912; Paint Brush 95</a>
+          <a href="/groups">&#128101; Grupos</a>
+          <a href="/radio">&#127911; Rádio</a>
+          <a href="/fans/${me.username}">&#11088; Fãs</a><u></u>
+          <a href="/me/visitors">&#128065; Visitantes</a>
+          <a href="/nosso-tempo">&#128368;&#65039; Nosso Tempo</a>
+        </div>
+      </div>
+  </div>
+        </div>
+
+        <div style="position:relative;margin-top:10px;padding:8px;border-radius:10px;background:linear-gradient(90deg,#003a74,#1e82d2);color:white;font-size:.82rem;font-weight:800;text-align:center;box-shadow:inset 0 1px rgba(255,255,255,.35);">
+          &#128190; Projeto vivo: cada melhoria deixa a rede com mais alma.
+        </div>
+      </div>
+      <div class="card home-side-card">
+        <div class="h" style="font-size:1.3rem;font-weight:900;color:var(--accent);">Jogos da Klein Dream</div>
+        <div class="home-game-links">
+          <a class="home-game-link" href="/games/memory">🧠 Memória</a>
+          <a class="home-game-link" href="/games/quiz">❓ Quiz</a>
+          <a class="home-game-link" href="/games/velha">⭕ Jogo da velha</a>
+          <a class="home-game-link" href="/games/snake">🐍 Snake</a>
+          <a class="home-game-link" href="/games/rps">✊ Pedra, papel e tesoura</a>
+          <a class="home-game-link" href="/games/kleincity">🏙️ Klein City</a>
+          <a class="home-game-link" href="/games/caderno">📓 Caderno de perguntas</a>
+          <a class="home-game-link" href="/paint">🎨 Paint Brush 95</a>
+        </div>
+      </div>
+
+      <div class="card home-side-card">
+        <div class="h" style="font-size:1.3rem;font-weight:900;color:var(--accent);">Ranking de jogos</div>
+        ${((gameLeaders||[]).length === 0)
+          ? `<div class="kd-mini-muted">Ainda não há pontuações registradas.</div>`
+          : `
+            <ol class="home-ranking-list">
+              ${(gameLeaders||[]).map(p => `
+                <li>
+                  <div><b>${escapeHtml(p.username)}</b></div>
+                  <div class="small">${escapeHtml(p.game)} · ${Number(p.points || 0)} pts</div>
+                </li>
+              `).join("")}
+            </ol>
+          `}
+      </div>
+
+      <div class="card home-side-card">
+        <div class="h" style="font-size:1.3rem;font-weight:900;color:var(--accent);">Membros mais ativos</div>
+        ${((activeMembers||[]).length === 0)
+          ? `<div class="kd-mini-muted">A atividade da semana ainda vai aparecer aqui.</div>`
+          : `
+            <div class="birthday-list">
+              ${(activeMembers||[]).map(u => `
+                <div class="birthday-item">
+                  <img src="${photoSrc(u.profile_photo)}" alt="${escapeHtml(u.username)}" />
+                  <div>
+                    <a href="/u/${u.username}"><b>${escapeHtml(u.full_name || u.username)}</b></a>
+                    <div class="small">${Number(u.activity_score || 0)} ações na semana</div>
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+          `}
+      </div>
+
+      <div class="card home-side-card">
+        <div class="h" style="font-size:1.3rem;font-weight:900;color:var(--accent);">&#127874; Aniversários</div>
+        ${((todayBirthdays||[]).length === 0 && (upcomingBirthdays||[]).length === 0)
+          ? `<div class="kd-mini-muted">Ainda não há aniversários cadastrados para aparecer aqui.</div>`
+          : `
+            ${((todayBirthdays||[]).length > 0) ? `
+              <div class="small" style="margin-bottom:8px;">Quem está soprando velinhas hoje</div>
+              <div class="birthday-list">
+                ${(todayBirthdays||[]).map(u => `
+                  <div class="birthday-item">
+                    <img src="${photoSrc(u.profile_photo)}" alt="${escapeHtml(u.username)}" />
+                    <div>
+                      <a href="/u/${u.username}"><b>${escapeHtml(u.full_name || u.username)}</b></a>
+                      <div class="small">Faz aniversário hoje &#127881;</div>
+                    </div>
+                  </div>
+                `).join("")}
+              </div>
+            ` : ``}
+
+            ${((upcomingBirthdays||[]).length > 0) ? `
+              <div class="small" style="margin:12px 0 8px 0;">Próximos 7 dias</div>
+              <div class="birthday-list">
+                ${(upcomingBirthdays||[]).map(u => `
+                  <div class="birthday-item">
+                    <img src="${photoSrc(u.profile_photo)}" alt="${escapeHtml(u.username)}" />
+                    <div>
+                      <a href="/u/${u.username}"><b>${escapeHtml(u.full_name || u.username)}</b></a>
+                      <div class="small">Aniversário em ${escapeHtml(u.birth_label || "")}</div>
+                    </div>
+                  </div>
+                `).join("")}
+              </div>
+            ` : ``}
+          `}
+      </div>
+
+      <div class="card home-side-card">
+        <div class="h" style="font-size:1.3rem;font-weight:900;color:var(--accent);">Mural público</div>
+        ${((recentMuralPosts||[]).length === 0)
+          ? `<div class="kd-mini-muted">Ainda não há posts no mural.</div>`
+          : `
+            <div class="home-mural-list">
+              ${(recentMuralPosts||[]).map(p => `
+                <div class="home-mural-item">
+                  <div class="small"><a href="/u/${p.username}"><b>${escapeHtml(p.full_name || p.username)}</b></a></div>
+                  <div>${escapeHtml(String(p.content || "").slice(0, 140))}${String(p.content || "").length > 140 ? '…' : ''}</div>
+                </div>
+              `).join("")}
+            </div>
+            <div style="margin-top:8px;"><a class="button secondary" href="/mural">Abrir mural</a></div>
+          `}
+      </div>
+    </div>
+	<!-- SUPER LOLITA CHANGELOG START -->
+<div class="card" style="margin-top:14px;background:var(--card);border:1px solid var(--line);">
+  <div class="h" style="display:flex;align-items:center;gap:8px;color:var(--accent);">
+    📢 Novidades da Klein Dream
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px;">
+
+    <div style="padding:10px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.03);">
+      <div style="font-weight:700;color:var(--accent);">🎨 Klein Dream Paynt iniciado</div>
+      <div style="font-size:.95rem;opacity:.9;margin-top:4px;">
+        O novo aplicativo retrô de desenho começou a ganhar vida com ferramentas clássicas e visual nostálgico.
+      </div>
+    </div>
+
+    <div style="padding:10px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.03);">
+      <div style="font-weight:700;color:var(--accent);">🛠️ Melhorias na Klein Dream</div>
+      <div style="font-size:.95rem;opacity:.9;margin-top:4px;">
+        Ajustes visuais e melhorias estão sendo preparadas para deixar a rede ainda mais confortável.
+      </div>
+    </div>
+
+    <div style="padding:10px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.03);">
+      <div style="font-weight:700;color:var(--accent);">💙 Projeto em evolução</div>
+      <div style="font-size:.95rem;opacity:.9;margin-top:4px;">
+        A Klein Dream continua evoluindo mantendo a simplicidade e a nostalgia das antigas redes sociais.
+      </div>
+    </div>
+
+  </div>
+</div>
+<!-- SUPER LOLITA CHANGELOG END -->
+  </div>
+` }) %>
+
+<% function escapeHtml(str){ return String(str ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); } %>
+<%- include("layout", { title: "Início", body: `
+  <div class="grid home-orbit" style="align-items:start;">
+    <div>
+      <div class="card mascot-chip home-hero-card">
+        <img src="/img/sr-disquete.png" alt="Sr. Disquete" class="kd-zoom" />
+        <div>
+          <div class="h" style="font-size:1.55rem;font-weight:900;color:var(--accent);">&#128190; Bem-vindo de volta, ${(me && (me.full_name || me.username)) ? escapeHtml(me.full_name || me.username) : ""}!</div>
+          <p style="font-size:1rem;line-height:1.6;margin:6px 0 0 0;">
+            Aqui o perfil continua sendo importante. Sem algoritmo empurrando barulho: só gente,
+            recados, comunidades e lembranças boas.
+          </p>
+          <div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap;">
+            <a class="button" href="/u/${me.username}">Meu perfil</a>
+            <a class="button secondary" href="/profile/edit">Editar perfil</a>
+            <a class="button secondary" href="/mural">Mural</a>
+            <a class="button secondary" href="/search">Procurar gente</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card home-network-card">
+        <div class="h" style="font-size:1.45rem;font-weight:900;color:var(--accent);">Movimento da Klein Dream</div>
+        <div class="home-stat-grid">
+          <div class="home-stat-box">
+            <div class="k">Membros</div>
+            <div class="v">${networkStats.totalMembers}</div>
+            <div class="small">${networkStats.newMembersWeek} chegaram esta semana</div>
+          </div>
+          <div class="home-stat-box">
+            <div class="k">Recados</div>
+            <div class="v">${networkStats.totalScraps}</div>
+            <div class="small">A rede segue conversando</div>
+          </div>
+          <div class="home-stat-box">
+            <div class="k">Fotos</div>
+            <div class="v">${networkStats.totalPhotos}</div>
+            <div class="small">Momentos guardados</div>
+          </div>
+          <div class="home-stat-box">
+            <div class="k">Grupos</div>
+            <div class="v">${networkStats.totalGroups}</div>
+            <div class="small">Espaços com identidade</div>
+          </div>
+        </div>
+      </div>
+
+
+
+      <div class="card home-block-card">
+        <div class="home-section-head">
+          <div class="h" style="font-size:1.35rem;font-weight:900;color:var(--accent);">&#128994; Online agora</div>
+          <span class="small">quem está navegando pela rede</span>
+        </div>
+        ${((onlineMembers||[]).length === 0)
+          ? `<div class="kd-mini-muted">No momento a rede está quietinha. Quando alguém mexer por aqui, aparece nesta lista.</div>`
+          : `
+            <div class="orkut-thumb-grid home-thumb-grid online-thumb-grid">
+              ${(onlineMembers||[]).map(user => `
+                <div class="orkut-thumb-card online-card-wrap" title="${escapeHtml(user.username)}">
+                  <a href="/u/${user.username}" class="online-card-link">
+                    ${user.profile_photo ? `<img class="orkut-thumb-avatar kd-zoom" src="${photoSrc(user.profile_photo)}" alt="${escapeHtml(user.username)}" />` : `<div class="orkut-thumb-avatar ph">?</div>`}
+                    <div class="orkut-thumb-name">${escapeHtml(user.full_name || user.username)}</div>
+                    <div class="orkut-thumb-meta">@${escapeHtml(user.username)}</div>
+                  </a>
+                  ${user.username !== me.username ? `<button class="btn secondary mini js-open-private-chat" type="button" data-chat-user="${escapeHtml(user.username)}">&#128172; Conversar</button>` : `<span class="badge">Você</span>`}
+                </div>
+              `).join("")}
+            </div>
+          `}
+      </div>
+
+      <div class="card home-block-card">
+        <div class="home-section-head">
+          <div class="h" style="font-size:1.35rem;font-weight:900;color:var(--accent);">Novos membros</div>
+          <a class="small" href="/search">ver mais</a>
+        </div>
+        ${((newUsers||[]).length === 0)
+          ? `<div class="kd-mini-muted">Ainda não há novos cadastros para mostrar.</div>`
+          : `
+            <div class="orkut-thumb-grid home-thumb-grid">
+              ${(newUsers||[]).map(user => `
+                <a class="orkut-thumb-card" href="/u/${user.username}" title="${escapeHtml(user.username)}">
+                  ${user.profile_photo ? `<img class="orkut-thumb-avatar kd-zoom" src="${photoSrc(user.profile_photo)}" alt="${escapeHtml(user.username)}" />` : `<div class="orkut-thumb-avatar ph">?</div>`}
+                  <div class="orkut-thumb-name">${escapeHtml(user.full_name || user.username)}</div>
+                  <div class="orkut-thumb-meta">@${escapeHtml(user.username)}</div>
+                </a>
+              `).join("")}
+            </div>
+          `}
+      </div>
+
+      <div class="card home-block-card">
+        <div class="home-section-head">
+          <div class="h" style="font-size:1.35rem;font-weight:900;color:var(--accent);">Grupos em destaque</div>
+          <a class="small" href="/groups">ver todas</a>
+        </div>
+        ${((featuredGroups||[]).length === 0)
+          ? `<div class="kd-mini-muted">Ainda não há grupos para destacar.</div>`
+          : `
+            <div class="orkut-thumb-grid home-group-grid">
+              ${(featuredGroups||[]).map(g => `
+                <a class="orkut-thumb-card group" href="/groups/${g.id}" title="${escapeHtml(g.name)}">
+                  <div class="orkut-group-icon">&#128101;</div>
+                  <div class="orkut-thumb-name">${escapeHtml(g.name)}</div>
+                  <div class="orkut-thumb-meta">${escapeHtml(g.category || "Sem categoria")}</div>
+                  <div class="orkut-thumb-meta">${Number(g.members_count || 0)} membro${Number(g.members_count || 0) === 1 ? '' : 's'}</div>
+                </a>
+              `).join("")}
+            </div>
+          `}
+      </div>
 	<!-- SUPER LOLITA CHANGELOG START -->
 <div class="card" style="margin-top:14px;background:var(--card);border:1px solid var(--line);">
   <div class="h" style="display:flex;align-items:center;gap:8px;color:var(--accent);">
