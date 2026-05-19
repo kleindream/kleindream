@@ -13,10 +13,18 @@
     <form id="paintSaveForm" method="post" action="/paint/save">
       <div class="paint-window95">
         <div class="paint-titlebar">Paint Brush - Klein Dream</div>
-        <div class="paint-toolbar">
+
+        <div class="paint-toolbar" aria-label="Ferramentas do Paint Brush">
           <button class="btn secondary paint-tool active" type="button" data-tool="pen">✏️ Lápis</button>
+          <button class="btn secondary paint-tool" type="button" data-tool="brush">🖌️ Pincel</button>
+          <button class="btn secondary paint-tool" type="button" data-tool="spray">💨 Spray</button>
+          <button class="btn secondary paint-tool" type="button" data-tool="line">📏 Linha</button>
+          <button class="btn secondary paint-tool" type="button" data-tool="rect">▭ Retângulo</button>
+          <button class="btn secondary paint-tool" type="button" data-tool="circle">○ Círculo</button>
+          <button class="btn secondary paint-tool" type="button" data-tool="fill">🪣 Balde</button>
           <button class="btn secondary paint-tool" type="button" data-tool="eraser">🧽 Borracha</button>
           <button class="btn secondary" id="paintUndo" type="button">↩️ Desfazer</button>
+          <button class="btn secondary" id="paintRedo" type="button">↪️ Refazer</button>
           <button class="btn secondary" id="paintClear" type="button">🗑️ Limpar</button>
           <button class="btn secondary" id="paintFillWhite" type="button">⬜ Fundo branco</button>
           <a class="btn secondary" href="/u/${me.username}">👤 Ver perfil</a>
@@ -27,19 +35,26 @@
             <label class="small" for="paintTitle">Título do desenho</label>
             <input id="paintTitle" name="title" class="input" type="text" maxlength="60" placeholder="Ex.: Meu PC em 2002" />
 
-            <label class="small" for="paintBrushSize">Espessura</label>
-            <input id="paintBrushSize" type="range" min="1" max="24" value="3" />
-            <div class="small">Tamanho: <b id="paintBrushSizeValue">3 px</b></div>
+            <label class="small" for="paintBrushSize">Espessura / tamanho</label>
+            <input id="paintBrushSize" type="range" min="1" max="42" value="4" />
+            <div class="small">Tamanho: <b id="paintBrushSizeValue">4 px</b></div>
 
-            <div class="small" style="margin-top:10px;">Cores</div>
+            <label class="small" for="paintOpacity">Intensidade</label>
+            <input id="paintOpacity" type="range" min="10" max="100" value="100" />
+            <div class="small">Força: <b id="paintOpacityValue">100%</b></div>
+
+            <div class="small" style="margin-top:10px;">Cores clássicas</div>
             <div class="paint-palette" id="paintPalette">
-              ${['#000000','#7f7f7f','#800000','#ff0000','#808000','#ffff00','#008000','#00ff00','#008080','#00ffff','#000080','#0000ff','#800080','#ff00ff','#ffffff','#c0c0c0'].map(color => `<button type="button" class="paint-color ${color === '#000000' ? 'active' : ''}" data-color="${color}" style="background:${color};" title="${color}"></button>`).join('')}
+              ${['#000000','#7f7f7f','#800000','#ff0000','#808000','#ffff00','#008000','#00ff00','#008080','#00ffff','#000080','#0000ff','#800080','#ff00ff','#ffffff','#c0c0c0','#f4c7ab','#ffb6c1','#8b4513','#ffd700'].map(color => `<button type="button" class="paint-color ${color === '#000000' ? 'active' : ''}" data-color="${color}" style="background:${color};" title="${color}"></button>`).join('')}
             </div>
 
+            <label class="small" for="paintCustomColor">Cor personalizada</label>
+            <input id="paintCustomColor" class="paint-custom-color" type="color" value="#000000" />
+
             <div class="paint-status-box small">
+              • agora tem <b>spray</b>, formas, linha, balde e refazer<br/>
               • máximo de <b>${maxDrawings}</b> desenhos por perfil<br/>
-              • apagando um, você pode criar outro<br/>
-              • o desenho salvo aparece no seu perfil
+              • o desenho salvo aparece no perfil do usuário
             </div>
           </div>
 
@@ -48,6 +63,7 @@
           </div>
         </div>
       </div>
+
       <input type="hidden" name="imageData" id="paintImageData" />
       <div class="paint-actions-row">
         <button class="btn" id="paintSaveBtn" type="submit" ${drawings.length >= maxDrawings ? 'disabled' : ''}>💾 Salvar desenho</button>
@@ -78,6 +94,5 @@
 <script>window.__PAINT_CAN_SAVE__ = ${drawings.length < maxDrawings ? 'true' : 'false'};</script>
 <script src="/paint.js"></script>
 ` }) %>
-
 
 <% function escapeHtml(str){ return String(str ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); } %>
