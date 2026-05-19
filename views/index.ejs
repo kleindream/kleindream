@@ -1,54 +1,353 @@
-<%- include("layout", { title: "Entrar", body: `
-  <div class="auth-page">
-    <div class="auth-bg">
-      <div class="orb o1"></div>
-      <div class="orb o2"></div>
-      <div class="orb o3"></div>
-    </div>
+<!-- KLEINDREAM /HOME - CONTEÚDO COMPLETO -->
+<style>
+  :root{
+    --kd-bg: #0b1a33;
+    --kd-bg2:#0f2347;
+    --kd-panel:#102a55;
+    --kd-panel2:#0d2346;
+    --kd-border: rgba(255,255,255,.10);
+    --kd-text: rgba(255,255,255,.92);
+    --kd-muted: rgba(255,255,255,.72);
+    --kd-faint: rgba(255,255,255,.58);
+    --kd-accent:#77b6ff;
+    --kd-accent2:#9ad1ff;
+    --kd-link:#bfe0ff;
+    --kd-shadow: 0 18px 60px rgba(0,0,0,.35);
+  }
 
-    <div class="auth-shell">
-      <div class="auth-brand">
-        <div class="brand-big"><span>Klein</span>Dream</div>
-        <div class="auth-sub">Uma rede social com alma de 2004 — recados, depoimentos, fotos e grupos.</div>
+  /* fundo ocupando a tela de forma agradável em 1366x768 */
+  .kd-home-wrap{
+    background:
+      radial-gradient(1200px 600px at 10% 10%, rgba(119,182,255,.18), transparent 55%),
+      radial-gradient(900px 500px at 90% 20%, rgba(154,209,255,.14), transparent 60%),
+      radial-gradient(1200px 700px at 50% 120%, rgba(119,182,255,.10), transparent 60%),
+      linear-gradient(180deg, var(--kd-bg) 0%, var(--kd-bg2) 55%, #09162c 100%);
+    color: var(--kd-text);
+    min-height: calc(100vh - 0px);
+    padding: 26px 0 44px;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  }
 
-        <div class="auth-bullets">
-          <div class="auth-bullet">
-            <div class="dot"></div>
-            <div><b>Recados</b> e <b>Depoimentos</b> com aquela vibe nostálgica.</div>
-          </div>
-          <div class="auth-bullet">
-            <div class="dot"></div>
-            <div><b>Grupos</b> para encontrar gente que curte o mesmo que você.</div>
-          </div>
-          <div class="auth-bullet">
-            <div class="dot"></div>
-            <div><b>Perfil</b> completo: humor, frase do dia e seus gostos.</div>
-          </div>
+  .kd-container{
+    max-width: 1120px;   /* ótimo para 1366x768 */
+    margin: 0 auto;
+    padding: 0 18px;
+  }
+
+  .kd-hero{
+    display: grid;
+    grid-template-columns: 1.15fr .85fr;
+    gap: 16px;
+    align-items: stretch;
+    margin-bottom: 18px;
+  }
+
+  .kd-card{
+    background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    border: 1px solid var(--kd-border);
+    border-radius: 22px;
+    box-shadow: var(--kd-shadow);
+    padding: 18px 18px;
+    backdrop-filter: blur(10px);
+  }
+
+  .kd-hero h1{
+    margin: 0 0 10px;
+    font-size: 38px;
+    line-height: 1.05;
+    letter-spacing: -0.8px;
+    font-weight: 900;
+  }
+
+  .kd-hero p{
+    margin: 0 0 14px;
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--kd-muted);
+  }
+
+  .kd-badges{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin: 12px 0 14px;
+  }
+
+  .kd-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding: 8px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--kd-border);
+    background: rgba(0,0,0,.16);
+    font-size: 12.5px;
+    color: var(--kd-muted);
+  }
+
+  .kd-dot{
+    width:8px;height:8px;border-radius:999px;
+    background: var(--kd-accent);
+    box-shadow: 0 0 0 4px rgba(119,182,255,.18);
+  }
+
+  .kd-cta{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top: 12px;
+  }
+
+  .kd-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding: 11px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,.18);
+    background: rgba(119,182,255,.18);
+    color: var(--kd-text);
+    text-decoration:none;
+    font-weight: 800;
+    letter-spacing:.2px;
+    transition: transform .08s ease, background .12s ease, border-color .12s ease;
+  }
+  .kd-btn:hover{ transform: translateY(-1px); background: rgba(119,182,255,.24); border-color: rgba(255,255,255,.26); }
+  .kd-btn.secondary{
+    background: rgba(0,0,0,.14);
+    color: var(--kd-link);
+  }
+
+  .kd-mini{
+    font-size: 12.5px;
+    color: var(--kd-faint);
+    line-height: 1.55;
+    margin-top: 10px;
+  }
+
+  .kd-terms{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    color: var(--kd-link);
+    font-size: 12px;
+  }
+  .kd-terms a{
+    color: var(--kd-link);
+    text-decoration:none;
+  }
+  .kd-terms a:hover{ text-decoration:underline; }
+  .kd-terms input{ accent-color: var(--kd-accent); }
+
+  .kd-side{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+
+  .kd-side h2{
+    margin:0 0 8px;
+    font-size: 16px;
+    letter-spacing: .2px;
+    font-weight: 900;
+  }
+
+  .kd-list{
+    margin:0;
+    padding:0;
+    list-style:none;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+
+  .kd-li{
+    padding: 10px 12px;
+    border-radius: 16px;
+    border: 1px solid var(--kd-border);
+    background: rgba(0,0,0,.14);
+  }
+  .kd-li b{ color: var(--kd-accent2); }
+  .kd-li span{ color: var(--kd-muted); font-size: 13px; line-height:1.45; display:block; margin-top:4px; }
+
+  .kd-section{
+    margin-top: 14px;
+  }
+
+  .kd-section h3{
+    margin: 0 0 10px;
+    font-size: 22px;
+    letter-spacing: -0.3px;
+    font-weight: 900;
+  }
+
+  .kd-sub{
+    margin: 0 0 14px;
+    color: var(--kd-muted);
+    line-height: 1.65;
+    font-size: 14.5px;
+  }
+
+  .kd-grid{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .kd-feature{
+    padding: 14px 14px;
+    border-radius: 18px;
+    border: 1px solid var(--kd-border);
+    background: rgba(0,0,0,.12);
+  }
+  .kd-feature h4{
+    margin: 0 0 6px;
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing:.2px;
+    color: var(--kd-accent2);
+  }
+  .kd-feature p{
+    margin:0;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--kd-muted);
+  }
+
+  .kd-two{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .kd-quote{
+    margin: 0;
+    padding: 14px 14px;
+    border-radius: 18px;
+    border: 1px solid rgba(119,182,255,.22);
+    background: rgba(119,182,255,.10);
+    color: rgba(255,255,255,.86);
+    line-height: 1.6;
+    font-size: 14px;
+  }
+  .kd-quote small{
+    display:block;
+    margin-top: 8px;
+    color: var(--kd-faint);
+    font-size: 12.5px;
+  }
+
+  .kd-divider{
+    height: 1px;
+    background: rgba(255,255,255,.10);
+    margin: 16px 0;
+  }
+
+  .kd-longtext{
+    color: var(--kd-muted);
+    line-height: 1.75;
+    font-size: 14.5px;
+  }
+  .kd-longtext b{ color: rgba(255,255,255,.92); }
+  .kd-longtext em{ color: rgba(191,224,255,.92); font-style: normal; }
+
+  .kd-callout{
+    padding: 16px 16px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,.16);
+    background: linear-gradient(180deg, rgba(0,0,0,.16), rgba(0,0,0,.10));
+  }
+  .kd-callout h4{
+    margin:0 0 8px;
+    font-size: 16px;
+    font-weight: 950;
+    letter-spacing: .2px;
+  }
+  .kd-callout p{
+    margin:0;
+    color: var(--kd-muted);
+    line-height: 1.6;
+    font-size: 13.5px;
+  }
+
+  .kd-footer-cta{
+    margin-top: 14px;
+    display:flex;
+    flex-wrap:wrap;
+    gap: 10px;
+    align-items:center;
+    justify-content: space-between;
+  }
+
+  .kd-footer-cta .kd-mini{
+    margin:0;
+  }
+
+  /* responsivo */
+  @media (max-width: 980px){
+    .kd-hero{ grid-template-columns: 1fr; }
+    .kd-grid{ grid-template-columns: 1fr; }
+    .kd-two{ grid-template-columns: 1fr; }
+    .kd-hero h1{ font-size: 34px; }
+  }
+</style>
+
+<div class="kd-home-wrap">
+  <div class="kd-container">
+
+    <!-- HERO -->
+    <div class="kd-hero">
+      <div class="kd-card">
+        <h1><font color="#0000FF">Klein</font> Dream</h1>
+        <p>
+          Uma rede social com alma de internet antiga — mas com base moderna e estável.
+          Aqui você não compete por atenção. Você constrói presença, história e conexão.
+        </p>
+		<p>
+          <img border="0" src="/img/logo1.png" width="400" height="300" alt=""></p>
+       <div class="kd-cta">
+          <a class="kd-btn" href="/register">Criar minha conta</a>
+			<a class="kd-btn secondary" href="/login">Entrar</a>
+        	<label class="kd-terms"><input type="checkbox" checked disabled> <a href="/termos">(Termos de uso)</a></label></div>
+        <div class="kd-badges">
+          <div class="kd-badge"><span class="kd-dot"></span> Sem algoritmo sufocando</div>
+          <div class="kd-badge"><span class="kd-dot"></span> Perfil completo e humano</div>
+          <div class="kd-badge"><span class="kd-dot"></span> Nostalgia com estrutura real</div>
+        </div>
+        <div class="kd-mini">
+          Dica: esta rede foi feita para lembrar a internet que você sente falta — e para funcionar sem sumir dados, sem apagar fotos e sem “recomeçar do zero”.
+        </div>
+      </div>
+
+      <div class="kd-side">
+        <div class="kd-card">
+          <h2>O que você pode fazer agora</h2>
+          <ul class="kd-list">
+            <li class="kd-li">
+              <b>Perfil com foto</b>
+              <span>Crie seu perfil, coloque sua foto de perfil e mostre quem você é.</span>
+            </li>
+            <li class="kd-li">
+              <b>Até 6 fotos no álbum</b>
+              <span>Guarde lembranças, estilo “internet de antigamente”, com limite clássico.</span>
+            </li>
+            <li class="kd-li">
+              <b>Recados e depoimentos</b>
+              <span>Deixe mensagens públicas e depoimentos que você aprova ou rejeita.</span>
+            </li>
+            <li class="kd-li">
+              <b>Amizades e comunidades</b>
+              <span>Adicione amigos e participe de comunidades com tópicos de verdade.</span>
+            </li>
+          </ul>
         </div>
 
-        <div class="auth-note">Dica: use seu <b>usuário</b> ou <b>e-mail</b> para entrar.</div>
-      </div>
-
-      <div class="card auth-card">
-        <div class="h auth-title">Entrar</div>
-
-        ${error ? `<div class="alert danger">${error}</div>` : ""}
-
-        <form method="post" action="/login" class="auth-form">
-          <label class="small">Usuário ou e-mail</label>
-          <input name="usernameOrEmail" autocomplete="username" />
-
-          <label class="small" style="margin-top:10px;">Senha</label>
-          <input name="password" type="password" autocomplete="current-password" />
-
-          <button class="btn auth-btn" type="submit">Entrar</button>
-
-          <div class="auth-links">
-            <a class="btn secondary" href="/register">Criar conta</a>
-            <a class="link-soft" href="/">Voltar</a>
-          </div>
-        </form>
+        <div class="kd-card kd-callout">
+          <h4>Por que isso importa?</h4>
+          <p>
+            Porque a internet virou barulho. A Klein Dream é um retorno à calma:
+            menos disputa, mais conversa, mais perfil, mais identidade.
+          </p>
+        </div>
       </div>
     </div>
-  </div>
-` }) %>
