@@ -144,7 +144,7 @@ const sessionMiddleware = session({
     cookie: {
       httpOnly: true,
       sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
+      secure: "auto",
       maxAge: 1000 * 60 * 60 * 24 * 30
     }
   });
@@ -769,7 +769,16 @@ app.post("/register", limiterAuth, async (req, res) => {
   req.session.userId = info.rows[0].id;
   req.session.username = username;
   req.flash("success", "Conta criada! Bem-vindo(a) ao KleinDream 💙");
-  redirectCanonical(res, "/profile/edit");
+
+  // Salva a sessão antes do redirect. Isso evita o Chrome ficar preso/deslogado
+  // quando o store de sessão ainda não terminou de gravar.
+  req.session.save((err) => {
+    if (err) {
+      console.error("Erro ao salvar sessão no cadastro:", err);
+      return res.status(500).send("Erro ao iniciar sessão. Tente novamente.");
+    }
+    return res.redirect("/profile/edit");
+  });
 });
 
 app.get("/login", async (req, res) => res.render("login", { error: null }));
@@ -783,9 +792,18 @@ app.post("/login", limiterAuth, async (req, res) => {
   if (!ok) return res.render("login", { error: "Senha incorreta." });
 
   req.session.userId = user.id;
-    req.session.username = user.username;
+  req.session.username = user.username;
   req.flash("success", "Bem-vindo(a) de volta!");
-  redirectCanonical(res, "/home");
+
+  // Salva a sessão antes do redirect. Em Chrome/Render isso evita a tela ficar
+  // girando ou voltar deslogada por cookie/sessão ainda não gravados.
+  req.session.save((err) => {
+    if (err) {
+      console.error("Erro ao salvar sessão no login:", err);
+      return res.status(500).send("Erro ao iniciar sessão. Tente novamente.");
+    }
+    return res.redirect("/home");
+  });
 });
 
 app.post("/logout", async (req, res) => {
