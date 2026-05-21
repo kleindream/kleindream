@@ -1,361 +1,368 @@
-	<!-- Super Lolita Highlighted Paynt Link -->
-<div style="margin-top:20px; padding:15px; border:2px dashed var(--accent); border-radius:12px; background-color:rgba(255, 245, 250, 0.2); text-align:center;">
-    <a href="https://klein-dream-paynt.onrender.com" target="_blank" style="font-size:1.25rem; font-weight:700; color:var(--accent); text-decoration:none;">
-      Crie e edite imagens gratuitamente, com o Klein Dream Paynt
-    </a>
-    <p style="font-size:0.95rem; color:var(--accent); margin-top:6px;">
-      Um presente para todos os visitantes e membros da Klein Dream.
-    </p>
-<!-- KLEINDREAM /HOME - CONTEÚDO COMPLETO -->
+<!-- KLEIN DREAM INDEX - SUPER LOLITA EDITION -->
 <style>
   :root{
-    --kd-bg: #0b1a33;
-    --kd-bg2:#0f2347;
-    --kd-panel:#102a55;
-    --kd-panel2:#0d2346;
-    --kd-border: rgba(255,255,255,.10);
-    --kd-text: rgba(255,255,255,.92);
-    --kd-muted: rgba(255,255,255,.72);
-    --kd-faint: rgba(255,255,255,.58);
-    --kd-accent:#77b6ff;
-    --kd-accent2:#9ad1ff;
-    --kd-link:#bfe0ff;
-    --kd-shadow: 0 18px 60px rgba(0,0,0,.35);
+    --kd-bg:#07152e;
+    --kd-bg2:#0b2147;
+    --kd-card:rgba(255,255,255,.075);
+    --kd-card2:rgba(255,255,255,.045);
+    --kd-line:rgba(255,255,255,.13);
+    --kd-text:rgba(255,255,255,.94);
+    --kd-muted:rgba(255,255,255,.74);
+    --kd-faint:rgba(255,255,255,.56);
+    --kd-accent:#7fc2ff;
+    --kd-accent2:#b8e4ff;
+    --kd-gold:#ffd36e;
+    --kd-pink:#ffb6d7;
+    --kd-green:#9cffbd;
+    --kd-shadow:0 22px 70px rgba(0,0,0,.38);
   }
 
-  /* fundo ocupando a tela de forma agradável em 1366x768 */
-  .kd-home-wrap{
+  *{box-sizing:border-box}
+
+  .kd-index{
+    min-height:100vh;
+    color:var(--kd-text);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     background:
-      radial-gradient(1200px 600px at 10% 10%, rgba(119,182,255,.18), transparent 55%),
-      radial-gradient(900px 500px at 90% 20%, rgba(154,209,255,.14), transparent 60%),
-      radial-gradient(1200px 700px at 50% 120%, rgba(119,182,255,.10), transparent 60%),
-      linear-gradient(180deg, var(--kd-bg) 0%, var(--kd-bg2) 55%, #09162c 100%);
-    color: var(--kd-text);
-    min-height: calc(100vh - 0px);
-    padding: 26px 0 44px;
-    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      radial-gradient(900px 460px at 8% 8%, rgba(127,194,255,.22), transparent 58%),
+      radial-gradient(700px 420px at 92% 8%, rgba(255,182,215,.16), transparent 60%),
+      radial-gradient(900px 520px at 50% 110%, rgba(156,255,189,.10), transparent 62%),
+      linear-gradient(180deg,var(--kd-bg),var(--kd-bg2) 55%,#061127);
+    padding:26px 0 42px;
+    overflow:hidden;
   }
 
-  .kd-container{
-    max-width: 1120px;   /* ótimo para 1366x768 */
-    margin: 0 auto;
-    padding: 0 18px;
+  .kd-container{max-width:1150px;margin:0 auto;padding:0 18px;position:relative;z-index:2}
+
+  .kd-stars:before,
+  .kd-stars:after{
+    content:"";
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    background-image:
+      radial-gradient(circle, rgba(255,255,255,.45) 1px, transparent 1.5px),
+      radial-gradient(circle, rgba(127,194,255,.40) 1px, transparent 1.5px);
+    background-size:80px 80px,130px 130px;
+    opacity:.28;
   }
+
+  .kd-topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:14px;
+    margin-bottom:16px;
+  }
+
+  .kd-brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:950;
+    letter-spacing:.2px;
+    color:white;
+    text-decoration:none;
+  }
+
+  .kd-brand-icon{
+    width:38px;height:38px;border-radius:12px;
+    display:grid;place-items:center;
+    background:linear-gradient(180deg,rgba(127,194,255,.28),rgba(255,255,255,.08));
+    border:1px solid var(--kd-line);
+    box-shadow:0 10px 24px rgba(0,0,0,.28);
+  }
+
+  .kd-nav{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+  .kd-nav a{
+    color:var(--kd-accent2);text-decoration:none;font-weight:800;font-size:13px;
+    padding:8px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);
+    background:rgba(0,0,0,.14);
+  }
+  .kd-nav a:hover{background:rgba(127,194,255,.16);color:white}
 
   .kd-hero{
-    display: grid;
-    grid-template-columns: 1.15fr .85fr;
-    gap: 16px;
-    align-items: stretch;
-    margin-bottom: 18px;
+    display:grid;
+    grid-template-columns:1.08fr .92fr;
+    gap:16px;
+    align-items:stretch;
   }
 
   .kd-card{
-    background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-    border: 1px solid var(--kd-border);
-    border-radius: 22px;
-    box-shadow: var(--kd-shadow);
-    padding: 18px 18px;
-    backdrop-filter: blur(10px);
+    background:linear-gradient(180deg,var(--kd-card),var(--kd-card2));
+    border:1px solid var(--kd-line);
+    border-radius:26px;
+    box-shadow:var(--kd-shadow);
+    backdrop-filter:blur(10px);
   }
 
-  .kd-hero h1{
-    margin: 0 0 10px;
-    font-size: 38px;
-    line-height: 1.05;
-    letter-spacing: -0.8px;
-    font-weight: 900;
+  .kd-main-card{padding:24px;position:relative;overflow:hidden}
+  .kd-main-card:after{
+    content:"";position:absolute;right:-80px;top:-90px;width:240px;height:240px;border-radius:50%;
+    background:radial-gradient(circle,rgba(127,194,255,.20),transparent 62%);
   }
 
-  .kd-hero p{
-    margin: 0 0 14px;
-    font-size: 15px;
-    line-height: 1.65;
-    color: var(--kd-muted);
+  .kd-kicker{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:8px 11px;border-radius:999px;
+    border:1px solid rgba(127,194,255,.24);
+    background:rgba(127,194,255,.12);
+    color:var(--kd-accent2);
+    font-size:12px;font-weight:900;
+    margin-bottom:13px;
   }
 
-  .kd-badges{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    margin: 12px 0 14px;
+  .kd-title{
+    margin:0 0 12px;
+    font-size:clamp(38px,6vw,66px);
+    line-height:.96;
+    letter-spacing:-2px;
+    font-weight:1000;
+  }
+  .kd-title span{color:var(--kd-accent);text-shadow:0 0 24px rgba(127,194,255,.35)}
+
+  .kd-lead{
+    margin:0 0 16px;
+    max-width:650px;
+    color:var(--kd-muted);
+    line-height:1.7;
+    font-size:16px;
   }
 
-  .kd-badge{
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    padding: 8px 10px;
-    border-radius: 999px;
-    border: 1px solid var(--kd-border);
-    background: rgba(0,0,0,.16);
-    font-size: 12.5px;
-    color: var(--kd-muted);
+  .kd-logo-box{
+    margin:12px 0 16px;
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;
   }
 
-  .kd-dot{
-    width:8px;height:8px;border-radius:999px;
-    background: var(--kd-accent);
-    box-shadow: 0 0 0 4px rgba(119,182,255,.18);
+  .kd-logo-box img{
+    width:min(280px,100%);
+    height:auto;
+    border-radius:22px;
+    border:1px solid rgba(255,255,255,.14);
+    background:rgba(255,255,255,.05);
+    box-shadow:0 16px 45px rgba(0,0,0,.32);
   }
 
-  .kd-cta{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    margin-top: 12px;
+  .kd-logo-note{
+    flex:1;min-width:220px;
+    padding:14px;border-radius:20px;
+    background:rgba(0,0,0,.16);
+    border:1px solid rgba(255,255,255,.10);
+    color:var(--kd-muted);
+    line-height:1.6;
+    font-size:14px;
   }
 
+  .kd-actions{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
   .kd-btn{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    padding: 11px 14px;
-    border-radius: 14px;
-    border: 1px solid rgba(255,255,255,.18);
-    background: rgba(119,182,255,.18);
-    color: var(--kd-text);
-    text-decoration:none;
-    font-weight: 800;
-    letter-spacing:.2px;
-    transition: transform .08s ease, background .12s ease, border-color .12s ease;
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:12px 15px;border-radius:16px;
+    color:white;text-decoration:none;font-weight:950;
+    background:linear-gradient(180deg,rgba(127,194,255,.30),rgba(127,194,255,.16));
+    border:1px solid rgba(255,255,255,.20);
+    box-shadow:0 10px 28px rgba(0,0,0,.22);
+    transition:transform .10s ease, filter .12s ease, background .12s ease;
   }
-  .kd-btn:hover{ transform: translateY(-1px); background: rgba(119,182,255,.24); border-color: rgba(255,255,255,.26); }
-  .kd-btn.secondary{
-    background: rgba(0,0,0,.14);
-    color: var(--kd-link);
-  }
+  .kd-btn:hover{transform:translateY(-2px);filter:brightness(1.08)}
+  .kd-btn.secondary{background:rgba(0,0,0,.18);color:var(--kd-accent2)}
+  .kd-btn.gold{background:linear-gradient(180deg,rgba(255,211,110,.28),rgba(255,211,110,.12));color:#fff7d8}
+  .kd-btn.pink{background:linear-gradient(180deg,rgba(255,182,215,.28),rgba(255,182,215,.12));color:#ffeaf4}
 
-  .kd-mini{
-    font-size: 12.5px;
-    color: var(--kd-faint);
-    line-height: 1.55;
-    margin-top: 10px;
-  }
+  .kd-terms{display:inline-flex;align-items:center;gap:7px;color:var(--kd-faint);font-size:12px;margin-top:2px}
+  .kd-terms a{color:var(--kd-accent2);text-decoration:none}.kd-terms a:hover{text-decoration:underline}
 
-  .kd-terms{
-    display:inline-flex;
-    align-items:center;
-    gap:6px;
-    color: var(--kd-link);
-    font-size: 12px;
-  }
-  .kd-terms a{
-    color: var(--kd-link);
-    text-decoration:none;
-  }
-  .kd-terms a:hover{ text-decoration:underline; }
-  .kd-terms input{ accent-color: var(--kd-accent); }
+  .kd-badges{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+  .kd-badge{display:inline-flex;gap:8px;align-items:center;padding:8px 10px;border-radius:999px;background:rgba(0,0,0,.16);border:1px solid rgba(255,255,255,.11);color:var(--kd-muted);font-size:12.5px;font-weight:750}
+  .kd-dot{width:8px;height:8px;border-radius:999px;background:var(--kd-accent);box-shadow:0 0 0 4px rgba(127,194,255,.16)}
 
-  .kd-side{
-    display:flex;
-    flex-direction:column;
-    gap:12px;
-  }
+  .kd-side{display:flex;flex-direction:column;gap:12px}
+  .kd-side-card{padding:18px}
+  .kd-side-card h2,.kd-section h3{margin:0 0 10px;font-weight:1000;letter-spacing:-.3px}
+  .kd-side-card h2{font-size:19px}.kd-section h3{font-size:25px}
+  .kd-side-card p,.kd-section-sub{margin:0;color:var(--kd-muted);line-height:1.65;font-size:14.5px}
 
-  .kd-side h2{
-    margin:0 0 8px;
-    font-size: 16px;
-    letter-spacing: .2px;
-    font-weight: 900;
-  }
+  .kd-mini-list{list-style:none;margin:13px 0 0;padding:0;display:grid;gap:9px}
+  .kd-mini-list li{padding:11px 12px;border-radius:17px;border:1px solid rgba(255,255,255,.11);background:rgba(0,0,0,.14);color:var(--kd-muted);line-height:1.45;font-size:13px}
+  .kd-mini-list b{display:block;color:var(--kd-accent2);font-size:14px;margin-bottom:3px}
 
-  .kd-list{
-    margin:0;
-    padding:0;
-    list-style:none;
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-  }
-
-  .kd-li{
-    padding: 10px 12px;
-    border-radius: 16px;
-    border: 1px solid var(--kd-border);
-    background: rgba(0,0,0,.14);
-  }
-  .kd-li b{ color: var(--kd-accent2); }
-  .kd-li span{ color: var(--kd-muted); font-size: 13px; line-height:1.45; display:block; margin-top:4px; }
-
-  .kd-section{
-    margin-top: 14px;
-  }
-
-  .kd-section h3{
-    margin: 0 0 10px;
-    font-size: 22px;
-    letter-spacing: -0.3px;
-    font-weight: 900;
-  }
-
-  .kd-sub{
-    margin: 0 0 14px;
-    color: var(--kd-muted);
-    line-height: 1.65;
-    font-size: 14.5px;
-  }
-
-  .kd-grid{
+  .kd-showcase{
+    margin-top:16px;
     display:grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
   }
 
-  .kd-feature{
-    padding: 14px 14px;
-    border-radius: 18px;
-    border: 1px solid var(--kd-border);
-    background: rgba(0,0,0,.12);
-  }
-  .kd-feature h4{
-    margin: 0 0 6px;
-    font-size: 14px;
-    font-weight: 900;
-    letter-spacing:.2px;
-    color: var(--kd-accent2);
-  }
-  .kd-feature p{
-    margin:0;
-    font-size: 13px;
-    line-height: 1.55;
-    color: var(--kd-muted);
-  }
+  .kd-project{padding:18px;position:relative;overflow:hidden}
+  .kd-project:before{content:"";position:absolute;right:-50px;top:-50px;width:150px;height:150px;border-radius:50%;background:rgba(127,194,255,.13)}
+  .kd-project.pet:before{background:rgba(255,211,110,.17)}
+  .kd-project.paynt:before{background:rgba(255,182,215,.15)}
 
-  .kd-two{
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
+  .kd-project-head{display:flex;gap:12px;align-items:center;margin-bottom:10px;position:relative;z-index:1}
+  .kd-project-icon{width:48px;height:48px;border-radius:16px;display:grid;place-items:center;font-size:25px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.13)}
+  .kd-project h3{margin:0;font-size:21px;font-weight:1000}.kd-project small{color:var(--kd-faint);font-weight:800}
+  .kd-project p{position:relative;z-index:1;color:var(--kd-muted);line-height:1.65;margin:0 0 13px;font-size:14.5px}
 
-  .kd-quote{
-    margin: 0;
-    padding: 14px 14px;
-    border-radius: 18px;
-    border: 1px solid rgba(119,182,255,.22);
-    background: rgba(119,182,255,.10);
-    color: rgba(255,255,255,.86);
-    line-height: 1.6;
-    font-size: 14px;
+  .kd-pet-preview{
+    position:relative;z-index:1;
+    min-height:140px;
+    border-radius:22px;
+    border:1px solid rgba(255,255,255,.14);
+    background:linear-gradient(#8fd1ff 0 48%,#8a5528 49% 100%);
+    overflow:hidden;
+    margin-bottom:12px;
   }
-  .kd-quote small{
-    display:block;
-    margin-top: 8px;
-    color: var(--kd-faint);
-    font-size: 12.5px;
-  }
+  .kd-pet-house{position:absolute;left:26px;bottom:18px;width:92px;height:66px;background:#b8592e;border:3px solid #6b2d15;border-radius:5px}
+  .kd-pet-house:before{content:"";position:absolute;left:-12px;top:-32px;width:116px;height:40px;background:#7c1f1f;border:3px solid #4b1010;clip-path:polygon(50% 0,100% 100%,0 100%)}
+  .kd-pet-dog{position:absolute;right:42px;bottom:22px;font-size:60px;animation:kdDog 1.2s infinite alternate ease-in-out;filter:drop-shadow(0 8px 8px rgba(0,0,0,.25))}
+  .kd-pet-heart{position:absolute;right:35px;top:20px;font-size:26px;animation:kdHeart 1.5s infinite alternate ease-in-out}
+  @keyframes kdDog{from{transform:translateY(0) rotate(-2deg)}to{transform:translateY(-8px) rotate(2deg)}}
+  @keyframes kdHeart{from{opacity:.55;transform:translateY(0) scale(.95)}to{opacity:1;transform:translateY(-9px) scale(1.1)}}
 
-  .kd-divider{
-    height: 1px;
-    background: rgba(255,255,255,.10);
-    margin: 16px 0;
-  }
+  .kd-sections{margin-top:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .kd-feature{padding:16px;border-radius:22px;border:1px solid rgba(255,255,255,.11);background:rgba(0,0,0,.13)}
+  .kd-feature h4{margin:0 0 7px;font-size:15px;color:var(--kd-accent2);font-weight:1000}
+  .kd-feature p{margin:0;color:var(--kd-muted);line-height:1.55;font-size:13.5px}
 
-  .kd-longtext{
-    color: var(--kd-muted);
-    line-height: 1.75;
-    font-size: 14.5px;
-  }
-  .kd-longtext b{ color: rgba(255,255,255,.92); }
-  .kd-longtext em{ color: rgba(191,224,255,.92); font-style: normal; }
+  .kd-final{margin-top:16px;padding:20px;display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap}
+  .kd-final h3{margin:0 0 6px;font-size:23px}.kd-final p{margin:0;color:var(--kd-muted);line-height:1.6;font-size:14.5px}
 
-  .kd-callout{
-    padding: 16px 16px;
-    border-radius: 20px;
-    border: 1px solid rgba(255,255,255,.16);
-    background: linear-gradient(180deg, rgba(0,0,0,.16), rgba(0,0,0,.10));
+  @media(max-width:960px){
+    .kd-hero,.kd-showcase{grid-template-columns:1fr}.kd-sections{grid-template-columns:1fr}.kd-topbar{align-items:flex-start;flex-direction:column}.kd-nav{justify-content:flex-start}.kd-main-card{padding:19px}.kd-title{letter-spacing:-1px}
   }
-  .kd-callout h4{
-    margin:0 0 8px;
-    font-size: 16px;
-    font-weight: 950;
-    letter-spacing: .2px;
-  }
-  .kd-callout p{
-    margin:0;
-    color: var(--kd-muted);
-    line-height: 1.6;
-    font-size: 13.5px;
-  }
-
-  .kd-footer-cta{
-    margin-top: 14px;
-    display:flex;
-    flex-wrap:wrap;
-    gap: 10px;
-    align-items:center;
-    justify-content: space-between;
-  }
-
-  .kd-footer-cta .kd-mini{
-    margin:0;
-  }
-
-  /* responsivo */
-  @media (max-width: 980px){
-    .kd-hero{ grid-template-columns: 1fr; }
-    .kd-grid{ grid-template-columns: 1fr; }
-    .kd-two{ grid-template-columns: 1fr; }
-    .kd-hero h1{ font-size: 34px; }
+  @media(max-width:560px){
+    .kd-index{padding-top:12px}.kd-container{padding:0 10px}.kd-card{border-radius:20px}.kd-actions .kd-btn{width:100%}.kd-logo-note{min-width:100%}.kd-nav a{font-size:12px;padding:7px 9px}.kd-pet-dog{right:28px}.kd-pet-house{left:18px}.kd-title{font-size:39px}
   }
 </style>
 
-<div class="kd-home-wrap">
+<div class="kd-index kd-stars">
   <div class="kd-container">
+    <div class="kd-topbar">
+      <a class="kd-brand" href="/">
+        <span class="kd-brand-icon">💾</span>
+        <span>Klein Dream</span>
+      </a>
+      <nav class="kd-nav">
+        <a href="/login">Entrar</a>
+        <a href="/register">Criar conta</a>
+        <a href="/termos">Termos</a>
+      </nav>
+    </div>
 
-    <!-- HERO -->
-    <div class="kd-hero">
-      <div class="kd-card">
-        <h1><font color="#0000FF">Klein</font> Dream</h1>
-        <p>
+    <section class="kd-hero">
+      <div class="kd-card kd-main-card">
+        <div class="kd-kicker">✨ Internet antiga, coração novo</div>
+        <h1 class="kd-title"><span>Klein</span><br>Dream</h1>
+        <p class="kd-lead">
           Uma rede social com alma de internet antiga — mas com base moderna e estável.
           Aqui você não compete por atenção. Você constrói presença, história e conexão.
         </p>
-		<p>
-          <img border="0" src="/img/logo1.png" width="400" height="300" alt=""></p>
-       <div class="kd-cta">
-          <a class="kd-btn" href="/register">Criar minha conta</a>
-			<a class="kd-btn secondary" href="/login">Entrar</a>
-        	<label class="kd-terms"><input type="checkbox" checked disabled> <a href="/termos">(Termos de uso)</a></label></div>
+
+        <div class="kd-logo-box">
+          <img src="/img/logo1.png" alt="Logo Klein Dream">
+          <div class="kd-logo-note">
+            Perfil, fotos, recados, comunidades e pequenos projetos feitos com carinho.
+            Uma vitrine nostálgica para quem sente falta de uma internet mais humana.
+          </div>
+        </div>
+
+        <div class="kd-actions">
+          <a class="kd-btn" href="/register">🌟 Criar minha conta</a>
+          <a class="kd-btn secondary" href="/login">🔐 Entrar</a>
+          <a class="kd-btn gold" href="/klein_dream_pet_auau.html">🐶 Jogar Klein Dream Pet</a>
+          <a class="kd-btn pink" href="https://klein-dream-paynt.onrender.com" target="_blank" rel="noopener">🎨 Abrir Paynt</a>
+        </div>
+        <label class="kd-terms"><input type="checkbox" checked disabled> Ao entrar, você conhece e aceita os <a href="/termos">termos de uso</a>.</label>
+
         <div class="kd-badges">
           <div class="kd-badge"><span class="kd-dot"></span> Sem algoritmo sufocando</div>
           <div class="kd-badge"><span class="kd-dot"></span> Perfil completo e humano</div>
           <div class="kd-badge"><span class="kd-dot"></span> Nostalgia com estrutura real</div>
         </div>
-        <div class="kd-mini">
-          Dica: esta rede foi feita para lembrar a internet que você sente falta — e para funcionar sem sumir dados, sem apagar fotos e sem “recomeçar do zero”.
-        </div>
       </div>
 
-      <div class="kd-side">
-        <div class="kd-card">
+      <aside class="kd-side">
+        <div class="kd-card kd-side-card">
           <h2>O que você pode fazer agora</h2>
-          <ul class="kd-list">
-            <li class="kd-li">
-              <b>Perfil com foto</b>
-              <span>Crie seu perfil, coloque sua foto de perfil e mostre quem você é.</span>
-            </li>
-            <li class="kd-li">
-              <b>Até 6 fotos no álbum</b>
-              <span>Guarde lembranças, estilo “internet de antigamente”, com limite clássico.</span>
-            </li>
-            <li class="kd-li">
-              <b>Recados e depoimentos</b>
-              <span>Deixe mensagens públicas e depoimentos que você aprova ou rejeita.</span>
-            </li>
-            <li class="kd-li">
-              <b>Amizades e comunidades</b>
-              <span>Adicione amigos e participe de comunidades com tópicos de verdade.</span>
-            </li>
+          <p>Uma rede simples, direta e feita para pessoas, não para barulho.</p>
+          <ul class="kd-mini-list">
+            <li><b>Perfil com foto</b> Mostre quem você é sem depender de feed infinito.</li>
+            <li><b>Até 6 fotos no álbum</b> Guarde lembranças no estilo clássico da internet.</li>
+            <li><b>Recados e depoimentos</b> Mensagens públicas e depoimentos com aprovação.</li>
+            <li><b>Amizades e comunidades</b> Tópicos, conversas e gente real.</li>
           </ul>
         </div>
 
-        <div class="kd-card kd-callout">
-          <h4>Por que isso importa?</h4>
+        <div class="kd-card kd-side-card">
+          <h2>Por que isso importa?</h2>
           <p>
             Porque a internet virou barulho. A Klein Dream é um retorno à calma:
             menos disputa, mais conversa, mais perfil, mais identidade.
           </p>
         </div>
+      </aside>
+    </section>
+
+    <section class="kd-showcase">
+      <div class="kd-card kd-project pet">
+        <div class="kd-project-head">
+          <div class="kd-project-icon">🐶</div>
+          <div>
+            <h3>Klein Dream Pet — Auau</h3>
+            <small>Um bichinho virtual feliz, simples e sem anúncios</small>
+          </div>
+        </div>
+        <div class="kd-pet-preview" aria-label="Prévia do Klein Dream Pet Auau">
+          <div class="kd-pet-house"></div>
+          <div class="kd-pet-heart">💙</div>
+          <div class="kd-pet-dog">🐶</div>
+        </div>
+        <p>
+          Cuide do Auau: dê comida, carinho, banho, abrace, brinque e aproveite um joguinho leve
+          para crianças, idosos e todos que querem um momento tranquilo no celular.
+        </p>
+        <a class="kd-btn gold" href="/klein_dream_pet_auau.html">Jogar agora 🐾</a>
       </div>
-    </div>
+
+      <div class="kd-card kd-project paynt">
+        <div class="kd-project-head">
+          <div class="kd-project-icon">🎨</div>
+          <div>
+            <h3>Klein Dream Paynt</h3>
+            <small>Desenho nostálgico direto no navegador</small>
+          </div>
+        </div>
+        <p>
+          Uma experiência simples, leve e divertida para desenhar e editar imagens sem complicação.
+          Uma amostra da qualidade e do carinho por trás do universo Klein Dream.
+        </p>
+        <a class="kd-btn pink" href="https://klein-dream-paynt.onrender.com" target="_blank" rel="noopener">Criar e editar imagens 🎨</a>
+      </div>
+    </section>
+
+    <section class="kd-sections">
+      <div class="kd-feature">
+        <h4>💬 Recados de verdade</h4>
+        <p>Aquela sensação gostosa de deixar uma mensagem no perfil de alguém, sem pressa e sem algoritmo.</p>
+      </div>
+      <div class="kd-feature">
+        <h4>🏡 Comunidades</h4>
+        <p>Um espaço para assuntos, lembranças, ideias e grupos com cara de internet clássica.</p>
+      </div>
+      <div class="kd-feature">
+        <h4>🧡 Presença humana</h4>
+        <p>Mais identidade, mais perfil, mais história. Menos barulho automático e menos competição por atenção.</p>
+      </div>
+    </section>
+
+    <section class="kd-card kd-final">
+      <div>
+        <h3>Entre sem pressa. Fique pelo sentimento.</h3>
+        <p>A Klein Dream é pequena, mas tem alma. Cada novo membro ajuda esse sonho a continuar crescendo.</p>
+      </div>
+      <div class="kd-actions" style="margin:0">
+        <a class="kd-btn" href="/register">Criar conta</a>
+        <a class="kd-btn secondary" href="/login">Já sou membro</a>
+      </div>
+    </section>
+  </div>
+</div>
