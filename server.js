@@ -736,7 +736,9 @@ app.get("/termos", (req, res) => {
 app.get("/logo1.png", (req, res) => {
   res.sendFile(path.join(__dirname, "views", "logo1.png"));
 });
-
+app.get('/auau', (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'klein_dream_pet_auau.html'));
+});
 
 // Sobre (texto fictício para o Digão editar)
 app.get("/about", async (req, res) => {
